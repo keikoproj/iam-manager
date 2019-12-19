@@ -1,0 +1,7 @@
+version: "2"
+domain: keikoproj.io
+repo: github.com/keikoproj/iam-manager
+resources:
+- group: iammanager
+  version: v1alpha1
+  kind: Iamrole

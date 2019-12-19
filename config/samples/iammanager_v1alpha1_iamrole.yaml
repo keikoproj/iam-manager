@@ -1,0 +1,7 @@
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: iamrole-sample
+spec:
+  # Add fields here
+  foo: bar

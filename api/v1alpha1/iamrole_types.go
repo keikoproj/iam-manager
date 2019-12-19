@@ -24,18 +24,85 @@ import (
 
 // IamroleSpec defines the desired state of Iamrole
 type IamroleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	PolicyDocument PolicyDocument `json:"PolicyDocument"`
 	// Important: Run "make" to regenerate code after modifying this file
 }
+
+// +kubebuilder:validation:Required
+
+//PolicyDocument type defines IAM policy struct
+type PolicyDocument struct {
+
+	// +kubebuilder:default:="2012-10-17"
+	// Version specifies IAM policy version
+	// By default, this value is "2012-10-17"
+	// +optional
+	Version string `json:"Version,omitempty"`
+
+	// Statement allows list of statement object
+	Statement []Statement `json:"Statement"`
+}
+
+// +kubebuilder:validation:Required
+// Statement type defines the AWS IAM policy statement
+type Statement struct {
+	//Effect on target resource
+	Effect Effect `json:"Effect"`
+
+	//Action allowed/denied on specific resources
+	Action []string `json:"Action"`
+
+	//Resources defines target resources which IAM policy will be applied
+	Resource []string `json:"Resource"`
+	// Sid is an optional field which describes the specific statement action
+	// +optional
+	Sid string `json:"Sid,omitempty"`
+}
+
+// Effect describes whether to allow or deny the specific action
+// Allowed values are
+// - "Allow" : allows the specific action on resources
+// - "Deny" : denies the specific action on resources
+// +kubebuilder:validation:Enum=Allow;Deny
+type Effect string
+
+const (
+	//Allow Policy allows policy
+	AllowPolicy Effect = "Allow"
+
+	//DenyPolicy denies policy
+	DenyPolicy Effect = "Deny"
+)
 
 // IamroleStatus defines the observed state of Iamrole
 type IamroleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	RoleName   string `json:"roleName,omitempty"`
+	State      State  `json:"state,omitempty"`
+	RetryCount int    `json:"retryCount"`
 }
 
-// +kubebuilder:object:root=true
+type State string
 
+const (
+	CreateInProgress State = "CreateInProgress"
+	CreateError      State = "CreateError"
+
+	UpdateInprogress State = "UpdateInProgress"
+	UpdateError      State = "UpdateError"
+
+	DeleteInprogress State = "DeleteInprogress"
+
+	Ready State = "Ready"
+)
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:path=iamroles,scope=Namespaced,shortName=iam,singular=iamrole
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state",description="current state of the iam role"
+// +kubebuilder:printcolumn:name="RoleName",type="string",JSONPath=".status.roleName",description="Name of the role"
+// +kubebuilder:printcolumn:name="RetryCount",type="integer",JSONPath=".status.retryCount",description="Retry count"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="time passed since iamrole creation"
 // Iamrole is the Schema for the iamroles API
 type Iamrole struct {
 	metav1.TypeMeta   `json:",inline"`

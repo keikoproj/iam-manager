@@ -69,6 +69,21 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)
 	}
+	if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
+		os.Exit(1)
+	}
+
+	//Get the client
+	iammanagerv1alpha1.NewWClient()
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		setupLog.Info("I'm enabling webhook now")
+		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
+			os.Exit(1)
+		}
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

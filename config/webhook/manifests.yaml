@@ -1,0 +1,52 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-iammanager-keikoproj-io-v1alpha1-iamrole
+  failurePolicy: Fail
+  name: miamrole.kb.io
+  rules:
+  - apiGroups:
+    - iammanager.keikoproj.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - iamroles
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-iammanager-keikoproj-io-v1alpha1-iamrole
+  failurePolicy: Fail
+  name: viamrole.kb.io
+  rules:
+  - apiGroups:
+    - iammanager.keikoproj.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - iamroles

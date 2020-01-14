@@ -50,7 +50,7 @@ func NewWClient() {
 	wClient = k8sClient
 
 	// call loadProperties with config map result
-	props = config.LoadProperties(context.Background(), k8sClient, "test-test-test-usw2-dev-dev", "iam-manager-iamroles-v1alpha1-configmap")
+	props = config.LoadProperties(context.Background(), k8sClient, "iam-manager-system", "iam-manager-iamroles-v1alpha1-configmap")
 
 }
 

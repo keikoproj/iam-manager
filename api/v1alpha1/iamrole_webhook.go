@@ -42,7 +42,7 @@ var wClient *k8s.Client
 var props *config.Properties
 
 func NewWClient() {
-	fmt.Println("calling k8 client")
+	fmt.Println("setting up k8s client")
 	k8sClient, err := k8s.NewK8sClient()
 	if err != nil {
 		panic(err)

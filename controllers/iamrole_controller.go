@@ -43,7 +43,7 @@ type IamroleReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
-////// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -98,7 +98,7 @@ var roleTrust = `{
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::898883873262:role/masters.dev-lwan3-test.k8s.local"
+        "AWS": "arn:aws:iam::000065563193:role/masters.ops-prim-ppd.cluster.k8s.local"
       },
       "Action": "sts:AssumeRole"
     }

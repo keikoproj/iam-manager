@@ -11,6 +11,7 @@ const (
 	iamPolicyBlacklist    = "iam.policy.resource.blacklist"
 	iamPolicyS3Restricted = "iam.policy.s3.restricted.resource"
 	awsAccountId = "aws.accountId"
+	awsMasterRole = "aws.MasterRole"
 )
 
 const (
@@ -22,7 +23,8 @@ type Properties struct {
 	AllowedPolicyAction       []string
 	RestrictedPolicyResources []string
 	RestrictedS3Resources     []string
-	AwsAccountId string
+	AWSAccountId string
+	AWSMasterRole string
 }
 
 //LoadProperties function loads properties from various sources
@@ -32,12 +34,14 @@ func LoadProperties(ctx context.Context, kClient *k8s.Client, ns string, cmName 
 	restrictedResources := strings.Split(res.Data[iamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(res.Data[iamPolicyS3Restricted], separator)
 	awsAccountId := res.Data[awsAccountId]
+	awsMasterRole := res.Data[awsMasterRole]
 
 	return &Properties{
 		AllowedPolicyAction:       allowedActions,
 		RestrictedPolicyResources: restrictedResources,
 		RestrictedS3Resources:     restrictedS3Resources,
-		AwsAccountId: awsAccountId,
+		AWSAccountId: awsAccountId,
+		AWSMasterRole: awsMasterRole,
 	}
 
 }

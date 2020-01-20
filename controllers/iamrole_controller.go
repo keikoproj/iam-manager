@@ -80,7 +80,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 			log.Error(err, "msg", "err", err.Error())
 			//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
-			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			//return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteComplete)
 

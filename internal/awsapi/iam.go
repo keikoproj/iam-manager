@@ -21,8 +21,9 @@ type IAMIface interface {
 const (
 	iamTagKey                          = "managedBy"
 	iamTagValue                        = "iam-manager"
-	iamManagedPermissionBoundaryPolicy = "arn:aws:iam::898883873262:policy/iam-manager-permission-boundary"
 )
+
+var IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
 
 type IAMRoleRequest struct {
 	Name             string
@@ -41,6 +42,7 @@ type IAM struct {
 }
 
 func New() *IAM {
+
 	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-west-2")})
 	if err != nil {
 		panic(err)
@@ -58,7 +60,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		RoleName:                 aws.String(req.Name),
 		Description:              aws.String(req.Description),
 		MaxSessionDuration:       aws.Int64(req.SessionDuration),
-		PermissionsBoundary:      aws.String(iamManagedPermissionBoundaryPolicy),
+		PermissionsBoundary:      aws.String(IamManagedPermissionBoundaryPolicy),
 	}
 
 	if err := input.Validate(); err != nil {

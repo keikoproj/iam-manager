@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/keikoproj/iam-manager/internal/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"time"
 
 	"github.com/go-logr/logr"

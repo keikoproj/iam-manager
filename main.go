@@ -17,7 +17,7 @@ package main
 
 import (
 	"flag"
-	"github.com/keikoproj/iam-manager/internal/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"os"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"

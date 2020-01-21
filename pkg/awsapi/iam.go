@@ -1,5 +1,8 @@
 package awsapi
 
+//go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
+//go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
+
 import (
 	"context"
 	"fmt"
@@ -8,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"strings"
 )
 
+//IAMIface defines interface methods
 type IAMIface interface {
 	CreateRole(ctx context.Context, req IAMRoleRequest)
 	GetRole(ctx context.Context, roleName string)
@@ -25,6 +30,7 @@ const (
 
 var IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
 
+//IAMRoleRequest struct
 type IAMRoleRequest struct {
 	Name             string
 	PolicyName       string
@@ -87,6 +93,12 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 			default:
 				fmt.Println(aerr.Error())
 			}
+		} else {
+			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
+			if strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "AccessDenied") {
+				_ := i.AddPermissionBoundary(ctx, req)
+			}
+
 		}
 		return nil, err
 	}
@@ -101,6 +113,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
+//TagRole tags role with appropriate tags
 func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	input := &iam.TagRoleInput{
 		RoleName: aws.String(req.Name),
@@ -132,12 +145,52 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
 			fmt.Println(err.Error())
+
 		}
 		return &IAMRoleResponse{}, err
 	}
 
 	fmt.Println(result)
 	return &IAMRoleResponse{}, nil
+}
+
+//AddPermissionBoundary adds permission boundary to the existing roles
+func (i *IAM)AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
+	input := &iam.PutRolePermissionsBoundaryInput{
+		RoleName: aws.String(req.Name),
+		PermissionsBoundary: aws.String(IamManagedPermissionBoundaryPolicy),
+	}
+
+	if err := input.Validate(); err != nil {
+		return err
+	}
+
+	_, err := i.Client.PutRolePermissionsBoundary(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+			case iam.ErrCodeInvalidInputException:
+				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+			case iam.ErrCodeUnmodifiableEntityException:
+				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+			case iam.ErrCodePolicyNotAttachableException:
+				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
+			case iam.ErrCodeServiceFailureException:
+				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 //UpdateRole updates role

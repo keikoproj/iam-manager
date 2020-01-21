@@ -18,6 +18,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"github.com/keikoproj/iam-manager/internal/awsapi"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/k8s"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -51,6 +52,7 @@ func NewWClient() {
 
 	// call loadProperties with config map result
 	props = config.LoadProperties(context.Background(), k8sClient, "iam-manager-system", "iam-manager-iamroles-v1alpha1-configmap")
+	awsapi.IamManagedPermissionBoundaryPolicy = fmt.Sprintf(awsapi.IamManagedPermissionBoundaryPolicy, props.AWSAccountId)
 
 }
 

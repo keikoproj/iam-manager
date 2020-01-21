@@ -17,6 +17,7 @@ package main
 
 import (
 	"flag"
+	"github.com/keikoproj/iam-manager/internal/awsapi"
 	"os"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
@@ -65,6 +66,7 @@ func main() {
 	if err = (&controllers.IamroleReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Iamrole"),
+		IAMClient: awsapi.New(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)

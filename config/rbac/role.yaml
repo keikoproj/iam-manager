@@ -18,3 +18,11 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - iammanager.keikoproj.io
+  resources:
+  - iamroles/status
+  verbs:
+  - get
+  - update
+  - patch

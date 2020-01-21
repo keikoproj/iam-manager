@@ -6145,7 +6145,7 @@ spec:
       serviceAccountName: cert-manager-cainjector
       containers:
         - name: cert-manager
-          image: "quay.io/jetstack/cert-manager-cainjector:v0.12.0"
+          image: "docker.intuit.com/dev/patterns/mongo-db-crr/service/cert-manager-cainjector:v0.12.0"
           imagePullPolicy: IfNotPresent
           args:
           - --v=2
@@ -6196,7 +6196,7 @@ spec:
       serviceAccountName: cert-manager
       containers:
         - name: cert-manager
-          image: "quay.io/jetstack/cert-manager-controller:v0.12.0"
+          image: "docker.intuit.com/dev/patterns/mongo-db-crr/service/cert-manager-controller:v0.12.0"
           imagePullPolicy: IfNotPresent
           args:
           - --v=2
@@ -6254,7 +6254,7 @@ spec:
       serviceAccountName: cert-manager-webhook
       containers:
         - name: cert-manager
-          image: "quay.io/jetstack/cert-manager-webhook:v0.12.0"
+          image: "docker.intuit.com/dev/patterns/mongo-db-crr/service/cert-manager-webhook:v0.12.0"
           imagePullPolicy: IfNotPresent
           args:
           - --v=2

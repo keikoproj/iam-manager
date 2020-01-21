@@ -1,0 +1,26 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  labels:
+    app: iam-manager
+  name: iam-manager-serving-cert
+  namespace: cert-manager
+spec:
+  commonName: iam-manager-webhook-service.iam-manager-system.svc
+  dnsNames:
+    - iam-manager-webhook-service.iam-manager-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: iam-manager-selfsigned-issuer
+  secretName: webhook-server-cert
+  renewBefore: "2159h55m0s"
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  labels:
+    app: iam-manager
+  name: iam-manager-selfsigned-issuer
+  namespace: cert-manager
+spec:
+  selfSigned: {}

@@ -4,4 +4,12 @@ metadata:
   name: iamrole-sample
 spec:
   # Add fields here
-  foo: bar
+  PolicyDocument:
+    Statement:
+      -
+        Effect: "Allow"
+        Action:
+          - "ec2:Describe*"
+        Resource:
+          - "*"
+        Sid: "AllowEC2Describe"

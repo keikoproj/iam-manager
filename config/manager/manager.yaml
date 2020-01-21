@@ -1,6 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  annotations:
+    iks.intuit.com/managed: "false"
   labels:
     control-plane: controller-manager
   name: system
@@ -21,6 +23,8 @@ spec:
     metadata:
       labels:
         control-plane: controller-manager
+      annotations:
+        iam.amazonaws.com/role: k8s-cluster-iam-manager-role
     spec:
       containers:
       - command:

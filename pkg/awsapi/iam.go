@@ -24,8 +24,8 @@ type IAMIface interface {
 }
 
 const (
-	iamTagKey                          = "managedBy"
-	iamTagValue                        = "iam-manager"
+	iamTagKey   = "managedBy"
+	iamTagValue = "iam-manager"
 )
 
 var IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
@@ -96,7 +96,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		} else {
 			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
 			if strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "AccessDenied") {
-				_ := i.AddPermissionBoundary(ctx, req)
+				i.AddPermissionBoundary(ctx, req)
 			}
 
 		}
@@ -155,9 +155,9 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 }
 
 //AddPermissionBoundary adds permission boundary to the existing roles
-func (i *IAM)AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
+func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
 	input := &iam.PutRolePermissionsBoundaryInput{
-		RoleName: aws.String(req.Name),
+		RoleName:            aws.String(req.Name),
 		PermissionsBoundary: aws.String(IamManagedPermissionBoundaryPolicy),
 	}
 

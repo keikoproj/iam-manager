@@ -22,7 +22,7 @@ mock:
 	done
 
 # Run tests
-test: mock generate fmt vet manifests
+test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary

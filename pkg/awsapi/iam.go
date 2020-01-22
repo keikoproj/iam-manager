@@ -215,10 +215,12 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
-
+			fmt.Println("error in update role"+err.Error())
 			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
 			if strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "AccessDenied") {
+				//Update the tag
+				i.TagRole(ctx, req)
+
 				i.AddPermissionBoundary(ctx, req)
 			}
 		}

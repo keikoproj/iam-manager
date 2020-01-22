@@ -130,14 +130,16 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 	switch iamRole.Status.State {
 
 	case "", iammanagerv1alpha1.CreateError:
-		if iamRole.Status.RetryCount != 0 {
-			status.RetryCount = iamRole.Status.RetryCount + 1
-		}
+		// why check with 0?
+		//if iamRole.Status.RetryCount != 0 {
+		//	status.RetryCount = iamRole.Status.RetryCount + 1
+		//}
 		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateInProgress)
 		//This should be zero day use case
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
+			status.RetryCount = iamRole.Status.RetryCount + 1
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateError)
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}
@@ -145,14 +147,15 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 	case iammanagerv1alpha1.Ready, iammanagerv1alpha1.UpdateError:
 		//This means its an update request
 		log.Info("lets overwrite iam pol")
-		if iamRole.Status.RetryCount != 0 {
-			status.RetryCount = iamRole.Status.RetryCount + 1
-		}
+		//if iamRole.Status.RetryCount != 0 {
+		//	status.RetryCount = iamRole.Status.RetryCount + 1
+		//}
 		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateInprogress)
 		//This should be zero day use case
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
+			status.RetryCount = iamRole.Status.RetryCount + 1
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateError)
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}

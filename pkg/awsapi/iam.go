@@ -93,12 +93,6 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 			default:
 				fmt.Println(aerr.Error())
 			}
-		} else {
-			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
-			if strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "AccessDenied") {
-				i.AddPermissionBoundary(ctx, req)
-			}
-
 		}
 		return nil, err
 	}
@@ -222,6 +216,11 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
 			fmt.Println(err.Error())
+
+			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
+			if strings.Contains(err.Error(), "403") || strings.Contains(err.Error(), "AccessDenied") {
+				i.AddPermissionBoundary(ctx, req)
+			}
 		}
 		return nil, err
 	}

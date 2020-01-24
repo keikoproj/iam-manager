@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/keikoproj/iam-manager/internal/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -43,7 +43,7 @@ type IamroleReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
+//// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -130,30 +130,41 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 	switch iamRole.Status.State {
 
 	case "", iammanagerv1alpha1.CreateError:
-		if iamRole.Status.RetryCount != 0 {
-			status.RetryCount = iamRole.Status.RetryCount + 1
-		}
+		// why check with 0?
+		//if iamRole.Status.RetryCount != 0 {
+		//	status.RetryCount = iamRole.Status.RetryCount + 1
+		//}
 		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateInProgress)
 		//This should be zero day use case
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
+			status.RetryCount = iamRole.Status.RetryCount + 1
+			log.Info("retry count error %d", "count", status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateError)
+			if status.RetryCount > 3 {
+				break
+			}
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}
 
 	case iammanagerv1alpha1.Ready, iammanagerv1alpha1.UpdateError:
 		//This means its an update request
 		log.Info("lets overwrite iam pol")
-		if iamRole.Status.RetryCount != 0 {
-			status.RetryCount = iamRole.Status.RetryCount + 1
-		}
+		//if iamRole.Status.RetryCount != 0 {
+		//	status.RetryCount = iamRole.Status.RetryCount + 1
+		//}
 		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateInprogress)
 		//This should be zero day use case
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
+			status.RetryCount = iamRole.Status.RetryCount + 1
+			log.Info("retry count", "count", status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateError)
+			if status.RetryCount > 3 {
+				break
+			}
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}
 

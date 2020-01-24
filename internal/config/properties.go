@@ -2,7 +2,7 @@ package config
 
 import (
 	"context"
-	"github.com/keikoproj/iam-manager/internal/k8s"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"strings"
 )
 
@@ -10,8 +10,8 @@ const (
 	iamPolicyWhitelist    = "iam.policy.action.prefix.whitelist"
 	iamPolicyBlacklist    = "iam.policy.resource.blacklist"
 	iamPolicyS3Restricted = "iam.policy.s3.restricted.resource"
-	awsAccountId = "aws.accountId"
-	awsMasterRole = "aws.MasterRole"
+	awsAccountId          = "aws.accountId"
+	awsMasterRole         = "aws.MasterRole"
 )
 
 const (
@@ -23,8 +23,8 @@ type Properties struct {
 	AllowedPolicyAction       []string
 	RestrictedPolicyResources []string
 	RestrictedS3Resources     []string
-	AWSAccountId string
-	AWSMasterRole string
+	AWSAccountId              string
+	AWSMasterRole             string
 }
 
 //LoadProperties function loads properties from various sources
@@ -40,8 +40,8 @@ func LoadProperties(ctx context.Context, kClient *k8s.Client, ns string, cmName 
 		AllowedPolicyAction:       allowedActions,
 		RestrictedPolicyResources: restrictedResources,
 		RestrictedS3Resources:     restrictedS3Resources,
-		AWSAccountId: awsAccountId,
-		AWSMasterRole: awsMasterRole,
+		AWSAccountId:              awsAccountId,
+		AWSMasterRole:             awsMasterRole,
 	}
 
 }

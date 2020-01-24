@@ -140,7 +140,11 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
 			status.RetryCount = iamRole.Status.RetryCount + 1
+			log.Info("retry count error %d", "count", status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateError)
+			if status.RetryCount > 3 {
+				break
+			}
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}
 
@@ -156,7 +160,11 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		if err != nil {
 			log.Error(err, "msg", "err", err.Error())
 			status.RetryCount = iamRole.Status.RetryCount + 1
+			log.Info("retry count", "count", status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateError)
+			if status.RetryCount > 3 {
+				break
+			}
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
 		}
 

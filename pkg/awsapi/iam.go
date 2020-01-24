@@ -20,6 +20,7 @@ type IAMIface interface {
 	UpdateRole(ctx context.Context, req IAMRoleRequest)
 	DeleteRole(ctx context.Context, roleName string)
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
+	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest)
 }
 
 const (

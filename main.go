@@ -71,10 +71,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)
 	}
-	if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
-		os.Exit(1)
-	}
+	//if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
+	//	setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
+	//	os.Exit(1)
+	//}
 
 	//Get the client
 	iammanagerv1alpha1.NewWClient()

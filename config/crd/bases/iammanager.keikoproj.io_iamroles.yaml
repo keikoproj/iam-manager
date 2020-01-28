@@ -447,7 +447,7 @@ spec:
               - Statement
               type: object
           required:
-            - PolicyDocument
+          - PolicyDocument
           type: object
         status:
           properties:

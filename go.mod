@@ -8,8 +8,9 @@ require (
 	github.com/aws/aws-sdk-go v1.25.38
 	github.com/go-logr/logr v0.1.0
 	github.com/golang/mock v1.3.1
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
+	github.com/onsi/ginkgo v1.6.0
+	github.com/onsi/gomega v1.4.2
+	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	golang.org/x/tools v0.0.0-20200121210457-b3205ff6fffe // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
@@ -17,5 +18,4 @@ require (
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	sigs.k8s.io/controller-runtime v0.2.2
-	sigs.k8s.io/controller-tools v0.2.1 // indirect
 )

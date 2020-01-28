@@ -9,4 +9,4 @@ data:
   iam.policy.s3.restricted.resource: "*"
   aws.accountId: "000011112222"
   aws.MasterRole: "masters.cluster.k8s.local"
-  aws.managed.policies: "shared.cluster.k8s.local"
+  iam.managed.policies: "shared.cluster.k8s.local"

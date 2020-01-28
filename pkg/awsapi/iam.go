@@ -119,6 +119,10 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	//Attach managed role policy
 	for _, policy := range ManagedPolicies {
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
+		if err != nil {
+			fmt.Printf("Error while attaching managed policy %s: %v", policy, err)
+			return &IAMRoleResponse{}, err
+		}
 	}
 
 	return i.AttachInlineRolePolicy(ctx, req)

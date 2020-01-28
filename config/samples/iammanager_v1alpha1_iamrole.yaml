@@ -1,15 +1,45 @@
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: iamrole-sample
+  name: iamrole-sample2
 spec:
-  # Add fields here
   PolicyDocument:
+    Version: '2012-10-17'
     Statement:
-      -
-        Effect: "Allow"
+      - Effect: Allow
         Action:
-          - "ec2:Describe*"
+          - s3:ListBucket
+        Resource:
+          - arn:aws:s3:::iksm-nmogulla-us-west-2-dev
+      - Effect: Allow
+        Action:
+          - s3:*
+        Resource:
+          - arn:aws:s3:::iksm-nmogulla-us-west-2-dev/*
+          - arn:aws:s3:::ami-query-prd-us-west-2/*
+          - arn:aws:s3:::ami-query-prd-us-east-2/*
+      - Effect: Allow
+        Resource:
+          -  "*"
+        Action:
+          - sts:AssumeRole
+      - Effect: Allow
+        Action:
+          - ec2:Describe*
         Resource:
           - "*"
-        Sid: "AllowEC2Describe"
+      - Effect: Allow
+        Action:
+          - route53:Get*
+          - route53:List*
+          - route53:Create*
+          - route53:Delete*
+          - route53:Change*
+        Resource:
+          - "*"
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:PutObjectAcl
+        Resource:
+          - arn:aws:s3:::intu-oim*

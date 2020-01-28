@@ -17,7 +17,7 @@ package main
 
 import (
 	"flag"
-	"github.com/keikoproj/iam-manager/internal/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"os"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
@@ -71,10 +71,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)
 	}
-	if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
-		os.Exit(1)
-	}
+	//if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
+	//	setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
+	//	os.Exit(1)
+	//}
 
 	//Get the client
 	iammanagerv1alpha1.NewWClient()

@@ -13,6 +13,14 @@ endif
 
 all: manager
 
+.PHONY: mock
+mock:
+	go get -u github.com/golang/mock/mockgen
+	@echo "mockgen is in progess"
+	@for pkg in $(shell go list ./...) ; do \
+		go generate ./... ;\
+	done
+
 # Run tests
 test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out

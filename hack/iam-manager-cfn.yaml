@@ -61,10 +61,12 @@ Resources:
           - Effect: "Allow"
             Action:
               - "iam:AttachRolePolicy"
+              - "iam:AddPermissionBoundary"
               - "iam:CreatePolicy"
               - "iam:DeletePolicy"
               - "iam:DetachRolePolicy"
               - "iam:PutRolePolicy"
+              - "iam:PutRolePermissionsBoundary"
               - "iam:UpdateAssumeRolePolicy"
               - "iam:DeleteRolePolicy"
               - "iam:DeletePolicy"

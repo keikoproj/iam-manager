@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/keikoproj/iam-manager/internal/awsapi"
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/internal/k8s"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

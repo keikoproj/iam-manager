@@ -20,5 +20,5 @@ $ kubectl version -o yaml
 ```
 - controller logs:
 ```
-$ kubectl logs <addon-manager-pod>
+$ kubectl logs <iam-manager>
 ```

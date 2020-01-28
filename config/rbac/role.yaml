@@ -19,10 +19,10 @@ rules:
   - update
   - watch
 - apiGroups:
-  - iammanager.keikoproj.io
+    - iammanager.keikoproj.io
   resources:
-  - iamroles/status
+    - iamroles/status
   verbs:
-  - get
-  - patch
-  - update
+    - get
+    - update
+    - patch

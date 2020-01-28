@@ -2,9 +2,8 @@ package config
 
 import (
 	"context"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"strings"
-
-	"github.com/keikoproj/iam-manager/internal/k8s"
 )
 
 const (

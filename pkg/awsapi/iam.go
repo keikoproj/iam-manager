@@ -1,5 +1,8 @@
 package awsapi
 
+//go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
+//go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
+
 import (
 	"context"
 	"fmt"
@@ -11,12 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 )
 
+//IAMIface defines interface methods
 type IAMIface interface {
 	CreateRole(ctx context.Context, req IAMRoleRequest)
 	GetRole(ctx context.Context, roleName string)
 	UpdateRole(ctx context.Context, req IAMRoleRequest)
 	DeleteRole(ctx context.Context, roleName string)
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
+	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest)
 }
 
 const (
@@ -30,6 +35,7 @@ var (
 	AwsAccountId                       string
 )
 
+//IAMRoleRequest struct
 type IAMRoleRequest struct {
 	Name             string
 	PolicyName       string
@@ -72,17 +78,15 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		return nil, err
 	}
 
+	roleAlreadyExists := false
 	_, err := i.Client.CreateRole(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			// Update the role to the latest spec if it is existed already
 			case iam.ErrCodeEntityAlreadyExistsException:
-				_, err := i.UpdateRole(ctx, req)
-				if err != nil {
-					return nil, err
-				}
-				return &IAMRoleResponse{}, nil
+				roleAlreadyExists = true
+				fmt.Println(iam.ErrCodeEntityAlreadyExistsException, aerr.Error())
 			case iam.ErrCodeLimitExceededException:
 				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
 			case iam.ErrCodeNoSuchEntityException:
@@ -93,11 +97,20 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 				fmt.Println(aerr.Error())
 			}
 		}
-		return nil, err
+		if !roleAlreadyExists {
+			return nil, err
+		}
 	}
 
 	//Attach a tag
 	_, err = i.TagRole(ctx, req)
+
+	if err != nil {
+		return &IAMRoleResponse{}, err
+	}
+
+	//Attach inline role policy
+	err = i.AddPermissionBoundary(ctx, req)
 
 	if err != nil {
 		return &IAMRoleResponse{}, err
@@ -108,10 +121,10 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
 	}
 
-	//Attach inline role policy
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
+//TagRole tags role with appropriate tags
 func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	input := &iam.TagRoleInput{
 		RoleName: aws.String(req.Name),
@@ -133,7 +146,47 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
 			case iam.ErrCodeInvalidInputException:
 				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+			case iam.ErrCodeServiceFailureException:
+				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
 
+		}
+		return &IAMRoleResponse{}, err
+	}
+
+	fmt.Println(result)
+	return &IAMRoleResponse{}, nil
+}
+
+//AddPermissionBoundary adds permission boundary to the existing roles
+func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
+	input := &iam.PutRolePermissionsBoundaryInput{
+		RoleName:            aws.String(req.Name),
+		PermissionsBoundary: aws.String(IamManagedPermissionBoundaryPolicy),
+	}
+
+	if err := input.Validate(); err != nil {
+		return err
+	}
+
+	_, err := i.Client.PutRolePermissionsBoundary(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+			case iam.ErrCodeInvalidInputException:
+				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+			case iam.ErrCodeUnmodifiableEntityException:
+				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+			case iam.ErrCodePolicyNotAttachableException:
+				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
 			case iam.ErrCodeServiceFailureException:
 				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
 			default:
@@ -144,11 +197,10 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 			// Message from an error.
 			fmt.Println(err.Error())
 		}
-		return &IAMRoleResponse{}, err
+		return err
 	}
 
-	fmt.Println(result)
-	return &IAMRoleResponse{}, nil
+	return nil
 }
 
 //UpdateRole updates role
@@ -158,11 +210,9 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		MaxSessionDuration: aws.Int64(req.SessionDuration),
 		Description:        aws.String(req.Description),
 	}
-
 	if err := input.Validate(); err != nil {
 		return nil, err
 	}
-
 	_, err := i.Client.UpdateRole(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -174,16 +224,16 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 			case iam.ErrCodeServiceFailureException:
 				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
 			default:
-				fmt.Println(aerr.Error())
+				fmt.Println("error in update roles" + err.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			fmt.Println("error in update role" + err.Error())
+			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
 		}
 		return nil, err
 	}
-
 	//If it is already here means update role is successful, lets move on to Update Assume role policy
 	//Lets double check this -- do we want to do this for every update?
 	inputPolicy := &iam.UpdateAssumeRolePolicyInput{
@@ -222,7 +272,6 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 
 //AttachInlineRolePolicy function attaches inline policy to the role
 func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
-
 	input := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(req.Name),
 		PolicyName:     aws.String(req.PolicyName),

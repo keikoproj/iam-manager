@@ -7,28 +7,28 @@ metadata:
   name: iamroles.iammanager.keikoproj.io
 spec:
   additionalPrinterColumns:
-    - JSONPath: .status.state
-      description: current state of the iam role
-      name: State
-      type: string
-    - JSONPath: .status.roleName
-      description: Name of the role
-      name: RoleName
-      type: string
-    - JSONPath: .status.retryCount
-      description: Retry count
-      name: RetryCount
-      type: integer
-    - JSONPath: .metadata.creationTimestamp
-      description: time passed since iamrole creation
-      name: Age
-      type: date
+  - JSONPath: .status.state
+    description: current state of the iam role
+    name: State
+    type: string
+  - JSONPath: .status.roleName
+    description: Name of the role
+    name: RoleName
+    type: string
+  - JSONPath: .status.retryCount
+    description: Retry count
+    name: RetryCount
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    description: time passed since iamrole creation
+    name: Age
+    type: date
   group: iammanager.keikoproj.io
   names:
     kind: Iamrole
     plural: iamroles
     shortNames:
-      - iam
+    - iam
   scope: Namespaced
   subresources:
     status: {}
@@ -152,7 +152,7 @@ spec:
                           this object.
                         type: string
                     required:
-                      - name
+                    - name
                     type: object
                   type: array
                 result:
@@ -284,7 +284,7 @@ spec:
                       type: string
                   type: object
               required:
-                - pending
+              - pending
               type: object
             labels:
               additionalProperties:
@@ -377,10 +377,10 @@ spec:
                     description: 'UID of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#uids'
                     type: string
                 required:
-                  - apiVersion
-                  - kind
-                  - name
-                  - uid
+                - apiVersion
+                - kind
+                - name
+                - uid
                 type: object
               type: array
             resourceVersion:
@@ -420,8 +420,8 @@ spec:
                       Effect:
                         description: Effect on target resource
                         enum:
-                          - Allow
-                          - Deny
+                        - Allow
+                        - Deny
                         type: string
                       Resource:
                         description: Resources defines target resources which IAM
@@ -434,9 +434,9 @@ spec:
                           specific statement action
                         type: string
                     required:
-                      - Effect
-                      - Action
-                      - Resource
+                    - Effect
+                    - Action
+                    - Resource
                     type: object
                   type: array
                 Version:
@@ -444,7 +444,7 @@ spec:
                     value is "2012-10-17"
                   type: string
               required:
-                - Statement
+              - Statement
               type: object
           required:
             - PolicyDocument
@@ -460,13 +460,13 @@ spec:
             state:
               type: string
           required:
-            - retryCount
+          - retryCount
           type: object
       type: object
   versions:
-    - name: v1alpha1
-      served: true
-      storage: true
+  - name: v1alpha1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""

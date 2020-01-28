@@ -151,7 +151,7 @@ spec:
                           this object.
                         type: string
                     required:
-                      - name
+                    - name
                     type: object
                   type: array
                 result:

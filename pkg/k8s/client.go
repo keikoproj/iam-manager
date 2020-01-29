@@ -54,7 +54,6 @@ type Iface interface {
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
-	fmt.Println("Iam at least herereeeeeeeeeeee")
 	iamCR := schema.GroupVersionResource{
 		Group:    "iammanager.keikoproj.io",
 		Version:  "v1alpha1",

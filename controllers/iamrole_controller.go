@@ -19,20 +19,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"time"
-
 	"github.com/go-logr/logr"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/pborman/uuid"
+	"github.com/pkg/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	"net/url"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 )
 
 const (
-	maxRetryCount = 10
+	maxRetryCount = 5
 	finalizerName = "iamrole.finalizers.iammanager.keikoproj.io"
+	requestId     = "request_id"
 )
 
 // IamroleReconciler reconciles a Iamrole object
@@ -43,27 +47,27 @@ type IamroleReconciler struct {
 }
 
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
-//// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
-	log := r.Log.WithValues("iamrole", req.NamespacedName)
-
+	ctx := context.WithValue(context.Background(), requestId, uuid.New())
+	log := r.Log.WithValues("request_id", ctx.Value(requestId), "iamrole", req.NamespacedName)
+	log.Info("Start of the request")
 	//Get the resource
 	var iamRole iammanagerv1alpha1.Iamrole
 
 	if err := r.Get(ctx, req.NamespacedName, &iamRole); err != nil {
-
+		log.Error(err, "unable to get iam resource from api server")
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	log.Info("I got something", "status", iamRole.Status.State)
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	// Isit being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
 		//Lets check if this is very first time use case
 		if !containsString(iamRole.ObjectMeta.Finalizers, finalizerName) {
+			log.Info("New iamrole resource. Adding the finalizer", "finalizer", finalizerName)
 			iamRole.ObjectMeta.Finalizers = append(iamRole.ObjectMeta.Finalizers, finalizerName)
 			r.UpdateMeta(ctx, &iamRole)
 		}
@@ -75,16 +79,18 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if iamRole.Status.RetryCount != 0 {
 			iamRole.Status.RetryCount = iamRole.Status.RetryCount + 1
 		}
-		log.Info("iam role name in delete", "role", roleName)
+		log.Info("Iamrole delete request")
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteInprogress)
 		if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
-			log.Error(err, "msg", "err", err.Error())
+			log.Error(err, "Unable to delete the role", "err", err.Error())
+			//i got to fix this
 			//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
 			//return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteComplete)
 
 		// Ok. Lets delete the finalizer so controller can delete the custom object
+		log.Info("Removing finalizer from Iamrole")
 		iamRole.ObjectMeta.Finalizers = removeString(iamRole.ObjectMeta.Finalizers, finalizerName)
 		r.UpdateMeta(ctx, &iamRole)
 	}
@@ -107,76 +113,97 @@ var roleTrust = `{
 
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
-	log := r.Log.WithValues("id", iamRole.ObjectMeta.UID, "iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
-
+	log := r.Log.WithValues("request_id", ctx.Value(requestId), "iamrole", iamRole.Name)
+	log.Info("And the state is ", "state", iamRole.Status.State)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
-	fmt.Println(string(role))
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	input := awsapi.IAMRoleRequest{
 		Name:             roleName,
-		PolicyName:       fmt.Sprintf("k8s-%s-policy", iamRole.ObjectMeta.Namespace),
-		Description:      "bla bla",
+		PolicyName:       "custom",
+		Description:      "#DO NOT DELETE#. Managed by iam-manager",
 		SessionDuration:  3600,
 		TrustPolicy:      roleTrust,
 		PermissionPolicy: string(role),
 	}
-	status := iammanagerv1alpha1.IamroleStatus{
-		RoleName:   roleName,
-		RetryCount: 0,
-	}
 
-	//I MIGHT NOT NEED THIS WHOLE SWITCH CASE
-	//REVISIT LATER
 	switch iamRole.Status.State {
-
-	case "", iammanagerv1alpha1.CreateError:
-		// why check with 0?
-		//if iamRole.Status.RetryCount != 0 {
-		//	status.RetryCount = iamRole.Status.RetryCount + 1
-		//}
-		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateInProgress)
-		//This should be zero day use case
+	case "":
+		// This is first time use case so lets update the status with create in progress
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{}, iammanagerv1alpha1.CreateInProgress)
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
-			log.Error(err, "msg", "err", err.Error())
-			status.RetryCount = iamRole.Status.RetryCount + 1
-			log.Info("retry count error %d", "count", status.RetryCount)
-			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.CreateError)
-			if status.RetryCount > 3 {
-				break
-			}
-			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
+			log.Error(err, "error in creating a role", "err", err.Error())
+			log.Info("retry count error", "count", iamRole.Status.RetryCount)
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
+			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
+		}
+		//Ok. Successful!!
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
+
+	case iammanagerv1alpha1.CreateInProgress, iammanagerv1alpha1.UpdateInprogress, iammanagerv1alpha1.DeleteInprogress:
+		//Nothing to do.. previous operation is in progress
+		log.Info("reconcile is in progress for the given role")
+		return ctrl.Result{}, nil
+
+	case iammanagerv1alpha1.CreateError, iammanagerv1alpha1.UpdateError:
+		// Check the retry count before proceed further
+		if iamRole.Status.RetryCount > maxRetryCount {
+			// if it exceeds number of retries, lets just keep it in error state and do not retry anymore
+			return ctrl.Result{}, nil
 		}
 
-	case iammanagerv1alpha1.Ready, iammanagerv1alpha1.UpdateError:
-		//This means its an update request
-		log.Info("lets overwrite iam pol")
-		//if iamRole.Status.RetryCount != 0 {
-		//	status.RetryCount = iamRole.Status.RetryCount + 1
-		//}
-		//r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateInprogress)
-		//This should be zero day use case
+		//update the status and retry again
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{}, iammanagerv1alpha1.UpdateInprogress)
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
-			log.Error(err, "msg", "err", err.Error())
-			status.RetryCount = iamRole.Status.RetryCount + 1
-			log.Info("retry count", "count", status.RetryCount)
-			r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.UpdateError)
-			if status.RetryCount > 3 {
-				break
-			}
-			return ctrl.Result{RequeueAfter: 30 * time.Duration(status.RetryCount) * time.Second}, nil
+			// If we are still getting error in retrial, increase the retryCount and requeue it.
+			log.Error(err, "error in creating/updating a role", "err", err.Error())
+			log.Info("retry count error", "count", iamRole.Status.RetryCount)
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
+			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 		}
 
+	case iammanagerv1alpha1.Ready:
+		// This can be update request or a duplicate Requeue for the previous status change to Ready
+
+		// Check with state of the world to figure out if this event is because of status update
+
+		targetPolicy, err := r.IAMClient.GetRolePolicy(ctx, input)
+		if err != nil {
+			// THIS SHOULD NEVER HAPPEN
+			// Just requeue in case if it happens
+			log.Error(err, "error in verifying the status of the iam role with state of the world", "err", err.Error())
+			log.Info("retry count error", "count", iamRole.Status.RetryCount)
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
+			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
+		}
+		if !comparePolicy(ctx, input.PermissionPolicy, *targetPolicy) {
+			// if reached here, it means its an update request
+			log.Info("Update request event. Proceeding with update operation")
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{}, iammanagerv1alpha1.UpdateInprogress)
+			_, err = r.IAMClient.CreateRole(ctx, input)
+			if err != nil {
+				log.Error(err, "error in creating a role", "err", err.Error())
+				r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 1}, iammanagerv1alpha1.UpdateError)
+				return ctrl.Result{RequeueAfter: 30 * time.Duration(1) * time.Second}, nil
+			}
+			//OK. Successful!!
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
+		} else {
+			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
+		}
+
+	default:
+		log.Error(errors.New("Unknown State"), "This should not happen")
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.UpdateError)
+		return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 	}
 
-	// If i reach here, That means it is all good. Lets change the status to Ready
-	status.RetryCount = 0
-	r.UpdateStatus(ctx, iamRole, status, iammanagerv1alpha1.Ready)
-	log.Info("I'm responding back", "status", iamRole.Status.State)
+	log.Info("Successfully reconciled")
 	return ctrl.Result{}, nil
 }
 
+//SetupWithManager sets up manager with controller
 func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&iammanagerv1alpha1.Iamrole{}).
@@ -233,4 +260,18 @@ func ignoreNotFound(err error) error {
 		return nil
 	}
 	return err
+}
+
+func comparePolicy(ctx context.Context, request string, target string) bool {
+	d, _ := url.QueryUnescape(target)
+	dest := iammanagerv1alpha1.PolicyDocument{}
+	json.Unmarshal([]byte(d), &dest)
+
+	req := iammanagerv1alpha1.PolicyDocument{}
+	json.Unmarshal([]byte(request), &req)
+	//compare
+	if reflect.DeepEqual(req, dest) {
+		return true
+	}
+	return false
 }

@@ -13,7 +13,6 @@ endif
 
 all: manager
 
-.PHONY: mock
 mock:
 	go get -u github.com/golang/mock/mockgen
 	@echo "mockgen is in progess"
@@ -22,11 +21,11 @@ mock:
 	done
 
 # Run tests
-test: generate fmt vet manifests
+test: mock generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
-manager: generate fmt vet
+manager: generate fmt vet update
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
@@ -41,6 +40,11 @@ install: manifests
 deploy: manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
+
+# updates the full config yaml file
+update: manifests
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default > hack/iam-manager.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen

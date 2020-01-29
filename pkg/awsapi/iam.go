@@ -339,7 +339,6 @@ func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, e
 	return resp.PolicyDocument, nil
 }
 
-
 // AttachManagedRolePolicy function attaches managed policy to the role
 func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, roleName string) error {
 

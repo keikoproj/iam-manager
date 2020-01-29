@@ -13,7 +13,6 @@ spec:
     kind: Issuer
     name: iam-manager-selfsigned-issuer
   secretName: webhook-server-cert
-  renewBefore: "2159h55m0s"
 ---
 apiVersion: cert-manager.io/v1alpha2
 kind: Issuer

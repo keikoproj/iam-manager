@@ -6,6 +6,7 @@ package awsapi
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -28,7 +29,11 @@ const (
 	iamTagValue = "iam-manager"
 )
 
-var IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
+var (
+	IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
+	ManagedPolicies                    []string
+	AwsAccountId                       string
+)
 
 //IAMRoleRequest struct
 type IAMRoleRequest struct {
@@ -104,10 +109,20 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		return &IAMRoleResponse{}, err
 	}
 
+	//Add permission boundary
 	err = i.AddPermissionBoundary(ctx, req)
 
 	if err != nil {
 		return &IAMRoleResponse{}, err
+	}
+
+	//Attach managed role policy
+	for _, policy := range ManagedPolicies {
+		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
+		if err != nil {
+			fmt.Printf("Error while attaching managed policy %s: %v", policy, err)
+			return &IAMRoleResponse{}, err
+		}
 	}
 
 	return i.AttachInlineRolePolicy(ctx, req)
@@ -256,7 +271,6 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	//Attach the Inline policy
-
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
@@ -325,8 +339,47 @@ func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, e
 	return resp.PolicyDocument, nil
 }
 
+
+// AttachManagedRolePolicy function attaches managed policy to the role
+func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, roleName string) error {
+
+	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
+
+	_, err := i.Client.AttachRolePolicy(&iam.AttachRolePolicyInput{
+		RoleName:  aws.String(roleName),
+		PolicyArn: policyARN,
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeEntityAlreadyExistsException:
+				fmt.Println(iam.ErrCodeEntityAlreadyExistsException, aerr.Error())
+			case iam.ErrCodeLimitExceededException:
+				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+			case iam.ErrCodeNoSuchEntityException:
+				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+			case iam.ErrCodeServiceFailureException:
+				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		}
+		return err
+	}
+	return nil
+}
+
 //DeleteRole function deletes the role in the account
 func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
+
+	// Detach managed policies
+	for _, policy := range ManagedPolicies {
+		if err := i.DetachRolePolicy(ctx, policy, roleName); err != nil {
+			fmt.Printf("Unable to detach the policy %s", policy)
+			return err
+		}
+	}
 
 	//Lets first delete inline policy
 	policyName := fmt.Sprintf("%s-policy", roleName)
@@ -369,6 +422,43 @@ func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleNam
 	}
 
 	result, err := i.Client.DeleteRolePolicy(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				// This is ok
+				return nil
+			case iam.ErrCodeLimitExceededException:
+				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+			case iam.ErrCodeUnmodifiableEntityException:
+				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+			case iam.ErrCodeServiceFailureException:
+				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+		return err
+	}
+
+	fmt.Println(result)
+	return nil
+}
+
+// DetachRolePolicy detaches a managed policy from role
+func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName string) error {
+
+	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
+
+	result, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{
+		PolicyArn: policyARN,
+		RoleName:  aws.String(roleName),
+	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {

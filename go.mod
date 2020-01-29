@@ -7,12 +7,14 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/aws/aws-sdk-go v1.25.38
 	github.com/go-logr/logr v0.1.0
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.0
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/onsi/ginkgo v1.6.0
 	github.com/onsi/gomega v1.4.2
-	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e
-	github.com/sirupsen/logrus v1.4.2 // indirect
-	golang.org/x/tools v0.0.0-20200121210457-b3205ff6fffe // indirect
+	github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c
+	github.com/pkg/errors v0.8.1
+	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/tools v0.0.0-20200129014352-cf670267be10 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d

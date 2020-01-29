@@ -16,11 +16,11 @@ import (
 //IAMIface defines interface methods
 type IAMIface interface {
 	CreateRole(ctx context.Context, req IAMRoleRequest)
-	GetRole(ctx context.Context, roleName string)
 	UpdateRole(ctx context.Context, req IAMRoleRequest)
 	DeleteRole(ctx context.Context, roleName string)
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
 	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest)
+	GetRolePolicy(ctx context.Context, req IAMRoleRequest) bool
 }
 
 const (
@@ -290,6 +290,39 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 		return nil, err
 	}
 	return &IAMRoleResponse{}, nil
+}
+
+//GetRolePolicy gets the role from aws iam
+func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, error) {
+	// First get the iam role policy on the AWS IAM side
+	input := &iam.GetRolePolicyInput{
+		PolicyName: aws.String(req.PolicyName),
+		RoleName:   aws.String(req.Name),
+	}
+
+	if err := input.Validate(); err != nil {
+		//should log the error
+		return nil, err
+	}
+
+	resp, err := i.Client.GetRolePolicy(input)
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+			case iam.ErrCodeServiceFailureException:
+				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		}
+
+		return nil, err
+	}
+
+	return resp.PolicyDocument, nil
 }
 
 //DeleteRole function deletes the role in the account

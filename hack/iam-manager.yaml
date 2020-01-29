@@ -676,8 +676,9 @@ subjects:
 ---
 apiVersion: v1
 data:
-  aws.MasterRole: masters.ops-prim-ppd.cluster.k8s.local
-  aws.accountId: "000065563193"
+  aws.MasterRole: masters.cluster.k8s.local
+  aws.accountId: "000011112222"
+  iam.managed.policies: shared.cluster.k8s.local
   iam.policy.action.prefix.whitelist: s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
   iam.policy.resource.blacklist: kops
   iam.policy.s3.restricted.resource: '*'

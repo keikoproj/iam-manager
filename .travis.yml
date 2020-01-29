@@ -27,11 +27,12 @@ jobs:
       script:
         - make test
         - bash <(curl -s https://codecov.io/bash)
+        - make docker-build
 
     - stage: publish-image
-      if: type IN (push, pull_request)
+      if: type IN (push)
       script:
-        - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - if [ $TRAVIS_EVENT_TYPE = push ]; then export IMG=keikoproj/iam-manager:$TRAVIS_BRANCH; fi
         - make docker-build
         - make docker-push

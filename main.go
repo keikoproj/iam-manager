@@ -79,7 +79,7 @@ func main() {
 	//Get the client
 	iammanagerv1alpha1.NewWClient()
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		setupLog.Info("I'm enabling webhook now")
+		setupLog.Info("Registering webhook")
 		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
 			os.Exit(1)
@@ -88,7 +88,7 @@ func main() {
 
 	// +kubebuilder:scaffold:builder
 
-	setupLog.Info("starting manager")
+	setupLog.Info("Registering controller")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)

@@ -11,10 +11,18 @@ rules:
   resources:
   - iamroles
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - iammanager.keikoproj.io
+  resources:
+  - iamroles/status
+  verbs:
+  - get
+  - update
+  - patch

@@ -339,27 +339,44 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, ro
 //DeleteRole function deletes the role in the account
 func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 
+	managedPolicyList, err := i.Client.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
+		RoleName: aws.String(roleName),
+	})
+	if err != nil {
+		fmt.Printf("Unable to list attached managed policies for role %s", roleName)
+		return err
+	}
+	fmt.Printf("Attached managed for role %s policies are: %v", roleName, managedPolicyList.AttachedPolicies)
+
 	// Detach managed policies
-	for _, policy := range ManagedPolicies {
-		if err := i.DetachRolePolicy(ctx, policy, roleName); err != nil {
-			fmt.Printf("Unable to detach the policy %s", policy)
+	for _, policy := range managedPolicyList.AttachedPolicies {
+		if err := i.DetachRolePolicy(ctx, aws.StringValue(policy.PolicyName), roleName); err != nil {
+			fmt.Printf("Unable to detach the policy %s", aws.StringValue(policy.PolicyName))
 			return err
 		}
 	}
 
-	//Lets first delete inline policy
-	policyName := fmt.Sprintf("%s-policy", roleName)
-	if err := i.DeleteInlinePolicy(ctx, policyName, roleName); err != nil {
-		fmt.Println("Unable to delete the policy")
+	inlinePolicies, err := i.Client.ListRolePolicies(&iam.ListRolePoliciesInput{
+		RoleName: aws.String(roleName),
+	})
+	if err != nil {
+		fmt.Printf("Unable to list inline policies for role %s", roleName)
 		return err
+	}
+
+	// Delete inline policies
+	for _, inlinePolicy := range inlinePolicies.PolicyNames {
+		if err := i.DeleteInlinePolicy(ctx, aws.StringValue(inlinePolicy), roleName); err != nil {
+			fmt.Printf("Unable to delete the policy %s", aws.StringValue(inlinePolicy))
+			return err
+		}
 	}
 
 	input := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
 
-	_, err := i.Client.DeleteRole(input)
-
+	_, err = i.Client.DeleteRole(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -382,6 +399,7 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 
 //DeleteInlinePolicy function deletes inline policy
 func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleName string) error {
+	fmt.Printf("Deleting inline policy %s", policyName)
 	input := &iam.DeleteRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
@@ -416,9 +434,10 @@ func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleNam
 	return nil
 }
 
-// DetachRolePolicy detaches a managed policy from role
+// DetachRolePolicy detaches a policy from role
 func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName string) error {
 
+	fmt.Println("Detaching role policy: ", policyName)
 	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
 
 	result, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{

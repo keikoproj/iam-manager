@@ -92,6 +92,7 @@ const (
 	UpdateError      State = "UpdateError"
 
 	DeleteInprogress State = "DeleteInprogress"
+	DeleteError      State = "DeleteError"
 
 	Ready State = "Ready"
 )

@@ -16,8 +16,10 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/log"
 	"os"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
@@ -26,13 +28,12 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
+	//setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
@@ -45,12 +46,15 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var debug bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&debug, "debug", false, "Enable Debug?")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.Logger(true))
+	log.New()
+	log := log.Logger(context.Background(), "main", "setup")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
@@ -59,38 +63,34 @@ func main() {
 		Port:               9443,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
+	log.V(1).Info("Setting up reconciler with manager")
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
-		Log:       ctrl.Log.WithName("controllers").WithName("Iamrole"),
 		IAMClient: awsapi.New(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Iamrole")
+		log.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)
 	}
-	//if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
-	//	setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
-	//	os.Exit(1)
-	//}
 
 	//Get the client
 	iammanagerv1alpha1.NewWClient()
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		setupLog.Info("Registering webhook")
+		log.Info("Registering webhook")
 		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "Iamrole")
+			log.Error(err, "unable to create webhook", "webhook", "Iamrole")
 			os.Exit(1)
 		}
 	}
 
 	// +kubebuilder:scaffold:builder
 
-	setupLog.Info("Registering controller")
+	log.Info("Registering controller")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		log.Error(err, "problem running manager")
 		os.Exit(1)
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/keikoproj/iam-manager/pkg/log"
 )
 
 //IAMIface defines interface methods
@@ -65,7 +66,9 @@ func New() *IAM {
 
 // CreateRole creates/updates the role
 func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
-
+	log := log.Logger(ctx, "awsapi", "iam", "CreateRole")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(req.TrustPolicy),
 		RoleName:                 aws.String(req.Name),
@@ -75,6 +78,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		return nil, err
 	}
 
@@ -86,15 +90,15 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 			// Update the role to the latest spec if it is existed already
 			case iam.ErrCodeEntityAlreadyExistsException:
 				roleAlreadyExists = true
-				fmt.Println(iam.ErrCodeEntityAlreadyExistsException, aerr.Error())
+				log.Info(iam.ErrCodeEntityAlreadyExistsException)
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		}
 		if !roleAlreadyExists {
@@ -103,6 +107,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	//Attach a tag
+	log.V(1).Info("Attaching Tag")
 	_, err = i.TagRole(ctx, req)
 
 	if err != nil {
@@ -110,6 +115,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	//Add permission boundary
+	log.V(1).Info("Attaching Permission Boundary")
 	err = i.AddPermissionBoundary(ctx, req)
 
 	if err != nil {
@@ -117,19 +123,24 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	//Attach managed role policy
+	log.V(1).Info("Attaching Managed policies")
 	for _, policy := range ManagedPolicies {
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
 		if err != nil {
-			fmt.Printf("Error while attaching managed policy %s: %v", policy, err)
+			log.Error(err, "Error while attaching managed policy", "policy", policy)
 			return &IAMRoleResponse{}, err
 		}
 	}
 
+	log.V(1).Info("Attaching Inline role policies")
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
 //TagRole tags role with appropriate tags
 func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "TagRole")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	input := &iam.TagRoleInput{
 		RoleName: aws.String(req.Name),
 		Tags: []*iam.Tag{
@@ -140,42 +151,46 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 		},
 	}
 
-	result, err := i.Client.TagRole(input)
+	_, err := i.Client.TagRole(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeInvalidInputException:
-				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+				log.Error(err, iam.ErrCodeInvalidInputException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err, err.Error())
 
 		}
 		return &IAMRoleResponse{}, err
 	}
 
-	fmt.Println(result)
+	log.V(1).Info("Successfully completed TagRole call")
 	return &IAMRoleResponse{}, nil
 }
 
 //AddPermissionBoundary adds permission boundary to the existing roles
 func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
+	log := log.Logger(ctx, "awsapi", "iam", "AddPermissionBoundary")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	input := &iam.PutRolePermissionsBoundaryInput{
 		RoleName:            aws.String(req.Name),
 		PermissionsBoundary: aws.String(IamManagedPermissionBoundaryPolicy),
 	}
 
 	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		return err
 	}
 
@@ -184,37 +199,42 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeInvalidInputException:
-				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+				log.Error(err, iam.ErrCodeInvalidInputException)
 			case iam.ErrCodeUnmodifiableEntityException:
-				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeUnmodifiableEntityException)
 			case iam.ErrCodePolicyNotAttachableException:
-				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
+				log.Error(err, iam.ErrCodePolicyNotAttachableException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err, err.Error())
 		}
 		return err
 	}
 
+	log.V(1).Info("Successfuly added permission boundary")
 	return nil
 }
 
 //UpdateRole updates role
 func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "UpdateRole")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	input := &iam.UpdateRoleInput{
 		RoleName:           aws.String(req.Name),
 		MaxSessionDuration: aws.Int64(req.SessionDuration),
 		Description:        aws.String(req.Description),
 	}
 	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		return nil, err
 	}
 	_, err := i.Client.UpdateRole(input)
@@ -222,30 +242,33 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println("error in update roles" + err.Error())
+				log.Error(err, "error in update roles")
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println("error in update role" + err.Error())
+			log.Error(err, "error in update role")
 			//If access denied, one use case would be it is an existing role and we need to first attach permission boundary
 		}
 		return nil, err
 	}
 	//If it is already here means update role is successful, lets move on to Update Assume role policy
 	//Lets double check this -- do we want to do this for every update?
+	log.V(1).Info("Initiating api call", "api", "UpdateAssumeRolePolicy")
+
 	inputPolicy := &iam.UpdateAssumeRolePolicyInput{
 		RoleName:       aws.String(req.Name),
 		PolicyDocument: aws.String(req.TrustPolicy),
 	}
 
 	if err := inputPolicy.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		return nil, err
 	}
 
@@ -254,28 +277,32 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err, err.Error())
 		}
 		return nil, err
 	}
 
 	//Attach the Inline policy
+	log.V(1).Info("AssumeRole Policy is successfully updated")
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
 //AttachInlineRolePolicy function attaches inline policy to the role
 func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "AttachInlineRolePolicy")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	input := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(req.Name),
 		PolicyName:     aws.String(req.PolicyName),
@@ -283,6 +310,7 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 	}
 
 	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		return nil, err
 	}
 	_, err := i.Client.PutRolePolicy(input)
@@ -290,24 +318,28 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeEntityAlreadyExistsException:
-				fmt.Println(iam.ErrCodeEntityAlreadyExistsException, aerr.Error())
+				log.Error(err, iam.ErrCodeEntityAlreadyExistsException)
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		}
 		return nil, err
 	}
+	log.V(1).Info("Successfully completed attaching InlineRolePolicy")
 	return &IAMRoleResponse{}, nil
 }
 
 //GetRolePolicy gets the role from aws iam
 func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "GetRolePolicy")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
 	// First get the iam role policy on the AWS IAM side
 	input := &iam.GetRolePolicyInput{
 		PolicyName: aws.String(req.PolicyName),
@@ -315,6 +347,7 @@ func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, e
 	}
 
 	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
 		//should log the error
 		return nil, err
 	}
@@ -325,23 +358,26 @@ func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, e
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		}
 
 		return nil, err
 	}
+	log.V(1).Info("Successfully able to get the policy")
 
 	return resp.PolicyDocument, nil
 }
 
 // AttachManagedRolePolicy function attaches managed policy to the role
 func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, roleName string) error {
-
+	log := log.Logger(ctx, "awsapi", "iam", "AttachManagedRolePolicy")
+	log.WithValues("roleName", roleName, "policyName", policyName)
+	log.V(1).Info("Initiating api call")
 	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
 
 	_, err := i.Client.AttachRolePolicy(&iam.AttachRolePolicyInput{
@@ -353,38 +389,43 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, ro
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeEntityAlreadyExistsException:
-				fmt.Println(iam.ErrCodeEntityAlreadyExistsException, aerr.Error())
+				log.Error(err, iam.ErrCodeEntityAlreadyExistsException)
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		}
 		return err
 	}
+	log.V(1).Info("Successfully attached managed policies")
 	return nil
 }
 
 //DeleteRole function deletes the role in the account
 func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
+	log := log.Logger(ctx, "awsapi", "iam", "DeleteRole")
+	log.WithValues("roleName", roleName)
+	log.V(1).Info("Initiating api call")
 
 	managedPolicyList, err := i.Client.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
 		RoleName: aws.String(roleName),
 	})
+
 	if err != nil {
-		fmt.Printf("Unable to list attached managed policies for role %s", roleName)
+		log.Error(err, "Unable to list attached managed policies for role")
 		return err
 	}
-	fmt.Printf("Attached managed for role %s policies are: %v", roleName, managedPolicyList.AttachedPolicies)
+	log.V(1).Info("Attached managed for role", "policyList", managedPolicyList.AttachedPolicies)
 
 	// Detach managed policies
 	for _, policy := range managedPolicyList.AttachedPolicies {
 		if err := i.DetachRolePolicy(ctx, aws.StringValue(policy.PolicyName), roleName); err != nil {
-			fmt.Printf("Unable to detach the policy %s", aws.StringValue(policy.PolicyName))
+			log.Error(err, "Unable to delete the policy", "policyName", aws.StringValue(policy.PolicyName))
 			return err
 		}
 	}
@@ -393,14 +434,14 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
-		fmt.Printf("Unable to list inline policies for role %s", roleName)
+		log.Error(err, "Unable to list inline policies for role")
 		return err
 	}
 
 	// Delete inline policies
 	for _, inlinePolicy := range inlinePolicies.PolicyNames {
 		if err := i.DeleteInlinePolicy(ctx, aws.StringValue(inlinePolicy), roleName); err != nil {
-			fmt.Printf("Unable to delete the policy %s", aws.StringValue(inlinePolicy))
+			log.Error(err, "Unable to delete the policy", "policyName", aws.StringValue(inlinePolicy))
 			return err
 		}
 	}
@@ -414,66 +455,72 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
 				//This is ok
 				err = nil
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.V(1).Info(iam.ErrCodeNoSuchEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		}
 		return err
 	}
+	log.V(1).Info("Successfully deleted the role")
 	return nil
 }
 
 //DeleteInlinePolicy function deletes inline policy
 func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleName string) error {
-	fmt.Printf("Deleting inline policy %s", policyName)
+	log := log.Logger(ctx, "awsapi", "iam", "DeleteInlinePolicy")
+	log.WithValues("roleName", roleName, "policyName", policyName)
+	log.V(1).Info("Initiating api call")
+
 	input := &iam.DeleteRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
 	}
 
-	result, err := i.Client.DeleteRolePolicy(input)
+	_, err := i.Client.DeleteRolePolicy(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.V(1).Info(iam.ErrCodeNoSuchEntityException)
 				// This is ok
 				return nil
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeUnmodifiableEntityException:
-				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeUnmodifiableEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err, err.Error())
 		}
 		return err
 	}
 
-	fmt.Println(result)
+	log.V(1).Info("Successfully deleted inline policy")
 	return nil
 }
 
 // DetachRolePolicy detaches a policy from role
 func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName string) error {
+	log := log.Logger(ctx, "awsapi", "iam", "DetachRolePolicy")
+	log.WithValues("roleName", roleName, "policyName", policyName)
+	log.V(1).Info("Initiating api call")
 
-	fmt.Println("Detaching role policy: ", policyName)
 	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
 
-	result, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{
+	_, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{
 		PolicyArn: policyARN,
 		RoleName:  aws.String(roleName),
 	})
@@ -481,26 +528,26 @@ func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName 
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				fmt.Println(iam.ErrCodeNoSuchEntityException, aerr.Error())
+				log.V(1).Info(iam.ErrCodeNoSuchEntityException)
 				// This is ok
 				return nil
 			case iam.ErrCodeLimitExceededException:
-				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeUnmodifiableEntityException:
-				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+				log.Error(err, iam.ErrCodeUnmodifiableEntityException)
 			case iam.ErrCodeServiceFailureException:
-				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
+				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:
-				fmt.Println(aerr.Error())
+				log.Error(err, aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			log.Error(err, err.Error())
 		}
 		return err
 	}
 
-	fmt.Println(result)
+	log.V(1).Info("Successfully detached policy")
 	return nil
 }

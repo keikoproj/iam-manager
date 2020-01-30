@@ -2,7 +2,7 @@ package k8s
 
 import (
 	"context"
-	"fmt"
+	"github.com/keikoproj/iam-manager/pkg/log"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
@@ -54,6 +54,9 @@ type Iface interface {
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
+	log := log.Logger(ctx, "k8s", "client", "IamrolesCount")
+	log.WithValues("namespace", ns)
+	log.V(1).Info("list api call")
 	iamCR := schema.GroupVersionResource{
 		Group:    "iammanager.keikoproj.io",
 		Version:  "v1alpha1",
@@ -62,17 +65,20 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 
 	roleList, err := c.dCl.Resource(iamCR).Namespace(ns).List(metav1.ListOptions{})
 	if err != nil {
-		fmt.Printf("error = %s\n", err.Error())
+		log.Error(err, "unable to list iamroles resources")
 		return 0, err
 	}
-	fmt.Printf("Total number of roles = %d\n", len(roleList.Items))
+	log.Info("Total number of roles", "count", len(roleList.Items))
 	return len(roleList.Items), nil
 }
 
 func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap {
+	log := log.Logger(ctx, "k8s", "client", "GetConfigMap")
+	log.WithValues("namespace", ns)
+	log.Info("Retrieving config map")
 	res, err := c.cl.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
-		fmt.Printf("error = %s\n", err.Error())
+		log.Error(err, "unable to get config map")
 		panic(err)
 	}
 

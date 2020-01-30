@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
+	"github.com/keikoproj/iam-manager/pkg/log"
 	"strings"
 )
 
@@ -31,6 +32,10 @@ type Properties struct {
 
 //LoadProperties function loads properties from various sources
 func LoadProperties(ctx context.Context, kClient *k8s.Client, ns string, cmName string) *Properties {
+	log := log.Logger(ctx, "config", "LoadProperties")
+	log.WithValues("namespace", ns)
+	log.Info("loading properties")
+
 	res := kClient.GetConfigMap(ctx, ns, cmName)
 	allowedActions := strings.Split(res.Data[iamPolicyWhitelist], separator)
 	restrictedResources := strings.Split(res.Data[iamPolicyBlacklist], separator)

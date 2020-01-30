@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/aws/aws-sdk-go v1.25.38
 	github.com/go-logr/logr v0.1.0
-	github.com/golang/mock v1.4.0
 	github.com/onsi/ginkgo v1.6.0
 	github.com/onsi/gomega v1.4.2
 	github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c

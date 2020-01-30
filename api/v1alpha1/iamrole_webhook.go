@@ -18,6 +18,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"github.com/keikoproj/iam-manager/pkg/log"
 	"strings"
 
 	"github.com/keikoproj/iam-manager/internal/config"
@@ -44,9 +45,11 @@ var wClient *k8s.Client
 var props *config.Properties
 
 func NewWClient() {
-	fmt.Println("setting up k8s client")
+	log := log.Logger(context.Background(), "v1alpha1", "LoadProperties")
+	log.Info("loading k8s client")
 	k8sClient, err := k8s.NewK8sClient()
 	if err != nil {
+		log.Error(err, "unable to create new k8s client")
 		panic(err)
 	}
 	wClient = k8sClient
@@ -73,7 +76,8 @@ var _ webhook.Defaulter = &Iamrole{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Iamrole) Default() {
-	iamrolelog.Info("default", "name", r.Name)
+	log := log.Logger(context.Background(), "v1alpha1", "Default")
+	log.Info("setting default version", "name", r.Name)
 
 	//Set the default value for Version
 	if r.Spec.PolicyDocument.Version == "" {
@@ -88,27 +92,32 @@ var _ webhook.Validator = &Iamrole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateCreate() error {
-	iamrolelog.Info("validate create", "name", r.Name)
+	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	log.Info("validating create request", "name", r.Name)
 
 	return r.validateIAMPolicy(false)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateUpdate(old runtime.Object) error {
-	iamrolelog.Info("validate update", "name", r.Name)
+	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	log.Info("validate update", "name", r.Name)
 
 	return r.validateIAMPolicy(true)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateDelete() error {
-	iamrolelog.Info("validate delete", "name", r.Name)
+	log := log.Logger(context.Background(), "v1alpha1", "ValidateDelete")
+	log.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }
 
 func (r *Iamrole) validateIAMPolicy(isItUpdate bool) error {
+	log := log.Logger(context.Background(), "v1alpha1", "validateIAMPolicy")
+	log.Info("validating IAM policy", "name", r.Name)
 	var allErrs field.ErrorList
 	if err := r.validateCustomResourceName(); err != nil {
 		allErrs = append(allErrs, err)

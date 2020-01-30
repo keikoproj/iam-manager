@@ -19,8 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-logr/logr"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	maxRetryCount = 5
+	maxRetryCount = 100
 	finalizerName = "iamrole.finalizers.iammanager.keikoproj.io"
 	requestId     = "request_id"
 )
@@ -42,7 +42,6 @@ const (
 // IamroleReconciler reconciles a Iamrole object
 type IamroleReconciler struct {
 	client.Client
-	Log       logr.Logger
 	IAMClient *awsapi.IAM
 }
 
@@ -51,13 +50,14 @@ type IamroleReconciler struct {
 
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.WithValue(context.Background(), requestId, uuid.New())
-	log := r.Log.WithValues("request_id", ctx.Value(requestId), "iamrole", req.NamespacedName)
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
+	log.WithValues("iamrole", req.NamespacedName)
 	log.Info("Start of the request")
 	//Get the resource
 	var iamRole iammanagerv1alpha1.Iamrole
 
 	if err := r.Get(ctx, req.NamespacedName, &iamRole); err != nil {
-		log.Error(err, "unable to get iam resource from api server")
+		log.Error(err, "unable to get iam resource from api server. ignoring it as the event will be back once its available")
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
@@ -80,12 +80,12 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			iamRole.Status.RetryCount = iamRole.Status.RetryCount + 1
 		}
 		log.Info("Iamrole delete request")
-		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteInprogress)
+		r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteInprogress)
 		if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
-			log.Error(err, "Unable to delete the role", "err", err.Error())
+			log.Error(err, "Unable to delete the role")
 			//i got to fix this
-			//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
-			//return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteComplete)
 
@@ -113,8 +113,9 @@ var roleTrust = `{
 
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
-	log := r.Log.WithValues("request_id", ctx.Value(requestId), "iamrole", iamRole.Name)
-	log.Info("And the state is ", "state", iamRole.Status.State)
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
+	log.WithValues("iamrole", iamRole.Name)
+	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	input := awsapi.IAMRoleRequest{
@@ -132,7 +133,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{}, iammanagerv1alpha1.CreateInProgress)
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
-			log.Error(err, "error in creating a role", "err", err.Error())
+			log.Error(err, "error in creating a role")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
@@ -157,11 +158,14 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			// If we are still getting error in retrial, increase the retryCount and requeue it.
-			log.Error(err, "error in creating/updating a role", "err", err.Error())
+			log.Error(err, "error in creating/updating a role")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 		}
+
+		//Ok. Successful!!
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
 
 	case iammanagerv1alpha1.Ready:
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
@@ -172,7 +176,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		if err != nil {
 			// THIS SHOULD NEVER HAPPEN
 			// Just requeue in case if it happens
-			log.Error(err, "error in verifying the status of the iam role with state of the world", "err", err.Error())
+			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
@@ -183,7 +187,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{}, iammanagerv1alpha1.UpdateInprogress)
 			_, err = r.IAMClient.CreateRole(ctx, input)
 			if err != nil {
-				log.Error(err, "error in creating a role", "err", err.Error())
+				log.Error(err, "error in creating a role")
 				r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 1}, iammanagerv1alpha1.UpdateError)
 				return ctrl.Result{RequeueAfter: 30 * time.Duration(1) * time.Second}, nil
 			}
@@ -212,20 +216,22 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 //UpdateStatus function updates the status based on the process step
 func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, state iammanagerv1alpha1.State) {
-	log := r.Log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
+	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
 	status.State = state
 	iamRole.Status = status
 	if err := r.Status().Update(ctx, iamRole); err != nil {
-		log.Error(err, "Unable to update status", "err", err.Error(), "status", state)
+		log.Error(err, "Unable to update status", "status", state)
 		panic(err)
 	}
 }
 
 //UpdateMeta function updates the metadata (mostly finalizers in this case)
 func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) {
-	log := r.Log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
+	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
 	if err := r.Update(ctx, iamRole); err != nil {
-		log.Error(err, "Unable to update object metadata (finalizer)", "err", err.Error())
+		log.Error(err, "Unable to update object metadata (finalizer)")
 		panic(err)
 	}
 }
@@ -263,6 +269,8 @@ func ignoreNotFound(err error) error {
 }
 
 func comparePolicy(ctx context.Context, request string, target string) bool {
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "comparePolicy")
+
 	d, _ := url.QueryUnescape(target)
 	dest := iammanagerv1alpha1.PolicyDocument{}
 	json.Unmarshal([]byte(d), &dest)
@@ -271,6 +279,7 @@ func comparePolicy(ctx context.Context, request string, target string) bool {
 	json.Unmarshal([]byte(request), &req)
 	//compare
 	if reflect.DeepEqual(req, dest) {
+		log.Info("input policy and target policy are equal")
 		return true
 	}
 	return false

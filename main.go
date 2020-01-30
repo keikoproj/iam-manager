@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
+	scheme = runtime.NewScheme()
 	//setupLog = ctrl.Log.WithName("setup")
 )
 
@@ -70,7 +70,7 @@ func main() {
 	log.V(1).Info("Setting up reconciler with manager")
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
- 		IAMClient: awsapi.New(),
+		IAMClient: awsapi.New(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)

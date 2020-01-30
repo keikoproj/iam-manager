@@ -65,7 +65,7 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 
 	roleList, err := c.dCl.Resource(iamCR).Namespace(ns).List(metav1.ListOptions{})
 	if err != nil {
-		log.Error(err,"unable to list iamroles resources")
+		log.Error(err, "unable to list iamroles resources")
 		return 0, err
 	}
 	log.Info("Total number of roles", "count", len(roleList.Items))
@@ -78,7 +78,7 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	log.Info("Retrieving config map")
 	res, err := c.cl.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
 	if err != nil {
-		log.Error(err,"unable to get config map")
+		log.Error(err, "unable to get config map")
 		panic(err)
 	}
 

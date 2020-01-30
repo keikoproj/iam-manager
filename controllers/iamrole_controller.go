@@ -51,7 +51,7 @@ type IamroleReconciler struct {
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.WithValue(context.Background(), requestId, uuid.New())
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
-	log.WithValues( "iamrole", req.NamespacedName)
+	log.WithValues("iamrole", req.NamespacedName)
 	log.Info("Start of the request")
 	//Get the resource
 	var iamRole iammanagerv1alpha1.Iamrole
@@ -80,12 +80,12 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			iamRole.Status.RetryCount = iamRole.Status.RetryCount + 1
 		}
 		log.Info("Iamrole delete request")
-		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteInprogress)
+		r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteInprogress)
 		if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 			log.Error(err, "Unable to delete the role")
 			//i got to fix this
-			//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
-			//return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteComplete)
 

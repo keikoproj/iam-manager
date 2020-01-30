@@ -13,7 +13,6 @@ endif
 
 all: manager
 
-.PHONY: mock
 mock:
 	go get -u github.com/golang/mock/mockgen
 	@echo "mockgen is in progess"

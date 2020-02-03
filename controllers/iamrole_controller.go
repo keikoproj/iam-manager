@@ -49,6 +49,12 @@ type IamroleReconciler struct {
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	ctx := context.WithValue(context.Background(), requestId, uuid.New())
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
 	log.WithValues("iamrole", req.NamespacedName)
@@ -57,7 +63,6 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	var iamRole iammanagerv1alpha1.Iamrole
 
 	if err := r.Get(ctx, req.NamespacedName, &iamRole); err != nil {
-		log.Error(err, "unable to get iam resource from api server. ignoring it as the event will be back once its available")
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
@@ -93,6 +98,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		log.Info("Removing finalizer from Iamrole")
 		iamRole.ObjectMeta.Finalizers = removeString(iamRole.ObjectMeta.Finalizers, finalizerName)
 		r.UpdateMeta(ctx, &iamRole)
+		log.Info("Successfully deleted iam role")
 	}
 
 	return ctrl.Result{}, nil

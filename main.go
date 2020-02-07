@@ -18,6 +18,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"os"
@@ -55,6 +56,8 @@ func main() {
 
 	log.New()
 	log := log.Logger(context.Background(), "main", "setup")
+
+	go config.RunConfigMapInformer(context.Background())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,

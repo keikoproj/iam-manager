@@ -4,53 +4,84 @@ import (
 	"context"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/cache"
 	"strings"
 )
 
-const (
-	iamPolicyWhitelist    = "iam.policy.action.prefix.whitelist"
-	iamPolicyBlacklist    = "iam.policy.resource.blacklist"
-	iamPolicyS3Restricted = "iam.policy.s3.restricted.resource"
-	awsAccountId          = "aws.accountId"
-	awsMasterRole         = "aws.MasterRole"
-	managedPolicies       = "iam.managed.policies"
-)
+var Props *Properties
 
-const (
-	separator = ","
-)
-
-//Properties struct loads the properties
 type Properties struct {
-	AllowedPolicyAction       []string
-	RestrictedPolicyResources []string
-	RestrictedS3Resources     []string
-	AWSAccountId              string
-	AWSMasterRole             string
-	ManagedPolicies           []string
+	allowedPolicyAction       []string
+	restrictedPolicyResources []string
+	restrictedS3Resources     []string
+	awsAccountID              string
+	awsMasterRole             string
+	managedPolicies           []string
 }
 
-//LoadProperties function loads properties from various sources
-func LoadProperties(ctx context.Context, kClient *k8s.Client, ns string, cmName string) *Properties {
-	log := log.Logger(ctx, "config", "LoadProperties")
-	log.WithValues("namespace", ns)
-	log.Info("loading properties")
+func LoadProperties(cm *v1.ConfigMap) {
+	allowedPolicyAction := strings.Split(cm.Data[propertyIamPolicyWhitelist], separator)
+	restrictedPolicyResources := strings.Split(cm.Data[propertyIamPolicyBlacklist], separator)
+	restrictedS3Resources := strings.Split(cm.Data[propertyIamPolicyS3Restricted], separator)
+	managedPolicies := strings.Split(cm.Data[propertyManagedPolicies], separator)
+	awsAccountID := cm.Data[propertyAwsAccountID]
+	awsMasterRole := cm.Data[propertyAwsMasterRole]
 
-	res := kClient.GetConfigMap(ctx, ns, cmName)
-	allowedActions := strings.Split(res.Data[iamPolicyWhitelist], separator)
-	restrictedResources := strings.Split(res.Data[iamPolicyBlacklist], separator)
-	restrictedS3Resources := strings.Split(res.Data[iamPolicyS3Restricted], separator)
-	managedPolicies := strings.Split(res.Data[managedPolicies], separator)
-	awsAccountId := res.Data[awsAccountId]
-	awsMasterRole := res.Data[awsMasterRole]
-
-	return &Properties{
-		AllowedPolicyAction:       allowedActions,
-		RestrictedPolicyResources: restrictedResources,
-		RestrictedS3Resources:     restrictedS3Resources,
-		AWSAccountId:              awsAccountId,
-		AWSMasterRole:             awsMasterRole,
-		ManagedPolicies:           managedPolicies,
+	Props = &Properties{
+		allowedPolicyAction:       allowedPolicyAction,
+		restrictedPolicyResources: restrictedPolicyResources,
+		restrictedS3Resources:     restrictedS3Resources,
+		awsAccountID:              awsAccountID,
+		awsMasterRole:             awsMasterRole,
+		managedPolicies:           managedPolicies,
 	}
+}
 
+func (p *Properties) AllowedPolicyAction() []string {
+	return p.allowedPolicyAction
+}
+
+func (p *Properties) RestrictedPolicyResources() []string {
+	return p.restrictedPolicyResources
+}
+
+func (p *Properties) RestrictedS3Resources() []string {
+	return p.restrictedS3Resources
+}
+
+func (p *Properties) ManagedPolicies() []string {
+	return p.managedPolicies
+}
+
+func (p *Properties) AWSAccountID() string {
+	return p.awsAccountID
+}
+
+func (p *Properties) AWSMasterRole() string {
+	return p.awsMasterRole
+}
+
+func RunConfigMapInformer(ctx context.Context) {
+	log := log.Logger(context.Background(), "v1alpha1", "RunConfigMapInformer")
+	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
+	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: updateProperties,
+	},
+	)
+	log.Info("Starting config map informer")
+	cmInformer.Run(ctx.Done())
+	log.Info("Cancelling config map informer")
+}
+
+func updateProperties(old, new interface{}) {
+	log := log.Logger(context.Background(), "runConfigMapInformer", "onUpdate")
+	oldCM := old.(*v1.ConfigMap)
+	newCM := new.(*v1.ConfigMap)
+	if oldCM.ResourceVersion == newCM.ResourceVersion {
+		return
+	}
+	log.Info("Updating config map with", "revision ", newCM.ResourceVersion)
+	log.Info("Updating", "config", newCM)
+	LoadProperties(newCM)
 }

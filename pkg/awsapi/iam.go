@@ -119,7 +119,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 
 	//Attach managed role policy
 	log.V(1).Info("Attaching Managed policies")
-	for _, policy := range config.ManagedPolicies {
+	for _, policy := range config.Props.ManagedPolicies() {
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
 		if err != nil {
 			log.Error(err, "Error while attaching managed policy", "policy", policy)
@@ -373,7 +373,7 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, ro
 	log := log.Logger(ctx, "awsapi", "iam", "AttachManagedRolePolicy")
 	log.WithValues("roleName", roleName, "policyName", policyName)
 	log.V(1).Info("Initiating api call")
-	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.AwsAccountId, policyName))
+	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.Props.AWSAccountID(), policyName))
 
 	_, err := i.Client.AttachRolePolicy(&iam.AttachRolePolicyInput{
 		RoleName:  aws.String(roleName),
@@ -513,7 +513,7 @@ func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName 
 	log.WithValues("roleName", roleName, "policyName", policyName)
 	log.V(1).Info("Initiating api call")
 
-	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.AwsAccountId, policyName))
+	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.Props.AWSAccountID(), policyName))
 
 	_, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{
 		PolicyArn: policyARN,

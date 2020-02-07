@@ -22,7 +22,7 @@ type IAMIface interface {
 	UpdateRole(ctx context.Context, req IAMRoleRequest)
 	DeleteRole(ctx context.Context, roleName string)
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
-	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest)
+	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error
 	GetRolePolicy(ctx context.Context, req IAMRoleRequest) bool
 }
 
@@ -195,6 +195,8 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
 				log.Error(err, iam.ErrCodeNoSuchEntityException)
+			case iam.ErrCodeLimitExceededException:
+				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeInvalidInputException:
 				log.Error(err, iam.ErrCodeInvalidInputException)
 			case iam.ErrCodeUnmodifiableEntityException:
@@ -312,8 +314,10 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
-			case iam.ErrCodeEntityAlreadyExistsException:
-				log.Error(err, iam.ErrCodeEntityAlreadyExistsException)
+			case iam.ErrCodeMalformedPolicyDocumentException:
+				log.Error(err, iam.ErrCodeMalformedPolicyDocumentException)
+			case iam.ErrCodeUnmodifiableEntityException:
+				log.Error(err, iam.ErrCodeUnmodifiableEntityException)
 			case iam.ErrCodeLimitExceededException:
 				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
@@ -383,12 +387,16 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, ro
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
-			case iam.ErrCodeEntityAlreadyExistsException:
-				log.Error(err, iam.ErrCodeEntityAlreadyExistsException)
-			case iam.ErrCodeLimitExceededException:
-				log.Error(err, iam.ErrCodeLimitExceededException)
 			case iam.ErrCodeNoSuchEntityException:
 				log.Error(err, iam.ErrCodeNoSuchEntityException)
+			case iam.ErrCodeLimitExceededException:
+				log.Error(err, iam.ErrCodeLimitExceededException)
+			case iam.ErrCodeInvalidInputException:
+				log.Error(err, iam.ErrCodeInvalidInputException)
+			case iam.ErrCodeUnmodifiableEntityException:
+				log.Error(err, iam.ErrCodeUnmodifiableEntityException)
+			case iam.ErrCodePolicyNotAttachableException:
+				log.Error(err, iam.ErrCodePolicyNotAttachableException)
 			case iam.ErrCodeServiceFailureException:
 				log.Error(err, iam.ErrCodeServiceFailureException)
 			default:

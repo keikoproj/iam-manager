@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	v1 "k8s.io/api/core/v1"
@@ -12,12 +13,13 @@ import (
 var Props *Properties
 
 type Properties struct {
-	allowedPolicyAction       []string
-	restrictedPolicyResources []string
-	restrictedS3Resources     []string
-	awsAccountID              string
-	awsMasterRole             string
-	managedPolicies           []string
+	allowedPolicyAction             []string
+	restrictedPolicyResources       []string
+	restrictedS3Resources           []string
+	awsAccountID                    string
+	awsMasterRole                   string
+	managedPolicies                 []string
+	managedPermissionBoundaryPolicy string
 }
 
 func LoadProperties(cm *v1.ConfigMap) {
@@ -27,14 +29,16 @@ func LoadProperties(cm *v1.ConfigMap) {
 	managedPolicies := strings.Split(cm.Data[propertyManagedPolicies], separator)
 	awsAccountID := cm.Data[propertyAwsAccountID]
 	awsMasterRole := cm.Data[propertyAwsMasterRole]
+	managedPermissionBoundaryPolicy := fmt.Sprintf(IamManagedPermissionBoundaryPolicy, awsAccountID)
 
 	Props = &Properties{
-		allowedPolicyAction:       allowedPolicyAction,
-		restrictedPolicyResources: restrictedPolicyResources,
-		restrictedS3Resources:     restrictedS3Resources,
-		awsAccountID:              awsAccountID,
-		awsMasterRole:             awsMasterRole,
-		managedPolicies:           managedPolicies,
+		allowedPolicyAction:             allowedPolicyAction,
+		restrictedPolicyResources:       restrictedPolicyResources,
+		restrictedS3Resources:           restrictedS3Resources,
+		awsAccountID:                    awsAccountID,
+		awsMasterRole:                   awsMasterRole,
+		managedPolicies:                 managedPolicies,
+		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
 	}
 }
 
@@ -62,6 +66,10 @@ func (p *Properties) AWSMasterRole() string {
 	return p.awsMasterRole
 }
 
+func (p *Properties) ManagedPermissionBoundaryPolicy() string {
+	return p.managedPermissionBoundaryPolicy
+}
+
 func RunConfigMapInformer(ctx context.Context) {
 	log := log.Logger(context.Background(), "v1alpha1", "RunConfigMapInformer")
 	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
@@ -81,7 +89,6 @@ func updateProperties(old, new interface{}) {
 	if oldCM.ResourceVersion == newCM.ResourceVersion {
 		return
 	}
-	log.Info("Updating config map with", "revision ", newCM.ResourceVersion)
-	log.Info("Updating", "config", newCM)
+	log.Info("Updating config map", "new revision ", newCM.ResourceVersion)
 	LoadProperties(newCM)
 }

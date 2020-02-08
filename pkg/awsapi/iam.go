@@ -69,7 +69,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		RoleName:                 aws.String(req.Name),
 		Description:              aws.String(req.Description),
 		MaxSessionDuration:       aws.Int64(req.SessionDuration),
-		PermissionsBoundary:      aws.String(config.IamManagedPermissionBoundaryPolicy),
+		PermissionsBoundary:      aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
 	}
 
 	if err := input.Validate(); err != nil {
@@ -181,7 +181,7 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 	log.V(1).Info("Initiating api call")
 	input := &iam.PutRolePermissionsBoundaryInput{
 		RoleName:            aws.String(req.Name),
-		PermissionsBoundary: aws.String(config.IamManagedPermissionBoundaryPolicy),
+		PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
 	}
 
 	if err := input.Validate(); err != nil {

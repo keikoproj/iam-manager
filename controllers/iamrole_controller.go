@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
@@ -46,7 +45,6 @@ const (
 type IamroleReconciler struct {
 	client.Client
 	IAMClient *awsapi.IAM
-	K8sClient *k8s.Client
 	Recorder  record.EventRecorder
 }
 

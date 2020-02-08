@@ -605,47 +605,47 @@ func (s *IAMAPISuite) TestDeleteInlinePolicyFailureUnattachablePolicyDocument(c 
 
 func (s *IAMAPISuite) TestDetachRolePolicySuccess(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.DetachRolePolicyOutput{}, nil)
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "VALID_ROLE")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "VALID_ROLE")
 	c.Assert(err, check.IsNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureMalformedPolicyDocument(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("MALFORMED_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeMalformedPolicyDocumentException, "", errors.New(iam.ErrCodeMalformedPolicyDocumentException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "MALFORMED_POLICY")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "MALFORMED_POLICY")
 	c.Assert(err, check.NotNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureLimitExceeded(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("TOO_MANY_REQUEST")}).Times(1).Return(nil, awserr.New(iam.ErrCodeLimitExceededException, "", errors.New(iam.ErrCodeLimitExceededException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "TOO_MANY_REQUEST")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "TOO_MANY_REQUEST")
 	c.Assert(err, check.NotNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureNoSuchEntity(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "NO_SUCH_ENTITY")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "NO_SUCH_ENTITY")
 	c.Assert(err, check.IsNil)
 }
 func (s *IAMAPISuite) TestDetachRolePolicyFailureServiceFailure(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("SERVICE_FAILURE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "SERVICE_FAILURE")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "SERVICE_FAILURE")
 	c.Assert(err, check.NotNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureUnmodififiablePolicyDocument(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("UNMODIFIABLE_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeUnmodifiableEntityException, "", errors.New(iam.ErrCodeUnmodifiableEntityException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "UNMODIFIABLE_POLICY")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "UNMODIFIABLE_POLICY")
 	c.Assert(err, check.NotNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureInvalidPolicyDocument(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("INVALID_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeInvalidInputException, "", errors.New(iam.ErrCodeInvalidInputException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "INVALID_POLICY")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "INVALID_POLICY")
 	c.Assert(err, check.NotNil)
 }
 
 func (s *IAMAPISuite) TestDetachRolePolicyFailureUnattachablePolicyDocument(c *check.C) {
 	s.mockI.EXPECT().DetachRolePolicy(&iam.DetachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("UNATTACHABLE_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodePolicyNotAttachableException, "", errors.New(iam.ErrCodePolicyNotAttachableException)))
-	err := s.mockIAM.DetachRolePolicy(s.ctx, "SOMETHING", "UNATTACHABLE_POLICY")
+	err := s.mockIAM.DetachRolePolicy(s.ctx, "arn:aws:iam::123456789012:policy/SOMETHING", "UNATTACHABLE_POLICY")
 	c.Assert(err, check.NotNil)
 }

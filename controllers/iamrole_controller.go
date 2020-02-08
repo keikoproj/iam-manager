@@ -20,10 +20,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
+	"k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	"net/url"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,8 +46,11 @@ const (
 type IamroleReconciler struct {
 	client.Client
 	IAMClient *awsapi.IAM
+	K8sClient *k8s.Client
+	Recorder  record.EventRecorder
 }
 
+// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
@@ -89,7 +95,9 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 			log.Error(err, "Unable to delete the role")
 			//i got to fix this
-			r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteError)
+			r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.DeleteError)
+			r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.DeleteError), "unable to delete the role due to "+err.Error())
+
 			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 		//r.UpdateStatus(ctx, &iamRole, iamRole.Status, iammanagerv1alpha1.DeleteComplete)
@@ -99,6 +107,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		iamRole.ObjectMeta.Finalizers = removeString(iamRole.ObjectMeta.Finalizers, finalizerName)
 		r.UpdateMeta(ctx, &iamRole)
 		log.Info("Successfully deleted iam role")
+		r.Recorder.Event(&iamRole, v1.EventTypeNormal, "Deleted", "Successfully deleted iam role")
 	}
 
 	return ctrl.Result{}, nil
@@ -146,10 +155,12 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 		}
 		//Ok. Successful!!
 		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
+		r.Recorder.Event(iamRole, v1.EventTypeNormal, "Created", "Successfully created iam role")
 
 	case iammanagerv1alpha1.CreateInProgress, iammanagerv1alpha1.UpdateInprogress, iammanagerv1alpha1.DeleteInprogress:
 		//Nothing to do.. previous operation is in progress
 		log.Info("reconcile is in progress for the given role")
+		//r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
 		return ctrl.Result{}, nil
 
 	case iammanagerv1alpha1.CreateError, iammanagerv1alpha1.UpdateError:
@@ -167,11 +178,13 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 			log.Error(err, "error in creating/updating a role")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.CreateError), "Unable to create/update iam role due to error "+err.Error())
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 		}
 
 		//Ok. Successful!!
 		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
+		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
 
 	case iammanagerv1alpha1.Ready:
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
@@ -185,6 +198,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.CreateError)
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.CreateError), "Unable to create/update iam role due to error "+err.Error())
 			return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 		}
 		if !comparePolicy(ctx, input.PermissionPolicy, *targetPolicy) {
@@ -195,10 +209,12 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 			if err != nil {
 				log.Error(err, "error in creating a role")
 				r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 1}, iammanagerv1alpha1.UpdateError)
+				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.UpdateError), "Unable to create/update iam role due to error "+err.Error())
 				return ctrl.Result{RequeueAfter: 30 * time.Duration(1) * time.Second}, nil
 			}
 			//OK. Successful!!
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName}, iammanagerv1alpha1.Ready)
+			r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
 		} else {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
 		}
@@ -206,10 +222,12 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 	default:
 		log.Error(errors.New("Unknown State"), "This should not happen")
 		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1}, iammanagerv1alpha1.UpdateError)
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.CreateError), "Unable to create/update iam role due to error Unknown State")
 		return ctrl.Result{RequeueAfter: 30 * time.Duration(iamRole.Status.RetryCount+1) * time.Second}, nil
 	}
 
 	log.Info("Successfully reconciled")
+
 	return ctrl.Result{}, nil
 }
 
@@ -218,6 +236,32 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&iammanagerv1alpha1.Iamrole{}).
 		Complete(r)
+}
+
+func (r *IamroleReconciler) HandleEvents(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, eType string, reason string, message string, count int) {
+
+	sEvent := &v1.Event{
+		Type:    eType,
+		Reason:  reason,
+		Message: message,
+		Source:  v1.EventSource{Component: "iam-manager"},
+		InvolvedObject: v1.ObjectReference{
+			Kind:            iamRole.Kind,
+			Namespace:       iamRole.ObjectMeta.Namespace,
+			Name:            iamRole.GenerateName,
+			ResourceVersion: iamRole.ResourceVersion,
+			APIVersion:      iamRole.APIVersion,
+		},
+	}
+	//This is first time. lets add all the timestamps
+	if count == 0 {
+		sEvent.FirstTimestamp = iamRole.CreationTimestamp
+		sEvent.LastTimestamp = iamRole.CreationTimestamp
+	}
+
+	sEvent.Name = fmt.Sprintf("event-success-%s", iamRole.ObjectMeta.Namespace)
+
+	r.K8sClient.AddEvents(ctx, iamRole.ObjectMeta.Namespace, sEvent)
 }
 
 //UpdateStatus function updates the status based on the process step

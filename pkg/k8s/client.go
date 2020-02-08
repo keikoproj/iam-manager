@@ -123,6 +123,6 @@ func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: c.cl.CoreV1().Events("")})
-	log.V(1).Info("Successfully add event broadcaster")
+	log.V(1).Info("Successfully added event broadcaster")
 	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "iam-manager"})
 }

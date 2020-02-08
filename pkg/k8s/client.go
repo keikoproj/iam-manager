@@ -79,7 +79,7 @@ func NewK8sClientDoOrDie() *Client {
 type Iface interface {
 	IamrolesCount(ctx context.Context, ns string)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
-	AddEvents(ctx context.Context, ns string, event *v1.Event) error
+	SetUpEventHandler(ctx context.Context) record.EventRecorder
 }
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace
@@ -113,18 +113,6 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	}
 
 	return res
-}
-
-//AddEvents methods adds events
-func (c *Client) AddEvents(ctx context.Context, ns string, event *v1.Event) error {
-	log := log.Logger(ctx, "k8s", "client", "AddEvents")
-	log.WithValues("namespace", ns)
-	_, err := c.cl.CoreV1().Events(ns).Create(event)
-	if err != nil {
-		log.Error(err, "unable to create event")
-		return err
-	}
-	return nil
 }
 
 //SetUpEventHandler sets up event handler with client-go recorder instead of creating events directly

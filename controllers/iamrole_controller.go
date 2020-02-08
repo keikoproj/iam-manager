@@ -238,32 +238,6 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *IamroleReconciler) HandleEvents(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, eType string, reason string, message string, count int) {
-
-	sEvent := &v1.Event{
-		Type:    eType,
-		Reason:  reason,
-		Message: message,
-		Source:  v1.EventSource{Component: "iam-manager"},
-		InvolvedObject: v1.ObjectReference{
-			Kind:            iamRole.Kind,
-			Namespace:       iamRole.ObjectMeta.Namespace,
-			Name:            iamRole.GenerateName,
-			ResourceVersion: iamRole.ResourceVersion,
-			APIVersion:      iamRole.APIVersion,
-		},
-	}
-	//This is first time. lets add all the timestamps
-	if count == 0 {
-		sEvent.FirstTimestamp = iamRole.CreationTimestamp
-		sEvent.LastTimestamp = iamRole.CreationTimestamp
-	}
-
-	sEvent.Name = fmt.Sprintf("event-success-%s", iamRole.ObjectMeta.Namespace)
-
-	r.K8sClient.AddEvents(ctx, iamRole.ObjectMeta.Namespace, sEvent)
-}
-
 //UpdateStatus function updates the status based on the process step
 func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, state iammanagerv1alpha1.State) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")

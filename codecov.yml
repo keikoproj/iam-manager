@@ -1,11 +1,7 @@
 coverage:
   range: "50...90"
   status:
-    project:
-      default:
-        target: auto
-        treshold: 5%
-        base: auto
+    patch: off
 
 ignore:
   - "**/zz_generated.*"

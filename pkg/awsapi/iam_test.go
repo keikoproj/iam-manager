@@ -193,6 +193,17 @@ func (s *IAMAPISuite) TestTagRoleFailureLimitExceeded(c *check.C) {
 	c.Assert(err, check.NotNil)
 }
 
+func (s *IAMAPISuite) TestTagRoleFailureUnattachable(c *check.C) {
+	s.mockI.EXPECT().TagRole(&iam.TagRoleInput{RoleName: aws.String("UN_ATTACHABLE"), Tags: []*iam.Tag{
+		{
+			Key:   aws.String("managedBy"),
+			Value: aws.String("iam-manager"),
+		},
+	}}).Times(1).Return(nil, awserr.New(iam.ErrCodePolicyNotAttachableException, "", errors.New(iam.ErrCodePolicyNotAttachableException)))
+	req := awsapi.IAMRoleRequest{Name: "UN_ATTACHABLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.TagRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
 //###########
 
 func (s *IAMAPISuite) TestAddPermissionBoundarySuccess(c *check.C) {
@@ -332,6 +343,43 @@ func (s *IAMAPISuite) TestUpdateRoleFailureInvalidInput(c *check.C) {
 	_, err := s.mockIAM.UpdateRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
 }
+
+func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureServiceFailure(c *check.C) {
+	awsapi.ManagedPolicies = []string{"SOMETHING"}
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil,awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)) )
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
+	_, err := s.mockIAM.UpdateRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureNoSuchEntity(c *check.C) {
+	awsapi.ManagedPolicies = []string{"SOMETHING"}
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil,awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)) )
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
+	_, err := s.mockIAM.UpdateRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureLimitExceeded(c *check.C) {
+	awsapi.ManagedPolicies = []string{"SOMETHING"}
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeLimitExceededException, "", errors.New(iam.ErrCodeLimitExceededException)))
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
+	_, err := s.mockIAM.UpdateRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureInvalidInput(c *check.C) {
+	awsapi.ManagedPolicies = []string{"SOMETHING"}
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeInvalidInputException, "", errors.New(iam.ErrCodeInvalidInputException)))
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
+	_, err := s.mockIAM.UpdateRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
 
 //####################
 

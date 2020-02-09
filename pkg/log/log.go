@@ -34,5 +34,6 @@ func Logger(ctx context.Context, names ...string) logr.Logger {
 	if rId != nil {
 		logk = logk.WithValues("request_id", rId)
 	}
+
 	return logk
 }

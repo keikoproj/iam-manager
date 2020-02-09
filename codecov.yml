@@ -1,0 +1,16 @@
+coverage:
+  range: "50...90"
+  status:
+    project:
+      default:
+        target: auto
+        treshold: 5%
+        base: auto
+
+ignore:
+  - "**/zz_generated.*"
+  - "bin"
+  - "config"
+  - "hack"
+  - "docs"
+  - "**/mocks/"

@@ -1,7 +1,7 @@
 package awsapi
 
 //go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
-//go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
+////go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
 
 import (
 	"context"

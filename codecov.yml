@@ -1,0 +1,12 @@
+coverage:
+  range: "50...90"
+  status:
+    patch: off
+
+ignore:
+  - "**/zz_generated.*"
+  - "bin"
+  - "config"
+  - "hack"
+  - "docs"
+  - "**/mocks/"

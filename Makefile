@@ -28,6 +28,9 @@ test: mock generate fmt vet manifests
 manager: generate fmt vet update
 	go build -o bin/manager main.go
 
+setup: ; $(info $(M) setting up env variables for test…) @ ## Setup env variables
+export KUBECONFIG=fake-kubeconfig
+
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	go run ./main.go

@@ -588,6 +588,15 @@ metadata:
   name: iam-manager-manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+- apiGroups:
   - iammanager.keikoproj.io
   resources:
   - iamroles

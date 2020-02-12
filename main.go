@@ -20,6 +20,7 @@ import (
 	"flag"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"os"
 
@@ -71,9 +72,11 @@ func main() {
 	}
 
 	log.V(1).Info("Setting up reconciler with manager")
+
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
 		IAMClient: awsapi.New(),
+		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")
 		os.Exit(1)

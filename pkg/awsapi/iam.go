@@ -1,7 +1,7 @@
 package awsapi
 
 //go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
-//go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
+////go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
 
 import (
 	"context"
@@ -427,7 +427,7 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 
 	// Detach managed policies
 	for _, policy := range managedPolicyList.AttachedPolicies {
-		if err := i.DetachRolePolicy(ctx, aws.StringValue(policy.PolicyName), roleName); err != nil {
+		if err := i.DetachRolePolicy(ctx, aws.StringValue(policy.PolicyArn), roleName); err != nil {
 			log.Error(err, "Unable to delete the policy", "policyName", aws.StringValue(policy.PolicyName))
 			return err
 		}
@@ -516,15 +516,13 @@ func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleNam
 }
 
 // DetachRolePolicy detaches a policy from role
-func (i *IAM) DetachRolePolicy(ctx context.Context, policyName string, roleName string) error {
+func (i *IAM) DetachRolePolicy(ctx context.Context, policyArn string, roleName string) error {
 	log := log.Logger(ctx, "awsapi", "iam", "DetachRolePolicy")
-	log.WithValues("roleName", roleName, "policyName", policyName)
+	log.WithValues("roleName", roleName, "policyArn", policyArn)
 	log.V(1).Info("Initiating api call")
 
-	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.Props.AWSAccountID(), policyName))
-
 	_, err := i.Client.DetachRolePolicy(&iam.DetachRolePolicyInput{
-		PolicyArn: policyARN,
+		PolicyArn: aws.String(policyArn),
 		RoleName:  aws.String(roleName),
 	})
 	if err != nil {

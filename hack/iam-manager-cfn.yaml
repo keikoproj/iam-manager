@@ -72,13 +72,6 @@ Resources:
               - "iam:DeletePolicy"
               - "iam:UpdateRole"
               - "iam:DeleteRole"
-              - "iam:GetRole"
-              - "iam:GetRolePolicy"
-              - "iam:GetPolicy"
-              - "iam:ListRoles"
-              - "iam:ListRolePolicies"
-              - "iam:ListAttachedRolePolicies"
-              - "iam:ListPolicies"
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Condition:
               StringEquals:
@@ -90,6 +83,17 @@ Resources:
               - "iam:UntagRole"
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Sid: "Allow"
+          - Effect: "Allow"
+            Action:
+              - "iam:GetRole"
+              - "iam:GetRolePolicy"
+              - "iam:GetPolicy"
+              - "iam:ListRoles"
+              - "iam:ListRolePolicies"
+              - "iam:ListAttachedRolePolicies"
+              - "iam:ListPolicies"
+            Resource: "*"
+            Sid: "AllowReadOps"
       Roles:
         - !Ref IAMManagerAccessRole
   ##### IAM Role to be assumed ####

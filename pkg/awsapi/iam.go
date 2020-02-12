@@ -6,6 +6,7 @@ package awsapi
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -420,13 +421,20 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 	log.WithValues("roleName", roleName)
 	log.V(1).Info("Initiating api call")
 
+	//Check if role exists
+
 	managedPolicyList, err := i.Client.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
 		RoleName: aws.String(roleName),
 	})
 
 	if err != nil {
-		log.Error(err, "Unable to list attached managed policies for role")
-		return err
+		if strings.Contains(err.Error(), "NoSuchEntity") {
+			log.Info("Role doesn't exist in the target account", "role_name", roleName)
+			return nil
+		} else {
+			log.Error(err, "Unable to list attached managed policies for role")
+			return err
+		}
 	}
 	log.V(1).Info("Attached managed for role", "policyList", managedPolicyList.AttachedPolicies)
 

@@ -204,6 +204,7 @@ func (s *IAMAPISuite) TestTagRoleFailureUnattachable(c *check.C) {
 	_, err := s.mockIAM.TagRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
 }
+
 //###########
 
 func (s *IAMAPISuite) TestAddPermissionBoundarySuccess(c *check.C) {
@@ -347,7 +348,7 @@ func (s *IAMAPISuite) TestUpdateRoleFailureInvalidInput(c *check.C) {
 func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureServiceFailure(c *check.C) {
 	awsapi.ManagedPolicies = []string{"SOMETHING"}
 	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
-	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil,awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)) )
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)))
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
 	_, err := s.mockIAM.UpdateRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
@@ -356,7 +357,7 @@ func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureServiceFailure(c *check.C) 
 func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureNoSuchEntity(c *check.C) {
 	awsapi.ManagedPolicies = []string{"SOMETHING"}
 	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
-	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil,awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)) )
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}
 	_, err := s.mockIAM.UpdateRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
@@ -379,7 +380,6 @@ func (s *IAMAPISuite) TestUpdateRoleAssumeRoleFailureInvalidInput(c *check.C) {
 	_, err := s.mockIAM.UpdateRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
 }
-
 
 //####################
 
@@ -555,11 +555,17 @@ func (s *IAMAPISuite) TestDeleteRoleFailureLimitExceeded(c *check.C) {
 	err := s.mockIAM.DeleteRole(s.ctx, "TOO_MANY_REQUEST")
 	c.Assert(err, check.NotNil)
 }
-
 func (s *IAMAPISuite) TestDeleteRoleFailureNoSuchEntity(c *check.C) {
 	s.mockI.EXPECT().DeleteRole(&iam.DeleteRoleInput{RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 	s.mockI.EXPECT().ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(&iam.ListAttachedRolePoliciesOutput{}, nil)
 	s.mockI.EXPECT().ListRolePolicies(&iam.ListRolePoliciesInput{RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(&iam.ListRolePoliciesOutput{}, nil)
+
+	err := s.mockIAM.DeleteRole(s.ctx, "NO_SUCH_ENTITY")
+	c.Assert(err, check.IsNil)
+}
+
+func (s *IAMAPISuite) TestDeleteRoleFailureNoSuchEntityAssumeRole(c *check.C) {
+	s.mockI.EXPECT().ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 
 	err := s.mockIAM.DeleteRole(s.ctx, "NO_SUCH_ENTITY")
 	c.Assert(err, check.IsNil)

@@ -25,6 +25,7 @@ jobs:
     - stage: unit-test
       if: type IN (push, pull_request)
       script:
+        - make setup
         - make test
         - bash <(curl -s https://codecov.io/bash)
         - make docker-build

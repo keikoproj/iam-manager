@@ -10,3 +10,4 @@ data:
   aws.accountId: "000011112222"
   aws.MasterRole: "masters.cluster.k8s.local"
   iam.managed.policies: "shared.cluster.k8s.local"
+  iam.managed.permission.boundary.policy: "iam-manager-permission-boundary"

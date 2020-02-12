@@ -10,7 +10,10 @@ import (
 	"strings"
 )
 
-var Props *Properties
+var (
+	Props                              *Properties
+	IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/%s"
+)
 
 type Properties struct {
 	allowedPolicyAction             []string
@@ -22,6 +25,20 @@ type Properties struct {
 	managedPermissionBoundaryPolicy string
 }
 
+func init() {
+	log := log.Logger(context.Background(), "internal.config.properties", "init")
+	k8sClient, err := k8s.NewK8sClient()
+	if err != nil {
+		log.Error(err, "unable to create new k8s client")
+		panic(err)
+	}
+	res := k8sClient.GetConfigMap(context.Background(), IamManagerNamespaceName, IamManagerConfigMapName)
+
+	// load properties into a global variable
+	LoadProperties(res)
+	log.Info("Loaded properties in init func")
+}
+
 func LoadProperties(cm *v1.ConfigMap) {
 	allowedPolicyAction := strings.Split(cm.Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm.Data[propertyIamPolicyBlacklist], separator)
@@ -29,7 +46,11 @@ func LoadProperties(cm *v1.ConfigMap) {
 	managedPolicies := strings.Split(cm.Data[propertyManagedPolicies], separator)
 	awsAccountID := cm.Data[propertyAwsAccountID]
 	awsMasterRole := cm.Data[propertyAwsMasterRole]
-	managedPermissionBoundaryPolicy := fmt.Sprintf(IamManagedPermissionBoundaryPolicy, awsAccountID)
+
+	managedPermissionBoundaryPolicy := cm.Data[propertyPermissionBoundary]
+	if !strings.HasPrefix(managedPermissionBoundaryPolicy, "arn:aws:iam::") {
+		managedPermissionBoundaryPolicy = fmt.Sprintf(IamManagedPermissionBoundaryPolicy, awsAccountID, managedPermissionBoundaryPolicy)
+	}
 
 	Props = &Properties{
 		allowedPolicyAction:             allowedPolicyAction,
@@ -71,7 +92,7 @@ func (p *Properties) ManagedPermissionBoundaryPolicy() string {
 }
 
 func RunConfigMapInformer(ctx context.Context) {
-	log := log.Logger(context.Background(), "v1alpha1", "RunConfigMapInformer")
+	log := log.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
 	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
 	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: updateProperties,
@@ -83,7 +104,7 @@ func RunConfigMapInformer(ctx context.Context) {
 }
 
 func updateProperties(old, new interface{}) {
-	log := log.Logger(context.Background(), "runConfigMapInformer", "onUpdate")
+	log := log.Logger(context.Background(), "internal.config.properties", "onUpdate")
 	oldCM := old.(*v1.ConfigMap)
 	newCM := new.(*v1.ConfigMap)
 	if oldCM.ResourceVersion == newCM.ResourceVersion {

@@ -93,7 +93,7 @@ func (c *Client) ClientInterface() kubernetes.Interface {
 }
 
 func GetConfigMapInformer(ctx context.Context, nsName string, cmName string) cache.SharedIndexInformer {
-	log := log.Logger(context.Background(), "k8s-client", "GetConfigMapInformer")
+	log := log.Logger(context.Background(), "pkg.k8s.client", "GetConfigMapInformer")
 	clientset, err := NewK8sClient()
 	if err != nil {
 		log.Error(err, "failed to get clientset")

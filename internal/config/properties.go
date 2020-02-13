@@ -7,6 +7,7 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"os"
 	"strings"
 )
 
@@ -27,6 +28,17 @@ type Properties struct {
 
 func init() {
 	log := log.Logger(context.Background(), "internal.config.properties", "init")
+
+	if os.Getenv("LOCAL") != "" {
+		err := LoadProperties("LOCAL")
+		if err != nil {
+			log.Error(err, "failed to load properties for local environment")
+			return
+		}
+		log.Info("Loaded properties in init func for tests")
+		return
+	}
+
 	k8sClient, err := k8s.NewK8sClient()
 	if err != nil {
 		log.Error(err, "unable to create new k8s client")
@@ -35,19 +47,43 @@ func init() {
 	res := k8sClient.GetConfigMap(context.Background(), IamManagerNamespaceName, IamManagerConfigMapName)
 
 	// load properties into a global variable
-	LoadProperties(res)
+	err = LoadProperties("", res)
+	if err != nil {
+		log.Error(err, "failed to load properties")
+		return
+	}
 	log.Info("Loaded properties in init func")
 }
 
-func LoadProperties(cm *v1.ConfigMap) {
-	allowedPolicyAction := strings.Split(cm.Data[propertyIamPolicyWhitelist], separator)
-	restrictedPolicyResources := strings.Split(cm.Data[propertyIamPolicyBlacklist], separator)
-	restrictedS3Resources := strings.Split(cm.Data[propertyIamPolicyS3Restricted], separator)
-	managedPolicies := strings.Split(cm.Data[propertyManagedPolicies], separator)
-	awsAccountID := cm.Data[propertyAwsAccountID]
-	awsMasterRole := cm.Data[propertyAwsMasterRole]
+func LoadProperties(env string, cm ...*v1.ConfigMap) error {
+	log := log.Logger(context.Background(), "internal.config.properties", "LoadProperties")
 
-	managedPermissionBoundaryPolicy := cm.Data[propertyPermissionBoundary]
+	if env != "" {
+		Props = &Properties{
+			allowedPolicyAction:             strings.Split(os.Getenv("ALLOWED_POLICY_ACTION"), separator),
+			restrictedPolicyResources:       strings.Split(os.Getenv("RESTRICTED_POLICY_RESOURCES"), separator),
+			restrictedS3Resources:           strings.Split(os.Getenv("RESTRICTED_S3_RESOURCES"), separator),
+			awsAccountID:                    os.Getenv("AWS_ACCOUNT_ID"),
+			awsMasterRole:                   os.Getenv("AWS_MASTER_ROLE"),
+			managedPolicies:                 strings.Split(os.Getenv("MANAGED_POLICIES"), separator),
+			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
+		}
+		return nil
+	}
+
+	if len(cm) == 0 || cm[0] == nil {
+		log.Error(fmt.Errorf("config map cannot be nil"), "config map cannot be nil")
+		return fmt.Errorf("config map cannot be nil")
+	}
+
+	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
+	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
+	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
+	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
+	awsAccountID := cm[0].Data[propertyAwsAccountID]
+	awsMasterRole := cm[0].Data[propertyAwsMasterRole]
+
+	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]
 	if !strings.HasPrefix(managedPermissionBoundaryPolicy, "arn:aws:iam::") {
 		managedPermissionBoundaryPolicy = fmt.Sprintf(IamManagedPermissionBoundaryPolicy, awsAccountID, managedPermissionBoundaryPolicy)
 	}
@@ -61,6 +97,7 @@ func LoadProperties(cm *v1.ConfigMap) {
 		managedPolicies:                 managedPolicies,
 		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
 	}
+	return nil
 }
 
 func (p *Properties) AllowedPolicyAction() []string {
@@ -111,5 +148,8 @@ func updateProperties(old, new interface{}) {
 		return
 	}
 	log.Info("Updating config map", "new revision ", newCM.ResourceVersion)
-	LoadProperties(newCM)
+	err := LoadProperties("", newCM)
+	if err != nil {
+		log.Error(err, "failed to update config map")
+	}
 }

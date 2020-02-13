@@ -11,7 +11,6 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
 	"gopkg.in/check.v1"
-	v1 "k8s.io/api/core/v1"
 	"testing"
 )
 
@@ -36,14 +35,7 @@ func (s *IAMAPISuite) SetUpTest(c *check.C) {
 		Client: s.mockI,
 	}
 
-	cm := &v1.ConfigMap{
-		Data: map[string]string{
-			"aws.accountId":                          "123456789012",
-			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
-			"iam.managed.policies":                   "SOMETHING",
-		},
-	}
-	config.LoadProperties(cm)
+	config.LoadProperties("LOCAL")
 }
 
 func (s *IAMAPISuite) TearDownTest(c *check.C) {

@@ -31,8 +31,7 @@ func (s *PropertiesSuite) TearDownTest(c *check.C) {
 
 // test local properties for local environment
 func (s *PropertiesSuite) TestLoadPropertiesLocalEnvSuccess(c *check.C) {
-	//c.Assert(Props, check.IsNil)
-	err := LoadProperties("Local")
+	err := LoadProperties("LOCAL")
 	c.Assert(err, check.IsNil)
 	c.Assert(Props, check.NotNil)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
@@ -61,4 +60,39 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccess(c *check.C) {
 	err := LoadProperties("", cm)
 	c.Assert(err, check.IsNil)
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
+}
+
+func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {
+	value := Props.AllowedPolicyAction()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetRestrictedPolicyResources(c *check.C) {
+	value := Props.RestrictedPolicyResources()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetRestrictedS3Resources(c *check.C) {
+	value := Props.RestrictedS3Resources()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetManagedPolicies(c *check.C) {
+	value := Props.ManagedPolicies()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetAWSAccountID(c *check.C) {
+	value := Props.AWSAccountID()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetAWSMasterRole(c *check.C) {
+	value := Props.AWSMasterRole()
+	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestGetManagedPermissionBoundaryPolicy(c *check.C) {
+	value := Props.ManagedPermissionBoundaryPolicy()
+	c.Assert(value, check.NotNil)
 }

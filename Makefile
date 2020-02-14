@@ -31,8 +31,7 @@ mock:
 	done
 
 # Run tests
-test: mock generate fmt vet manifests
-	make setup
+test: setup mock generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary

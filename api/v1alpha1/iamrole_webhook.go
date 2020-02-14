@@ -18,11 +18,10 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"strings"
 
-	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,7 +41,6 @@ const (
 var iamrolelog = logf.Log.WithName("iamrole-resource")
 
 var wClient *k8s.Client
-var props *config.Properties
 
 func NewWClient() {
 	log := log.Logger(context.Background(), "v1alpha1", "LoadProperties")
@@ -53,13 +51,6 @@ func NewWClient() {
 		panic(err)
 	}
 	wClient = k8sClient
-
-	// call loadProperties with config map result
-	props = config.LoadProperties(context.Background(), k8sClient, "iam-manager-system", "iam-manager-iamroles-v1alpha1-configmap")
-	awsapi.IamManagedPermissionBoundaryPolicy = fmt.Sprintf(awsapi.IamManagedPermissionBoundaryPolicy, props.AWSAccountId)
-	awsapi.ManagedPolicies = props.ManagedPolicies
-	awsapi.AwsAccountId = props.AWSAccountId
-
 }
 
 func (r *Iamrole) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -146,7 +137,7 @@ func (r *Iamrole) validateIAMPolicyAction() *field.Error {
 	for _, statement := range r.Spec.PolicyDocument.Statement {
 		for _, action := range statement.Action {
 			isAllowed := false
-			for _, prefix := range props.AllowedPolicyAction {
+			for _, prefix := range config.Props.AllowedPolicyAction() {
 
 				if strings.HasPrefix(action, prefix) {
 					isAllowed = true
@@ -161,7 +152,7 @@ func (r *Iamrole) validateIAMPolicyAction() *field.Error {
 			//This is special case-- May be only for Intuit
 			if strings.HasPrefix(action, "s3:") {
 				for _, resource := range statement.Resource {
-					for _, res := range props.RestrictedS3Resources {
+					for _, res := range config.Props.RestrictedS3Resources() {
 						isAllowed := false
 						if resource != res {
 							isAllowed = true
@@ -185,7 +176,7 @@ func (r *Iamrole) validateIAMPolicyResource() *field.Error {
 	for _, statement := range r.Spec.PolicyDocument.Statement {
 		for _, resource := range statement.Resource {
 			isAllowed := true
-			for _, res := range props.RestrictedPolicyResources {
+			for _, res := range config.Props.RestrictedPolicyResources() {
 
 				if strings.Contains(resource, res) {
 					isAllowed = false

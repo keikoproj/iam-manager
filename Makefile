@@ -13,6 +13,16 @@ endif
 
 all: manager
 
+setup: ; $(info $(M) setting up env variables for test…) @ ## Setup env variables
+export LOCAL=true
+export ALLOWED_POLICY_ACTION=allowed-action
+export RESTRICTED_POLICY_RESOURCES=policy-resource
+export RESTRICTED_S3_RESOURCES=s3-resource
+export AWS_ACCOUNT_ID=123456789012
+export AWS_MASTER_ROLE=
+export MANAGED_POLICIES=SOMETHING
+export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
+
 mock:
 	go get -u github.com/golang/mock/mockgen
 	@echo "mockgen is in progess"
@@ -21,7 +31,7 @@ mock:
 	done
 
 # Run tests
-test: mock generate fmt vet manifests
+test: setup mock generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary

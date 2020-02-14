@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pborman/uuid"
@@ -133,7 +134,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, iamRole *iamman
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	input := awsapi.IAMRoleRequest{
 		Name:             roleName,
-		PolicyName:       "custom",
+		PolicyName:       config.InlinePolicyName,
 		Description:      "#DO NOT DELETE#. Managed by iam-manager",
 		SessionDuration:  3600,
 		TrustPolicy:      roleTrust,
@@ -295,10 +296,16 @@ func comparePolicy(ctx context.Context, request string, target string) bool {
 
 	d, _ := url.QueryUnescape(target)
 	dest := iammanagerv1alpha1.PolicyDocument{}
-	json.Unmarshal([]byte(d), &dest)
+	err := json.Unmarshal([]byte(d), &dest)
+	if err != nil {
+		log.Error(err, "failed to unmarshal policy document", target)
+	}
 
 	req := iammanagerv1alpha1.PolicyDocument{}
-	json.Unmarshal([]byte(request), &req)
+	err = json.Unmarshal([]byte(request), &req)
+	if err != nil {
+		log.Error(err, "failed to marshal policy document", request)
+	}
 	//compare
 	if reflect.DeepEqual(req, dest) {
 		log.Info("input policy and target policy are equal")

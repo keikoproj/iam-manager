@@ -2,20 +2,24 @@ package k8s
 
 import (
 	"context"
+	"fmt"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
 	"os"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+	clientv1 "k8s.io/client-go/informers/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 )
 
 type Client struct {
@@ -113,6 +117,28 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	}
 
 	return res
+}
+
+func (c *Client) ClientInterface() kubernetes.Interface {
+	return c.cl
+}
+
+// GetConfigMapInformer returns shared informer for given config map
+func GetConfigMapInformer(ctx context.Context, nsName string, cmName string) cache.SharedIndexInformer {
+	log := log.Logger(context.Background(), "pkg.k8s.client", "GetConfigMapInformer")
+	clientset, err := NewK8sClient()
+	if err != nil {
+		log.Error(err, "failed to get clientset")
+		return nil
+	}
+
+	listOptions := func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", cmName)
+	}
+
+	// default resync period 24 hours
+	cmInformer := clientv1.NewFilteredConfigMapInformer(clientset.ClientInterface(), nsName, 24*time.Hour, cache.Indexers{}, listOptions)
+	return cmInformer
 }
 
 //SetUpEventHandler sets up event handler with client-go recorder instead of creating events directly

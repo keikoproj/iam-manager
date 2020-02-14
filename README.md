@@ -51,6 +51,8 @@ export AWS_PROFILE=admin_123456789012_account
 ./install.sh eks-dev2-k8s us-west-2 aws_profile
 
 ```
+##### iam-manager config-map
+This [document](docs/Configmap_Properties.md) provide explanation on configmap variables.
 
 #### Additional Info  
 iam-manager is built using kubebuilder project and like any other kubebuilder project iam-manager also uses cert-manager to manage the SSL certs for webhooks.

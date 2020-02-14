@@ -6,6 +6,7 @@ package awsapi
 import (
 	"context"
 	"fmt"
+	"github.com/keikoproj/iam-manager/internal/config"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -28,12 +29,6 @@ type IAMIface interface {
 const (
 	iamTagKey   = "managedBy"
 	iamTagValue = "iam-manager"
-)
-
-var (
-	IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/iam-manager-permission-boundary"
-	ManagedPolicies                    []string
-	AwsAccountId                       string
 )
 
 //IAMRoleRequest struct
@@ -74,7 +69,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		RoleName:                 aws.String(req.Name),
 		Description:              aws.String(req.Description),
 		MaxSessionDuration:       aws.Int64(req.SessionDuration),
-		PermissionsBoundary:      aws.String(IamManagedPermissionBoundaryPolicy),
+		PermissionsBoundary:      aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
 	}
 
 	if err := input.Validate(); err != nil {
@@ -124,7 +119,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 
 	//Attach managed role policy
 	log.V(1).Info("Attaching Managed policies")
-	for _, policy := range ManagedPolicies {
+	for _, policy := range config.Props.ManagedPolicies() {
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
 		if err != nil {
 			log.Error(err, "Error while attaching managed policy", "policy", policy)
@@ -186,7 +181,7 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 	log.V(1).Info("Initiating api call")
 	input := &iam.PutRolePermissionsBoundaryInput{
 		RoleName:            aws.String(req.Name),
-		PermissionsBoundary: aws.String(IamManagedPermissionBoundaryPolicy),
+		PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
 	}
 
 	if err := input.Validate(); err != nil {
@@ -382,7 +377,7 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, ro
 	log := log.Logger(ctx, "awsapi", "iam", "AttachManagedRolePolicy")
 	log.WithValues("roleName", roleName, "policyName", policyName)
 	log.V(1).Info("Initiating api call")
-	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", AwsAccountId, policyName))
+	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.Props.AWSAccountID(), policyName))
 
 	_, err := i.Client.AttachRolePolicy(&iam.AttachRolePolicyInput{
 		RoleName:  aws.String(roleName),

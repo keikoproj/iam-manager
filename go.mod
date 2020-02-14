@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.4.0 // indirect
 	golang.org/x/sys v0.0.0-20190422165155-953cdadca894 // indirect
-	golang.org/x/tools v0.0.0-20200207224406-61798d64f025 // indirect
+	golang.org/x/tools v0.0.0-20200212150539-ea181f53ac56 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d

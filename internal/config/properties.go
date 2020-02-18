@@ -3,6 +3,8 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	v1 "k8s.io/api/core/v1"
@@ -50,7 +52,7 @@ func init() {
 	err = LoadProperties("", res)
 	if err != nil {
 		log.Error(err, "failed to load properties")
-		return
+		panic(err)
 	}
 	log.Info("Loaded properties in init func")
 }
@@ -58,6 +60,7 @@ func init() {
 func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	log := log.Logger(context.Background(), "internal.config.properties", "LoadProperties")
 
+	// for local testing
 	if env != "" {
 		Props = &Properties{
 			allowedPolicyAction:             strings.Split(os.Getenv("ALLOWED_POLICY_ACTION"), separator),
@@ -76,11 +79,23 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		return fmt.Errorf("config map cannot be nil")
 	}
 
+	var awsAccountID string
+	var err error
+
+	// Load AWS account ID
+	if Props != nil && Props.awsAccountID != "" {
+		awsAccountID = Props.awsAccountID
+	} else {
+		awsAccountID, err = GetAccountID()
+		if err != nil {
+			return err
+		}
+	}
+
 	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
 	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
-	awsAccountID := cm[0].Data[propertyAwsAccountID]
 	awsMasterRole := cm[0].Data[propertyAwsMasterRole]
 
 	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]
@@ -98,6 +113,20 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
 	}
 	return nil
+}
+
+// LoadAccountID loads aws accountID from sts caller identity
+func GetAccountID() (string, error) {
+	log := log.Logger(context.Background(), "internal.config.properties", "GetAccountID")
+
+	// get caller identity in order to fetch aws account ID
+	svc := sts.New(session.Must(session.NewSession()))
+	result, err := svc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		log.Error(err, "failed to get caller's identity")
+		return "", err
+	}
+	return *result.Account, nil
 }
 
 func (p *Properties) AllowedPolicyAction() []string {

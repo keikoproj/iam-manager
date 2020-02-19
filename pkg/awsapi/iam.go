@@ -1,14 +1,13 @@
 package awsapi
 
 //go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
+//go:generate mockgen -destination=mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
 ////go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
-	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -25,6 +24,7 @@ type IAMIface interface {
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
 	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error
 	GetRolePolicy(ctx context.Context, req IAMRoleRequest) bool
+	GetAccountID(ctx context.Context) (string, error)
 }
 
 const (
@@ -34,12 +34,14 @@ const (
 
 //IAMRoleRequest struct
 type IAMRoleRequest struct {
-	Name             string
-	PolicyName       string
-	Description      string
-	SessionDuration  int64
-	TrustPolicy      string
-	PermissionPolicy string
+	Name                            string
+	PolicyName                      string
+	Description                     string
+	SessionDuration                 int64
+	TrustPolicy                     string
+	PermissionPolicy                string
+	ManagedPermissionBoundaryPolicy string
+	ManagedPolicies                 []string
 }
 
 type IAMRoleResponse struct {
@@ -49,7 +51,7 @@ type IAM struct {
 	Client iamiface.IAMAPI
 }
 
-func New() *IAM {
+func NewIAM() *IAM {
 
 	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-west-2")})
 	if err != nil {
@@ -70,7 +72,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		RoleName:                 aws.String(req.Name),
 		Description:              aws.String(req.Description),
 		MaxSessionDuration:       aws.Int64(req.SessionDuration),
-		PermissionsBoundary:      aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
+		PermissionsBoundary:      aws.String(req.ManagedPermissionBoundaryPolicy),
 	}
 
 	if err := input.Validate(); err != nil {
@@ -120,7 +122,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 
 	//Attach managed role policy
 	log.V(1).Info("Attaching Managed policies")
-	for _, policy := range config.Props.ManagedPolicies() {
+	for _, policy := range req.ManagedPolicies {
 		err = i.AttachManagedRolePolicy(ctx, policy, req.Name)
 		if err != nil {
 			log.Error(err, "Error while attaching managed policy", "policy", policy)
@@ -182,7 +184,7 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 	log.V(1).Info("Initiating api call")
 	input := &iam.PutRolePermissionsBoundaryInput{
 		RoleName:            aws.String(req.Name),
-		PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()),
+		PermissionsBoundary: aws.String(req.ManagedPermissionBoundaryPolicy),
 	}
 
 	if err := input.Validate(); err != nil {
@@ -374,15 +376,14 @@ func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, e
 }
 
 // AttachManagedRolePolicy function attaches managed policy to the role
-func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyName string, roleName string) error {
+func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyArn string, roleName string) error {
 	log := log.Logger(ctx, "awsapi", "iam", "AttachManagedRolePolicy")
-	log.WithValues("roleName", roleName, "policyName", policyName)
+	log.WithValues("roleName", roleName, "policyName", policyArn)
 	log.V(1).Info("Initiating api call")
-	policyARN := aws.String(fmt.Sprintf("arn:aws:iam::%s:policy/%s", config.Props.AWSAccountID(), policyName))
 
 	_, err := i.Client.AttachRolePolicy(&iam.AttachRolePolicyInput{
 		RoleName:  aws.String(roleName),
-		PolicyArn: policyARN,
+		PolicyArn: aws.String(policyArn),
 	})
 
 	if err != nil {

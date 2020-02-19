@@ -3,8 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	v1 "k8s.io/api/core/v1"
@@ -14,8 +13,8 @@ import (
 )
 
 var (
-	Props                              *Properties
-	IamManagedPermissionBoundaryPolicy = "arn:aws:iam::%s:policy/%s"
+	Props           *Properties
+	PolicyARNFormat = "arn:aws:iam::%s:policy/%s"
 )
 
 type Properties struct {
@@ -86,7 +85,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	if Props != nil && Props.awsAccountID != "" {
 		awsAccountID = Props.awsAccountID
 	} else {
-		awsAccountID, err = GetAccountID()
+		awsAccountID, err = awsapi.NewSTS().GetAccountID(context.Background())
 		if err != nil {
 			return err
 		}
@@ -95,12 +94,18 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
-	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
 	awsMasterRole := cm[0].Data[propertyAwsMasterRole]
+
+	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
+	for i := range managedPolicies {
+		if !strings.HasPrefix(managedPolicies[i], "arn:aws:iam::") {
+			managedPolicies[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPolicies[i])
+		}
+	}
 
 	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]
 	if !strings.HasPrefix(managedPermissionBoundaryPolicy, "arn:aws:iam::") {
-		managedPermissionBoundaryPolicy = fmt.Sprintf(IamManagedPermissionBoundaryPolicy, awsAccountID, managedPermissionBoundaryPolicy)
+		managedPermissionBoundaryPolicy = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPermissionBoundaryPolicy)
 	}
 
 	Props = &Properties{
@@ -113,20 +118,6 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
 	}
 	return nil
-}
-
-// LoadAccountID loads aws accountID from sts caller identity
-func GetAccountID() (string, error) {
-	log := log.Logger(context.Background(), "internal.config.properties", "GetAccountID")
-
-	// get caller identity in order to fetch aws account ID
-	svc := sts.New(session.Must(session.NewSession()))
-	result, err := svc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	if err != nil {
-		log.Error(err, "failed to get caller's identity")
-		return "", err
-	}
-	return *result.Account, nil
 }
 
 func (p *Properties) AllowedPolicyAction() []string {

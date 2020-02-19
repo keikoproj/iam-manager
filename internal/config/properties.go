@@ -25,6 +25,7 @@ type Properties struct {
 	awsMasterRole                   string
 	managedPolicies                 []string
 	managedPermissionBoundaryPolicy string
+	awsRegion                       string
 }
 
 func init() {
@@ -69,6 +70,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			awsMasterRole:                   os.Getenv("AWS_MASTER_ROLE"),
 			managedPolicies:                 strings.Split(os.Getenv("MANAGED_POLICIES"), separator),
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
+			awsRegion:                       os.Getenv("AWS_REGION"),
 		}
 		return nil
 	}
@@ -81,11 +83,13 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	var awsAccountID string
 	var err error
 
+	awsRegion := cm[0].Data[propertyAwsRegion]
+
 	// Load AWS account ID
 	if Props != nil && Props.awsAccountID != "" {
 		awsAccountID = Props.awsAccountID
 	} else {
-		awsAccountID, err = awsapi.NewSTS().GetAccountID(context.Background())
+		awsAccountID, err = awsapi.NewSTS(awsRegion).GetAccountID(context.Background())
 		if err != nil {
 			return err
 		}
@@ -116,6 +120,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		awsMasterRole:                   awsMasterRole,
 		managedPolicies:                 managedPolicies,
 		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
+		awsRegion:                       awsRegion,
 	}
 	return nil
 }
@@ -146,6 +151,10 @@ func (p *Properties) AWSMasterRole() string {
 
 func (p *Properties) ManagedPermissionBoundaryPolicy() string {
 	return p.managedPermissionBoundaryPolicy
+}
+
+func (p *Properties) AWSRegion() string {
+	return p.awsRegion
 }
 
 func RunConfigMapInformer(ctx context.Context) {

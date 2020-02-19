@@ -87,6 +87,11 @@ func (s *PropertiesSuite) TestGetAWSAccountID(c *check.C) {
 	c.Assert(value, check.NotNil)
 }
 
+func (s *PropertiesSuite) TestGetAWSRegion(c *check.C) {
+	value := Props.AWSRegion()
+	c.Assert(value, check.NotNil)
+}
+
 func (s *PropertiesSuite) TestGetAWSMasterRole(c *check.C) {
 	value := Props.AWSMasterRole()
 	c.Assert(value, check.NotNil)

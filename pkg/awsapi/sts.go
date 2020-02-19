@@ -1,7 +1,7 @@
 package awsapi
 
 //go:generate mockgen -destination=mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
-//go:generate mockgen -destination=mocks/mock_sts.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi STSIface
+////go:generate mockgen -destination=mocks/mock_sts.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi STSIface
 
 import (
 	"context"
@@ -20,8 +20,8 @@ type STS struct {
 	Client stsiface.STSAPI
 }
 
-func NewSTS() *STS {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-west-2")})
+func NewSTS(region string) *STS {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	if err != nil {
 		panic(err)
 	}

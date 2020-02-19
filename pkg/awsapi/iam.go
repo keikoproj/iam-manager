@@ -49,9 +49,9 @@ type IAM struct {
 	Client iamiface.IAMAPI
 }
 
-func NewIAM() *IAM {
+func NewIAM(region string) *IAM {
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("us-west-2")})
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
 	if err != nil {
 		panic(err)
 	}

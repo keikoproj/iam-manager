@@ -22,8 +22,8 @@ const (
 	// iam policy for restricting s3 resources
 	propertyIamPolicyS3Restricted = "iam.policy.s3.restricted.resource"
 
-	// aws account ID
-	propertyAwsAccountID = "aws.accountId"
+	// aws region
+	propertyAwsRegion = "aws.region"
 
 	// aws master role
 	propertyAwsMasterRole = "aws.MasterRole"

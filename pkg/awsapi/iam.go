@@ -23,7 +23,6 @@ type IAMIface interface {
 	AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest)
 	AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error
 	GetRolePolicy(ctx context.Context, req IAMRoleRequest) bool
-	GetAccountID(ctx context.Context) (string, error)
 }
 
 const (

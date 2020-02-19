@@ -1,5 +1,8 @@
 package awsapi
 
+//go:generate mockgen -destination=mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
+//go:generate mockgen -destination=mocks/mock_sts.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi STSIface
+
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/aws"

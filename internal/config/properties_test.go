@@ -7,14 +7,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"strings"
 	"testing"
-	//"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
 )
 
 type PropertiesSuite struct {
 	t        *testing.T
 	ctx      context.Context
 	mockCtrl *gomock.Controller
-	//mockIAM  *mock_awsapi.
 }
 
 func TestPropertiesSuite(t *testing.T) {

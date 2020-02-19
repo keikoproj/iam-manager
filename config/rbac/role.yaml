@@ -11,27 +11,27 @@ rules:
   resources:
   - events
   verbs:
-  - create
   - get
   - list
   - watch
+  - create
 - apiGroups:
   - iammanager.keikoproj.io
   resources:
   - iamroles
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - iammanager.keikoproj.io
   resources:
   - iamroles/status
   verbs:
   - get
-  - patch
   - update
+  - patch

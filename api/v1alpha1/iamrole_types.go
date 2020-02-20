@@ -77,24 +77,22 @@ const (
 // IamroleStatus defines the observed state of Iamrole
 type IamroleStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
-	RoleName   string `json:"roleName,omitempty"`
-	State      State  `json:"state,omitempty"`
-	RetryCount int    `json:"retryCount"`
+	//RoleName represents the name of the iam role created in AWS
+	RoleName string `json:"roleName,omitempty"`
+	//State of the resource
+	State State `json:"state,omitempty"`
+	//RetryCount in case of error
+	RetryCount int `json:"retryCount"`
+	//ErrorDescription in case of error
+	ErrorDescription string `json:"errorDescription,omitempty"`
 }
 
 type State string
 
 const (
-	CreateInProgress State = "CreateInProgress"
-	CreateError      State = "CreateError"
-
-	UpdateInprogress State = "UpdateInProgress"
-	UpdateError      State = "UpdateError"
-
-	DeleteInprogress State = "DeleteInprogress"
-	DeleteError      State = "DeleteError"
-
-	Ready State = "Ready"
+	Ready            State = "Ready"
+	Error            State = "Error"
+	PolicyNotAllowed State = "PolicyNotAllowed"
 )
 
 // +kubebuilder:object:root=true

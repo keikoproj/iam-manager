@@ -18,17 +18,16 @@ package main
 import (
 	"context"
 	"flag"
+	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
-	"os"
-
-	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	// +kubebuilder:scaffold:imports
 )
@@ -66,6 +65,7 @@ func main() {
 		LeaderElection:     enableLeaderElection,
 		Port:               9443,
 	})
+
 	if err != nil {
 		log.Error(err, "unable to start manager")
 		os.Exit(1)

@@ -468,9 +468,8 @@ spec:
               description: RetryCount in case of error
               type: integer
             roleName:
-              description: 'Important: Run "make" to regenerate code after modifying
-                this file RoleName represents the name of the iam role created in
-                AWS'
+              description: RoleName represents the name of the iam role created in
+                AWS
               type: string
             state:
               description: State of the resource

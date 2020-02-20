@@ -76,7 +76,6 @@ const (
 
 // IamroleStatus defines the observed state of Iamrole
 type IamroleStatus struct {
-	// Important: Run "make" to regenerate code after modifying this file
 	//RoleName represents the name of the iam role created in AWS
 	RoleName string `json:"roleName,omitempty"`
 	//State of the resource

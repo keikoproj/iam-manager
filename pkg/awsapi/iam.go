@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
 )
 

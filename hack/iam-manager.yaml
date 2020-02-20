@@ -461,13 +461,18 @@ spec:
           type: object
         status:
           properties:
+            errorDescription:
+              description: ErrorDescription in case of error
+              type: string
             retryCount:
+              description: RetryCount in case of error
               type: integer
             roleName:
-              description: 'Important: Run "make" to regenerate code after modifying
-                this file'
+              description: RoleName represents the name of the iam role created in
+                AWS
               type: string
             state:
+              description: State of the resource
               type: string
           required:
           - retryCount
@@ -687,6 +692,7 @@ apiVersion: v1
 data:
   aws.MasterRole: masters.cluster.k8s.local
   aws.accountId: "000011112222"
+  iam.managed.permission.boundary.policy: iam-manager-permission-boundary
   iam.managed.policies: shared.cluster.k8s.local
   iam.policy.action.prefix.whitelist: s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
   iam.policy.resource.blacklist: kops

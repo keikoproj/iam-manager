@@ -15,7 +15,7 @@ all: manager
 
 setup: ; $(info $(M) setting up env variables for test…) @ ## Setup env variables
 export LOCAL=true
-export ALLOWED_POLICY_ACTION=allowed-action
+export ALLOWED_POLICY_ACTION=s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
 export RESTRICTED_POLICY_RESOURCES=policy-resource
 export RESTRICTED_S3_RESOURCES=s3-resource
 export AWS_ACCOUNT_ID=123456789012

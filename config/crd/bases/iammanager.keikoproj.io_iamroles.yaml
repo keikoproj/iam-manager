@@ -451,13 +451,18 @@ spec:
           type: object
         status:
           properties:
+            errorDescription:
+              description: ErrorDescription in case of error
+              type: string
             retryCount:
+              description: RetryCount in case of error
               type: integer
             roleName:
-              description: 'Important: Run "make" to regenerate code after modifying
-                this file'
+              description: RoleName represents the name of the iam role created in
+                AWS
               type: string
             state:
+              description: State of the resource
               type: string
           required:
           - retryCount

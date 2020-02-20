@@ -75,7 +75,7 @@ func main() {
 
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
-		IAMClient: awsapi.New(),
+		IAMClient: awsapi.NewIAM(config.Props.AWSRegion()),
 		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")

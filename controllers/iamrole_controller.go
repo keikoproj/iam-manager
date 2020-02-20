@@ -135,12 +135,14 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	input := awsapi.IAMRoleRequest{
-		Name:             roleName,
-		PolicyName:       config.InlinePolicyName,
-		Description:      "#DO NOT DELETE#. Managed by iam-manager",
-		SessionDuration:  3600,
-		TrustPolicy:      roleTrust,
-		PermissionPolicy: string(role),
+		Name:                            roleName,
+		PolicyName:                      config.InlinePolicyName,
+		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
+		SessionDuration:                 3600,
+		TrustPolicy:                     roleTrust,
+		PermissionPolicy:                string(role),
+		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
+		ManagedPolicies:                 config.Props.ManagedPolicies(),
 	}
 	//Validate IAM Policy and Resource
 	if err := validation.ValidateIAMPolicyAction(ctx, iamRole.Spec.PolicyDocument); err != nil {

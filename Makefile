@@ -19,8 +19,9 @@ export ALLOWED_POLICY_ACTION=s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get
 export RESTRICTED_POLICY_RESOURCES=policy-resource
 export RESTRICTED_S3_RESOURCES=s3-resource
 export AWS_ACCOUNT_ID=123456789012
+export AWS_REGION=us-west-2
 export AWS_MASTER_ROLE=
-export MANAGED_POLICIES=SOMETHING
+export MANAGED_POLICIES=arn:aws:iam::123456789012:policy/SOMETHING
 export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
 
 mock:

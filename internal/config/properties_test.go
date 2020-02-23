@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"gopkg.in/check.v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"strings"
 	"testing"
 )
@@ -31,6 +31,7 @@ func (s *PropertiesSuite) TearDownTest(c *check.C) {
 
 // test local properties for local environment
 func (s *PropertiesSuite) TestLoadPropertiesLocalEnvSuccess(c *check.C) {
+	Props = nil
 	err := LoadProperties("LOCAL")
 	c.Assert(err, check.IsNil)
 	c.Assert(Props, check.NotNil)
@@ -40,25 +41,30 @@ func (s *PropertiesSuite) TestLoadPropertiesLocalEnvSuccess(c *check.C) {
 // test failure when env is not local and cm is empty
 // should not return nil pointer
 func (s *PropertiesSuite) TestLoadPropertiesFailedNoCM(c *check.C) {
+	Props = nil
 	err := LoadProperties("")
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Equals, "config map cannot be nil")
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesFailedNilCM(c *check.C) {
+	Props = nil
 	err := LoadProperties("", nil)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Equals, "config map cannot be nil")
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesSuccess(c *check.C) {
+	Props = nil
 	cm := &v1.ConfigMap{
 		Data: map[string]string{
 			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
+			"aws.accountId":                          "123456789012",
 		},
 	}
 	err := LoadProperties("", cm)
 	c.Assert(err, check.IsNil)
+	c.Assert(Props.AWSRegion(), check.Equals, "us-west-2")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
 }
 
@@ -100,4 +106,14 @@ func (s *PropertiesSuite) TestGetAWSMasterRole(c *check.C) {
 func (s *PropertiesSuite) TestGetManagedPermissionBoundaryPolicy(c *check.C) {
 	value := Props.ManagedPermissionBoundaryPolicy()
 	c.Assert(value, check.NotNil)
+}
+
+func (s *PropertiesSuite) TestIsWebhookEnabled(c *check.C) {
+	value := Props.IsWebHookEnabled()
+	c.Assert(value, check.Equals, false)
+}
+
+func (s *PropertiesSuite) TestMaxRolesAllowed(c *check.C) {
+	value := Props.MaxRolesAllowed()
+	c.Assert(value, check.Equals, 1)
 }

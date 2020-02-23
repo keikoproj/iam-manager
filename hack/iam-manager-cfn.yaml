@@ -12,9 +12,13 @@ Parameters:
     AllowedValues: ["instance", "kiam"]
     Default: "instance"
     ConstraintDescription: "Must specify kiam or instance"
-  ParamK8sMasterRole:
+  ParamK8sTrustRole:
     Description: Role to be assumed in case of kiam
     Type: String
+  ParamK8sClusterName:
+    Description: Cluster Name to be included in the names
+    Type: String
+    Deafult: "cluster"
   AllowedPolicyList:
     Description: Allowed IAM policy list
     Type: CommaDelimitedList
@@ -28,7 +32,7 @@ Resources:
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
       Description: "PermissionBoundary to be used by iam-manager"
-      ManagedPolicyName: iam-manager-permission-boundary
+      ManagedPolicyName: !Sub "k8s-iam-manager-${ParamK8sClusterName}-permission-boundary"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -41,7 +45,7 @@ Resources:
     Type: 'AWS::IAM::Policy'
     DependsOn: IAMManagerAccessRole
     Properties:
-      PolicyName: k8s-cluster-iam-manager-policy
+      PolicyName: !Sub "k8s-iam-manager-${ParamK8sClusterName}-policy"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -56,7 +60,7 @@ Resources:
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Condition:
               StringEquals:
-                iam:PermissionsBoundary: !Sub "arn:aws:iam::${AWS::AccountId}:policy/iam-manager-permission-boundary"
+                iam:PermissionsBoundary: !Sub "arn:aws:iam::${AWS::AccountId}:policy/k8s-iam-manager-${ParamK8sClusterName}-permission-boundary"
             Sid: "AllowOnlyWithPermBoundary"
           - Effect: "Allow"
             Action:
@@ -72,6 +76,13 @@ Resources:
               - "iam:DeletePolicy"
               - "iam:UpdateRole"
               - "iam:DeleteRole"
+              - "iam:GetRole"
+              - "iam:GetRolePolicy"
+              - "iam:GetPolicy"
+              - "iam:ListRoles"
+              - "iam:ListRolePolicies"
+              - "iam:ListAttachedRolePolicies"
+              - "iam:ListPolicies"
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Condition:
               StringEquals:
@@ -83,24 +94,13 @@ Resources:
               - "iam:UntagRole"
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Sid: "Allow"
-          - Effect: "Allow"
-            Action:
-              - "iam:GetRole"
-              - "iam:GetRolePolicy"
-              - "iam:GetPolicy"
-              - "iam:ListRoles"
-              - "iam:ListRolePolicies"
-              - "iam:ListAttachedRolePolicies"
-              - "iam:ListPolicies"
-            Resource: "*"
-            Sid: "AllowReadOps"
       Roles:
         - !Ref IAMManagerAccessRole
   ##### IAM Role to be assumed ####
   IAMManagerAccessRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: k8s-cluster-iam-manager-role
+      RoleName: !Sub "k8s-iam-manager-${ParamK8sClusterName}-role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Id: "IamAssumeRole"
@@ -109,13 +109,14 @@ Resources:
           Sid: "AllowAssumeRole"
           Action: "sts:AssumeRole"
           Principal:
-            AWS: !If [CreateIAMRole, !Sub "arn:aws:iam::${AWS::AccountId}:role/${ParamK8sMasterRole}", !Ref "AWS::NoValue"]
+            AWS: !If [CreateIAMRole, !Sub "${ParamK8sTrustRole}", !Ref "AWS::NoValue"]
             Service: !If [CreateInstanceProfile, "ec2.amazonaws.com", !Ref "AWS::NoValue"]
       Path: "/"
   IAMManagerInstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
+    Condition: CreateInstanceProfile
     Properties:
-      InstanceProfileName: iam-manager-instance-profile
+      InstanceProfileName: !Sub "k8s-iam-manager-${ParamK8sClusterName}-instance-profile"
       Path: /
       Roles:
         - !Ref IAMManagerAccessRole

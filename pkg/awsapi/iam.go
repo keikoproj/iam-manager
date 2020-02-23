@@ -430,7 +430,7 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 			return err
 		}
 	}
-	log.V(1).Info("Attached managed for role", "policyList", managedPolicyList.AttachedPolicies)
+	log.V(1).Info("listing attached policies", "policyList", managedPolicyList.AttachedPolicies)
 
 	// Detach managed policies
 	for _, policy := range managedPolicyList.AttachedPolicies {

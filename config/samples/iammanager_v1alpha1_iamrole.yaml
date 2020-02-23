@@ -1,7 +1,7 @@
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: iamrole-sample2
+  name: dev-patterns-iksmanager-usw2-ppd-idev
 spec:
   PolicyDocument:
     Version: '2012-10-17'

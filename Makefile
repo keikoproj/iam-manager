@@ -52,10 +52,17 @@ deploy: manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy_no_webhook: manifests
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default_no_webhook | kubectl apply -f -
+
 # updates the full config yaml file
 update: manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default > hack/iam-manager.yaml
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default_no_webhook > hack/iam-manager_no_webhook.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen

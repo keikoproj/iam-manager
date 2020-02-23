@@ -25,7 +25,6 @@ import (
 // IamroleSpec defines the desired state of Iamrole
 type IamroleSpec struct {
 	PolicyDocument PolicyDocument `json:"PolicyDocument"`
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:validation:Required
@@ -89,9 +88,10 @@ type IamroleStatus struct {
 type State string
 
 const (
-	Ready            State = "Ready"
-	Error            State = "Error"
-	PolicyNotAllowed State = "PolicyNotAllowed"
+	Ready                State = "Ready"
+	Error                State = "Error"
+	PolicyNotAllowed     State = "PolicyNotAllowed"
+	RolesMaxLimitReached State = "RolesMaxLimitReached"
 )
 
 // +kubebuilder:object:root=true

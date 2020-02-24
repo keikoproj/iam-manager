@@ -60,11 +60,15 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccess(c *check.C) {
 		Data: map[string]string{
 			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
 			"aws.accountId":                          "123456789012",
+			"iam.role.max.limit.per.namespace": "5",
 		},
 	}
 	err := LoadProperties("", cm)
 	c.Assert(err, check.IsNil)
 	c.Assert(Props.AWSRegion(), check.Equals, "us-west-2")
+	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
+	c.Assert(Props.IsWebHookEnabled(), check.Equals, false)
+	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
 }
 

@@ -60,7 +60,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccess(c *check.C) {
 		Data: map[string]string{
 			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
 			"aws.accountId":                          "123456789012",
-			"iam.role.max.limit.per.namespace": "5",
+			"iam.role.max.limit.per.namespace":       "5",
 		},
 	}
 	err := LoadProperties("", cm)
@@ -119,5 +119,5 @@ func (s *PropertiesSuite) TestIsWebhookEnabled(c *check.C) {
 
 func (s *PropertiesSuite) TestMaxRolesAllowed(c *check.C) {
 	value := Props.MaxRolesAllowed()
-	c.Assert(value, check.Equals, 1)
+	c.Assert(value, check.Equals, 5)
 }

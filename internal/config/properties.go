@@ -130,6 +130,8 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			return err
 		}
 		Props.awsAccountID = awsAccountID
+	} else {
+		Props.awsAccountID = awsAccountID
 	}
 
 	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]

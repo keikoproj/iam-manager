@@ -10,11 +10,7 @@ cluster=$(echo $1 | cut -d. -f1)
 ## Execute CFN using awscli command
 policyList=`cat allowed_policies.txt`
 echo $policyList
-aws cloudformation create-stack --stack-name iam-manager-$cluster-cfn --template-body file://iam-manager-cfn.yaml --parameters ParameterKey=DeploymentType,ParameterValue=kiam ParameterKey=ParamK8sTrustRole,ParameterValue=$4 ParameterKey=ParamK8sClusterName,ParameterValue=$1 ParameterKey=AllowedPolicyList,ParameterValue=$policyList --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --on-failure DELETE --region $2 --profile $3
-
-## wget iam-manager
-kubectl apply -f iam-manager/iam-manager_no_webhook.yaml
-
+aws cloudformation update-stack --stack-name iam-manager-$cluster-cfn --use-previous-template --parameters ParameterKey=DeploymentType,ParameterValue=kiam ParameterKey=ParamK8sTrustRole,ParameterValue=$4 ParameterKey=ParamK8sClusterName,ParameterValue=$1 ParameterKey=AllowedPolicyList,ParameterValue=$policyList --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --on-failure DELETE --region $2 --profile $3
 
 ## install config map
 kubectl apply -f iam-manager/iammanager.keikoproj.io_iamroles-configmap.yaml

@@ -24,25 +24,6 @@ Update the allowed policies in [allowed_policies.txt](hack/allowed_policies.txt)
 
 Note: You must be cluster admin and have exported KUBECONFIG and also has Administrator access to underlying AWS account and have the credentials exported.
 
-There are 2 types of installations which are widely used
-1. iam-manager with kiam.
-2. iam-manager on dedicated instances.
-
-##### iam-manager with kiam
-This installation is where pods can assume the role only via kiam. Kiam server runs on master nodes and any role created must be trusted by master node instance profile to be assumed by kiam.  
-
-example:
-```bash
-export KUBECONFIG=/Users/myhome/.kube/admin@eks-dev2-k8s  
-export AWS_PROFILE=admin_123456789012_account
-./install_with_kiam.sh [cluster_name] [aws_region] [aws_profile] [masters_nodes_instance_profile]
-./install_with_kiam.sh eks-dev2-k8s us-west-2 aws_profile arn:aws:iam::123456789012:role/masters.eks-dev2-k8s
-
-```
-
-##### iam-manager on dedicated instances
-This installation is where pods assume direct instance profile to do the job.
-
 example:
 ```bash
 export KUBECONFIG=/Users/myhome/.kube/admin@eks-dev2-k8s  
@@ -51,6 +32,9 @@ export AWS_PROFILE=admin_123456789012_account
 ./install.sh eks-dev2-k8s us-west-2 aws_profile
 
 ```
+
+To enable web hook or/and also update your installation of iam-manager to work with kiam please check [Installation](docs/Install.md) for detailed instructions.
+
 ##### iam-manager config-map
 This [document](docs/Configmap_Properties.md) provide explanation on configmap variables.
 

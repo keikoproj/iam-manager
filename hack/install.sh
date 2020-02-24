@@ -3,8 +3,6 @@
 ## $2 => region
 ## $3 => aws_profile
 
-## install cert-manager
-kubectl apply -f cert-manager/cert-manager-v0.12.0.yaml --validate=false
 
 ##Split cluster name by "." delimeter to avoid naming syntax issues
 cluster=$(echo $1 | cut -d. -f1)

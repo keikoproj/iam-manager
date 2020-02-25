@@ -1,4 +1,4 @@
-##Installation:
+### Installation:
 
 Simplest way to install iam-manager along with the role required for it to do the job is to run [install.sh](hack/install.sh) command.  
 

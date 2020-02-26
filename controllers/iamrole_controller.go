@@ -18,6 +18,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
@@ -73,7 +74,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
 	// Isit being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
@@ -133,7 +134,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log.WithValues("iamrole", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
-	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
 	input := awsapi.IAMRoleRequest{
 		Name:                            roleName,
 		PolicyName:                      config.InlinePolicyName,
@@ -146,22 +147,16 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	}
 	//Validate IAM Policy and Resource
 	if err := validation.ValidateIAMPolicyAction(ctx, iamRole.Spec.PolicyDocument); err != nil {
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: iamRole.Status.RoleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
+		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
 	}
 
 	if err := validation.ValidateIAMPolicyResource(ctx, iamRole.Spec.PolicyDocument); err != nil {
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: iamRole.Status.RoleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
-	}
-	//Validate Number of successful IAM roles
-
-	var iamRoles iammanagerv1alpha1.IamroleList
-	if err := r.List(ctx, &iamRoles, client.InNamespace(req.Namespace)); err != nil {
-		return ctrl.Result{}, ignoreNotFound(err)
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
+		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
 	}
 
-	log.Info("Total Number of roles", "count", len(iamRoles.Items))
-
-	var sleepTime float64
+	var requeueTime float64
 	switch iamRole.Status.State {
 	case iammanagerv1alpha1.Ready:
 
@@ -174,7 +169,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: iamRole.Status.RoleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, 3000)
 
 		}
 
@@ -192,20 +187,37 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			//Lets do exponential back off
 			// 2^x
 			waitTime := math.Pow(2, float64(iamRole.Status.RetryCount+1)) * 100
-			sleepTime = waitTime
+			requeueTime = waitTime
 			if waitTime > maxWaitTime {
-				sleepTime = maxWaitTime
+				requeueTime = maxWaitTime
 			}
-			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", sleepTime)
+			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", requeueTime)
 		}
 		fallthrough
+	case "", iammanagerv1alpha1.PolicyNotAllowed, iammanagerv1alpha1.RolesMaxLimitReached:
+		//Validate Number of successful IAM roles
 
+		var iamRoles iammanagerv1alpha1.IamroleList
+		if err := r.List(ctx, &iamRoles, client.InNamespace(req.Namespace)); err != nil {
+			return ctrl.Result{}, ignoreNotFound(err)
+		}
+
+		log.Info("Total Number of roles", "count", len(iamRoles.Items), "allowed", config.Props.MaxRolesAllowed())
+
+		if config.Props.MaxRolesAllowed() < len(iamRoles.Items) {
+			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
+			log.Error(errors.New(errMsg), errMsg)
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg}, iammanagerv1alpha1.RolesMaxLimitReached)
+		}
+		fallthrough
 	default:
+
 		_, err := r.IAMClient.CreateRole(ctx, input)
 		if err != nil {
 			log.Error(err, "error in creating a role")
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, sleepTime)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, requeueTime)
 		}
 		//OK. Successful!!
 		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")

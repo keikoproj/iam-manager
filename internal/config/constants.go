@@ -25,6 +25,9 @@ const (
 	// aws region
 	propertyAwsRegion = "aws.region"
 
+	//enable webhook property
+	propertAWSAccountID = "aws.accountId"
+
 	// aws master role
 	propertyAwsMasterRole = "aws.MasterRole"
 
@@ -33,6 +36,12 @@ const (
 
 	// user managed permission boundary policy
 	propertyPermissionBoundary = "iam.managed.permission.boundary.policy"
+
+	//enable webhook property
+	propertWebhookEnabled = "webhook.enabled"
+
+	//max allowed aws iam roles per namespace
+	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
 )
 
 const (

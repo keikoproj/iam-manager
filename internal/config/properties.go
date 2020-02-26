@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -26,6 +27,8 @@ type Properties struct {
 	managedPolicies                 []string
 	managedPermissionBoundaryPolicy string
 	awsRegion                       string
+	isWebhookEnabled                string
+	maxRolesAllowed                 int
 }
 
 func init() {
@@ -71,6 +74,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			managedPolicies:                 strings.Split(os.Getenv("MANAGED_POLICIES"), separator),
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
 			awsRegion:                       os.Getenv("AWS_REGION"),
+			isWebhookEnabled:                os.Getenv("ENABLE_WEBHOOK"),
 		}
 		return nil
 	}
@@ -80,25 +84,67 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		return fmt.Errorf("config map cannot be nil")
 	}
 
-	var awsAccountID string
-	var err error
-
-	awsRegion := cm[0].Data[propertyAwsRegion]
-
-	// Load AWS account ID
-	if Props != nil && Props.awsAccountID != "" {
-		awsAccountID = Props.awsAccountID
-	} else {
-		awsAccountID, err = awsapi.NewSTS(awsRegion).GetAccountID(context.Background())
-		if err != nil {
-			return err
-		}
-	}
-
 	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
 	awsMasterRole := cm[0].Data[propertyAwsMasterRole]
+
+	Props = &Properties{
+		allowedPolicyAction:       allowedPolicyAction,
+		restrictedPolicyResources: restrictedPolicyResources,
+		restrictedS3Resources:     restrictedS3Resources,
+		awsMasterRole:             awsMasterRole,
+	}
+
+	//Defaults
+	isWebhook := cm[0].Data[propertWebhookEnabled]
+	if isWebhook == "true" {
+		Props.isWebhookEnabled = "true"
+	} else {
+		Props.isWebhookEnabled = "false"
+	}
+
+	awsRegion := cm[0].Data[propertyAwsRegion]
+	if awsRegion != "" {
+		Props.awsRegion = awsRegion
+	} else {
+		Props.awsRegion = "us-west-2"
+	}
+
+	maxRolesAllowed := cm[0].Data[propertyMaxIamRoles]
+	if maxRolesAllowed != "" {
+		maxRolesAllowed, err := strconv.Atoi(maxRolesAllowed)
+		if err != nil {
+			return err
+		}
+		Props.maxRolesAllowed = maxRolesAllowed
+	} else {
+		Props.maxRolesAllowed = 1
+	}
+
+	awsAccountID := cm[0].Data[propertAWSAccountID]
+	// Load AWS account ID
+	if Props.awsAccountID == "" && awsAccountID == "" {
+		awsAccountID, err := awsapi.NewSTS(Props.awsRegion).GetAccountID(context.Background())
+		if err != nil {
+			return err
+		}
+		Props.awsAccountID = awsAccountID
+	} else {
+		Props.awsAccountID = awsAccountID
+	}
+
+	managedPermissionBoundaryPolicyArn := cm[0].Data[propertyPermissionBoundary]
+
+	if managedPermissionBoundaryPolicyArn == "" {
+		managedPermissionBoundaryPolicyArn = fmt.Sprintf(PolicyARNFormat, awsAccountID, "k8s-iam-manager-cluster-permission-boundary")
+	}
+
+	if !strings.HasPrefix(managedPermissionBoundaryPolicyArn, "arn:aws:iam::") {
+		managedPermissionBoundaryPolicyArn = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPermissionBoundaryPolicyArn)
+	}
+
+	Props.managedPermissionBoundaryPolicy = managedPermissionBoundaryPolicyArn
 
 	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
 	for i := range managedPolicies {
@@ -106,22 +152,8 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			managedPolicies[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPolicies[i])
 		}
 	}
+	Props.managedPolicies = managedPolicies
 
-	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]
-	if !strings.HasPrefix(managedPermissionBoundaryPolicy, "arn:aws:iam::") {
-		managedPermissionBoundaryPolicy = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPermissionBoundaryPolicy)
-	}
-
-	Props = &Properties{
-		allowedPolicyAction:             allowedPolicyAction,
-		restrictedPolicyResources:       restrictedPolicyResources,
-		restrictedS3Resources:           restrictedS3Resources,
-		awsAccountID:                    awsAccountID,
-		awsMasterRole:                   awsMasterRole,
-		managedPolicies:                 managedPolicies,
-		managedPermissionBoundaryPolicy: managedPermissionBoundaryPolicy,
-		awsRegion:                       awsRegion,
-	}
 	return nil
 }
 
@@ -157,6 +189,18 @@ func (p *Properties) AWSRegion() string {
 	return p.awsRegion
 }
 
+func (p *Properties) IsWebHookEnabled() bool {
+	resp := false
+	if p.isWebhookEnabled == "true" {
+		resp = true
+	}
+	return resp
+}
+
+func (p *Properties) MaxRolesAllowed() int {
+	return p.maxRolesAllowed
+}
+
 func RunConfigMapInformer(ctx context.Context) {
 	log := log.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
 	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
@@ -170,7 +214,7 @@ func RunConfigMapInformer(ctx context.Context) {
 }
 
 func updateProperties(old, new interface{}) {
-	log := log.Logger(context.Background(), "internal.config.properties", "onUpdate")
+	log := log.Logger(context.Background(), "internal.config.properties", "updateProperties")
 	oldCM := old.(*v1.ConfigMap)
 	newCM := new.(*v1.ConfigMap)
 	if oldCM.ResourceVersion == newCM.ResourceVersion {

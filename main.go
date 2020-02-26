@@ -72,6 +72,7 @@ func main() {
 	}
 
 	log.V(1).Info("Setting up reconciler with manager")
+	log.Info("region ", "region", config.Props.AWSRegion())
 
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
@@ -84,7 +85,7 @@ func main() {
 
 	//Get the client
 	iammanagerv1alpha1.NewWClient()
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if config.Props.IsWebHookEnabled() {
 		log.Info("Registering webhook")
 		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
 			log.Error(err, "unable to create webhook", "webhook", "Iamrole")

@@ -98,8 +98,8 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 
 	//Defaults
 	isWebhook := cm[0].Data[propertWebhookEnabled]
-	if isWebhook != "" {
-		Props.isWebhookEnabled = isWebhook
+	if isWebhook == "true" {
+		Props.isWebhookEnabled = "true"
 	} else {
 		Props.isWebhookEnabled = "false"
 	}
@@ -134,13 +134,17 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.awsAccountID = awsAccountID
 	}
 
-	managedPermissionBoundaryPolicy := cm[0].Data[propertyPermissionBoundary]
+	managedPermissionBoundaryPolicyArn := cm[0].Data[propertyPermissionBoundary]
 
-	if managedPermissionBoundaryPolicy == "" {
-		managedPermissionBoundaryPolicy = "k8s-iam-manager-cluster-permission-boundary"
+	if managedPermissionBoundaryPolicyArn == "" {
+		managedPermissionBoundaryPolicyArn = fmt.Sprintf(PolicyARNFormat, awsAccountID, "k8s-iam-manager-cluster-permission-boundary")
 	}
 
-	Props.managedPermissionBoundaryPolicy = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPermissionBoundaryPolicy)
+	if !strings.HasPrefix(managedPermissionBoundaryPolicyArn, "arn:aws:iam::") {
+		managedPermissionBoundaryPolicyArn = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPermissionBoundaryPolicyArn)
+	}
+
+	Props.managedPermissionBoundaryPolicy = managedPermissionBoundaryPolicyArn
 
 	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
 	for i := range managedPolicies {

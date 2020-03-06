@@ -25,6 +25,8 @@ import (
 // IamroleSpec defines the desired state of Iamrole
 type IamroleSpec struct {
 	PolicyDocument PolicyDocument `json:"PolicyDocument"`
+	// +optional
+	TrustPolicy TrustPolicy `json:"TrustPolicy,omitempty"`
 }
 
 // +kubebuilder:validation:Required
@@ -64,6 +66,19 @@ type Statement struct {
 // - "Deny" : denies the specific action on resources
 // +kubebuilder:validation:Enum=Allow;Deny
 type Effect string
+
+//TrustPolicy struct holds principal
+type TrustPolicy struct {
+	Principal Principal `json:"Principal,omitempty"`
+}
+
+//Principal struct holds AWS principal
+type Principal struct {
+	// +optional
+	AWS StringOrStrings `json:"AWS,omitempty"`
+	// +optional
+	Service string `json:"Service,omitempty"`
+}
 
 const (
 	//Allow Policy allows policy

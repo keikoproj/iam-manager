@@ -23,7 +23,7 @@ type Properties struct {
 	restrictedPolicyResources       []string
 	restrictedS3Resources           []string
 	awsAccountID                    string
-	awsMasterRole                   string
+	trustPolicyARNs                 []string
 	managedPolicies                 []string
 	managedPermissionBoundaryPolicy string
 	awsRegion                       string
@@ -70,7 +70,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			restrictedPolicyResources:       strings.Split(os.Getenv("RESTRICTED_POLICY_RESOURCES"), separator),
 			restrictedS3Resources:           strings.Split(os.Getenv("RESTRICTED_S3_RESOURCES"), separator),
 			awsAccountID:                    os.Getenv("AWS_ACCOUNT_ID"),
-			awsMasterRole:                   os.Getenv("AWS_MASTER_ROLE"),
+			trustPolicyARNs:                 strings.Split(os.Getenv("TRUST_POLICY_ARN_LIST"), separator),
 			managedPolicies:                 strings.Split(os.Getenv("MANAGED_POLICIES"), separator),
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
 			awsRegion:                       os.Getenv("AWS_REGION"),
@@ -87,13 +87,11 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
-	awsMasterRole := cm[0].Data[propertyAwsMasterRole]
 
 	Props = &Properties{
 		allowedPolicyAction:       allowedPolicyAction,
 		restrictedPolicyResources: restrictedPolicyResources,
 		restrictedS3Resources:     restrictedS3Resources,
-		awsMasterRole:             awsMasterRole,
 	}
 
 	//Defaults
@@ -154,6 +152,14 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	}
 	Props.managedPolicies = managedPolicies
 
+	trustPolicyARNs := strings.Split(cm[0].Data[propertyDefaultTrustPolicyARNList], separator)
+	for i := range trustPolicyARNs {
+		if !strings.HasPrefix(trustPolicyARNs[i], "arn:aws:iam::") {
+			trustPolicyARNs[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, trustPolicyARNs[i])
+		}
+	}
+	Props.trustPolicyARNs = trustPolicyARNs
+
 	return nil
 }
 
@@ -177,8 +183,8 @@ func (p *Properties) AWSAccountID() string {
 	return p.awsAccountID
 }
 
-func (p *Properties) AWSMasterRole() string {
-	return p.awsMasterRole
+func (p *Properties) TrustPolicyARNs() []string {
+	return p.trustPolicyARNs
 }
 
 func (p *Properties) ManagedPermissionBoundaryPolicy() string {

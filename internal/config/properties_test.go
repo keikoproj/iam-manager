@@ -122,7 +122,7 @@ func (s *PropertiesSuite) TestGetAWSRegion(c *check.C) {
 }
 
 func (s *PropertiesSuite) TestGetAWSMasterRole(c *check.C) {
-	value := Props.AWSMasterRole()
+	value := Props.TrustPolicyARNs()
 	c.Assert(value, check.NotNil)
 }
 

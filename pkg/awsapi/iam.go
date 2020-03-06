@@ -336,6 +336,43 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 }
 
 //GetRolePolicy gets the role from aws iam
+func (i *IAM) GetRole(ctx context.Context, req IAMRoleRequest) (*iam.GetRoleOutput, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "GetRole")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
+	// First get the iam role policy on the AWS IAM side
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(req.Name),
+	}
+
+	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
+		//should log the error
+		return nil, err
+	}
+
+	resp, err := i.Client.GetRole(input)
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
+			case iam.ErrCodeServiceFailureException:
+				log.Error(err, iam.ErrCodeServiceFailureException)
+			default:
+				log.Error(err, aerr.Error())
+			}
+		}
+
+		return nil, err
+	}
+	log.V(1).Info("Successfully able to get the role")
+
+	return resp, nil
+}
+
+//GetRolePolicy gets the role from aws iam
 func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, error) {
 	log := log.Logger(ctx, "awsapi", "iam", "GetRolePolicy")
 	log.WithValues("roleName", req.Name)

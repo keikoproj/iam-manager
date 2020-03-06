@@ -20,7 +20,7 @@ export RESTRICTED_POLICY_RESOURCES=policy-resource
 export RESTRICTED_S3_RESOURCES=s3-resource
 export AWS_ACCOUNT_ID=123456789012
 export AWS_REGION=us-west-2
-export AWS_MASTER_ROLE=
+export TRUST_POLICY_ARN_LIST=arn:aws:iam::123456789012:role/trust_role
 export MANAGED_POLICIES=arn:aws:iam::123456789012:policy/SOMETHING
 export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
 
@@ -32,7 +32,7 @@ mock:
 	done
 
 # Run tests
-test: setup mock generate fmt vet manifests
+test: setup mock generate fmt manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
@@ -45,6 +45,15 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install: manifests
+	kustomize build config/crd_no_webhook | kubectl apply -f -
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: manifests
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default_no_webhook | kubectl apply -f -
+
+# Install CRDs into a cluster
+install_with_webhook: manifests
 	kustomize build config/crd | kubectl apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
@@ -52,21 +61,17 @@ deploy_with_webhook: manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default_no_webhook | kubectl apply -f -
-
 # updates the full config yaml file
 update: manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default > hack/iam-manager_with_webhook.yaml
-	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default_no_webhook > hack/iam-manager.yaml
+	kustomize build config/default > hack/iam-manager_with_webhook.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
+
 
 # Run go fmt against code
 fmt:

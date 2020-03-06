@@ -4,7 +4,8 @@ import "encoding/json"
 
 //StringOrStrings type accepts one string or multiple strings
 // +kubebuilder:object:generate=false
-// +k8s:openapi-gen=true
+// +kubebuilder:validation:Type=string
+// +kubebuilder:validation:Format=StringOrStrings
 type StringOrStrings []string
 
 //MarshalJSON function is a custom implementation of json.Marshal for StringOrStrings
@@ -40,13 +41,3 @@ func (s *StringOrStrings) UnmarshalJSON(b []byte) error {
 	*s = strings
 	return nil
 }
-
-// OpenAPISchemaType is used by the kube-openapi generator when constructing
-// the OpenAPI spec of this type.
-//
-// See: https://github.com/kubernetes/kube-openapi/tree/master/pkg/generators
-func (StringOrStrings) OpenAPISchemaType() []string { return []string{"string"} }
-
-// OpenAPISchemaFormat is used by the kube-openapi generator when constructing
-// the OpenAPI spec of this type.
-func (StringOrStrings) OpenAPISchemaFormat() string { return "string-or-strings" }

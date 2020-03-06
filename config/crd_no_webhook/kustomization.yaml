@@ -3,7 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/iammanager.keikoproj.io_iamroles.yaml
-- bases/iammanager.keikoproj.io_iamroles-configmap.yaml
+#- bases/iammanager.keikoproj.io_iamroles-configmap.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

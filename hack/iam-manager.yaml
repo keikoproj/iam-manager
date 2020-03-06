@@ -459,9 +459,10 @@ spec:
                 Principal:
                   properties:
                     AWS:
+                      format: StringOrStrings
                       items:
                         type: string
-                      type: array
+                      type: string
                     Service:
                       type: string
                   type: object
@@ -636,22 +637,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: iam-manager-system
----
-apiVersion: v1
-data:
-  aws.MasterRole: masters.cluster.k8s.local
-  aws.accountId: "000011112222"
-  iam.managed.permission.boundary.policy: iam-manager-permission-boundary
-  iam.managed.policies: shared.cluster.k8s.local
-  iam.policy.action.prefix.whitelist: s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
-  iam.policy.resource.blacklist: kops
-  iam.policy.s3.restricted.resource: '*'
-kind: ConfigMap
-metadata:
-  labels:
-    app: iam-manager
-  name: iam-manager-iamroles-v1alpha1-configmap
   namespace: iam-manager-system
 ---
 apiVersion: v1

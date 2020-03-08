@@ -129,7 +129,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	log.V(1).Info("Attaching Inline role policies")
-	return i.AttachInlineRolePolicy(ctx, req)
+	return i.UpdateRole(ctx, req)
 }
 
 //TagRole tags role with appropriate tags

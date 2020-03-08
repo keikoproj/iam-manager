@@ -287,14 +287,16 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update status due to error "+err.Error())
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
+
+	if state != iammanagerv1alpha1.Error {
+		return ctrl.Result{}, nil
+	}
+
 	//if wait time is specified, requeue it after provided time
 	if len(requeueTime) == 0 {
 		requeueTime[0] = 0
 	}
 
-	if state != iammanagerv1alpha1.Error {
-		return ctrl.Result{}, nil
-	}
 	log.Info("Requeue time", "time", requeueTime[0])
 	return ctrl.Result{RequeueAfter: time.Duration(requeueTime[0]) * time.Millisecond}, nil
 }

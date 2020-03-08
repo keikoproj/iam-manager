@@ -154,7 +154,7 @@ func CompareAssumeRolePolicy(ctx context.Context, request awsapi.IAMRoleRequest,
 	}
 	//compare
 	if !reflect.DeepEqual(reqAssume, destAssume) {
-		log.Info("input assume role policy and target assume role policy are NOT equal")
+		log.Info("input assume role policy and target assume role policy are NOT equal", "req", reqAssume, "dest", destAssume)
 		return false
 	}
 

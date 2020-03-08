@@ -459,10 +459,9 @@ spec:
                 Principal:
                   properties:
                     AWS:
-                      format: StringOrStrings
                       items:
                         type: string
-                      type: string
+                      type: array
                     Service:
                       type: string
                   type: object

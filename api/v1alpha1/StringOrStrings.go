@@ -4,8 +4,6 @@ import "encoding/json"
 
 //StringOrStrings type accepts one string or multiple strings
 // +kubebuilder:object:generate=false
-// +kubebuilder:validation:Type=string
-// +kubebuilder:validation:Format=StringOrStrings
 type StringOrStrings []string
 
 //MarshalJSON function is a custom implementation of json.Marshal for StringOrStrings

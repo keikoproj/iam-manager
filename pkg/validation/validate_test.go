@@ -190,7 +190,7 @@ func (s *ValidateSuite) TestComparePermissionPolicySuccess(c *check.C) {
 		PermissionPolicy: string(role1),
 	}
 
-	flag := validation.ComparePermissionPolicy(s.ctx, i1, string(role2))
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
 	c.Assert(flag, check.Equals, true)
 }
 
@@ -220,7 +220,7 @@ func (s *ValidateSuite) TestComparePermissionPolicy2Success(c *check.C) {
 		PermissionPolicy: string(role1),
 	}
 
-	flag := validation.ComparePermissionPolicy(s.ctx, i1, string(role2))
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
 	c.Assert(flag, check.Equals, true)
 }
 
@@ -250,7 +250,7 @@ func (s *ValidateSuite) TestComparePermissionPolicyFailure(c *check.C) {
 		PermissionPolicy: string(role1),
 	}
 
-	flag := validation.ComparePermissionPolicy(s.ctx, i1, string(role2))
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
 	c.Assert(flag, check.Equals, false)
 }
 
@@ -294,7 +294,7 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
 		TrustPolicy: string(role1),
 	}
 
-	flag := validation.CompareAssumeRolePolicy(s.ctx, i1, &target)
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
 	c.Assert(flag, check.Equals, true)
 }
 
@@ -337,7 +337,7 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
 		TrustPolicy: string(role1),
 	}
 
-	flag := validation.CompareAssumeRolePolicy(s.ctx, i1, &target)
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
 	c.Assert(flag, check.Equals, true)
 }
 
@@ -380,7 +380,7 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
 		TrustPolicy: string(role1),
 	}
 
-	flag := validation.CompareAssumeRolePolicy(s.ctx, i1, &target)
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
 	c.Assert(flag, check.Equals, false)
 }
 

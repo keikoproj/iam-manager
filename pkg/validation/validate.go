@@ -90,20 +90,20 @@ func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument
 }
 
 //CompareRole function compares input role to target role
-func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, role *iam.GetRoleOutput, target string) bool {
+func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole *iam.GetRoleOutput, targetRolePolicy string) bool {
 	log := log.Logger(ctx, "pkg.validation", "ComparePolicy")
 
 	// Step 1: Compare the permission policy
-	if !ComparePermissionPolicy(ctx, request, target) {
+	if !ComparePermissionPolicy(ctx, request.PermissionPolicy, targetRolePolicy) {
 		return false
 	}
 
 	//Step 2: Compare Assume Role Policy Document
-	if !CompareAssumeRolePolicy(ctx, request, role) {
+	if !CompareAssumeRolePolicy(ctx, request.TrustPolicy, *targetRole.Role.AssumeRolePolicyDocument) {
 		return false
 	}
 	//Step 3: Compare Permission Boundary
-	if !reflect.DeepEqual(request.ManagedPermissionBoundaryPolicy, *role.Role.PermissionsBoundary.PermissionsBoundaryArn) {
+	if !reflect.DeepEqual(request.ManagedPermissionBoundaryPolicy, *targetRole.Role.PermissionsBoundary.PermissionsBoundaryArn) {
 		log.Info("input permission boundary and target permission boundary are NOT equal")
 		return false
 	}
@@ -111,8 +111,8 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, role *iam.G
 	return true
 }
 
-//ComparePermissionPolicy compares assume role policy from request and response
-func ComparePermissionPolicy(ctx context.Context, request awsapi.IAMRoleRequest, target string) bool {
+//ComparePermissionPolicy compares role policy from request and response
+func ComparePermissionPolicy(ctx context.Context, request string, target string) bool {
 	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
 	d, _ := url.QueryUnescape(target)
@@ -123,7 +123,7 @@ func ComparePermissionPolicy(ctx context.Context, request awsapi.IAMRoleRequest,
 	}
 
 	req := v1alpha1.PolicyDocument{}
-	err = json.Unmarshal([]byte(request.PermissionPolicy), &req)
+	err = json.Unmarshal([]byte(request), &req)
 	if err != nil {
 		log.Error(err, "failed to marshal policy document")
 	}
@@ -137,10 +137,10 @@ func ComparePermissionPolicy(ctx context.Context, request awsapi.IAMRoleRequest,
 }
 
 //CompareAssumeRolePolicy compares assume role policy from request and response
-func CompareAssumeRolePolicy(ctx context.Context, request awsapi.IAMRoleRequest, role *iam.GetRoleOutput) bool {
+func CompareAssumeRolePolicy(ctx context.Context, request string, target string) bool {
 	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
-	a, _ := url.QueryUnescape(*role.Role.AssumeRolePolicyDocument)
+	a, _ := url.QueryUnescape(target)
 	destAssume := utils.TrustPolicy{}
 	err := json.Unmarshal([]byte(a), &destAssume)
 	if err != nil {
@@ -148,7 +148,7 @@ func CompareAssumeRolePolicy(ctx context.Context, request awsapi.IAMRoleRequest,
 	}
 
 	reqAssume := utils.TrustPolicy{}
-	err = json.Unmarshal([]byte(request.TrustPolicy), &reqAssume)
+	err = json.Unmarshal([]byte(request), &reqAssume)
 	if err != nil {
 		log.Error(err, "failed to marshal assume role policy document")
 	}

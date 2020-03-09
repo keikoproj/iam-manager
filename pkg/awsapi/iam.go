@@ -335,7 +335,7 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 	return &IAMRoleResponse{}, nil
 }
 
-//GetRolePolicy gets the role from aws iam
+//GetRole gets the role from aws iam
 func (i *IAM) GetRole(ctx context.Context, req IAMRoleRequest) (*iam.GetRoleOutput, error) {
 	log := log.Logger(ctx, "awsapi", "iam", "GetRole")
 	log.WithValues("roleName", req.Name)

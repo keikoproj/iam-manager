@@ -129,7 +129,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	log.V(1).Info("Attaching Inline role policies")
-	return i.AttachInlineRolePolicy(ctx, req)
+	return i.UpdateRole(ctx, req)
 }
 
 //TagRole tags role with appropriate tags
@@ -333,6 +333,43 @@ func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*
 	}
 	log.V(1).Info("Successfully completed attaching InlineRolePolicy")
 	return &IAMRoleResponse{}, nil
+}
+
+//GetRole gets the role from aws iam
+func (i *IAM) GetRole(ctx context.Context, req IAMRoleRequest) (*iam.GetRoleOutput, error) {
+	log := log.Logger(ctx, "awsapi", "iam", "GetRole")
+	log.WithValues("roleName", req.Name)
+	log.V(1).Info("Initiating api call")
+	// First get the iam role policy on the AWS IAM side
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(req.Name),
+	}
+
+	if err := input.Validate(); err != nil {
+		log.Error(err, "input validation failed")
+		//should log the error
+		return nil, err
+	}
+
+	resp, err := i.Client.GetRole(input)
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				log.Error(err, iam.ErrCodeNoSuchEntityException)
+			case iam.ErrCodeServiceFailureException:
+				log.Error(err, iam.ErrCodeServiceFailureException)
+			default:
+				log.Error(err, aerr.Error())
+			}
+		}
+
+		return nil, err
+	}
+	log.V(1).Info("Successfully able to get the role")
+
+	return resp, nil
 }
 
 //GetRolePolicy gets the role from aws iam

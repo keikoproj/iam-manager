@@ -55,6 +55,8 @@ func (s *IAMAPISuite) TestCreateRoleSuccess(c *check.C) {
 	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy())}).Times(1).Return(nil, nil)
 	s.mockI.EXPECT().PutRolePolicy(&iam.PutRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(&iam.PutRolePolicyOutput{}, nil)
 	s.mockI.EXPECT().AttachRolePolicy(&iam.AttachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.AttachRolePolicyOutput{}, nil)
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(&iam.UpdateRoleOutput{}, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{RoleName: aws.String("VALID_ROLE"), PolicyDocument: aws.String("SOMETHING")}).Times(1).Return(&iam.UpdateAssumeRolePolicyOutput{}, nil)
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(), ManagedPolicies: config.Props.ManagedPolicies()}
 	_, err := s.mockIAM.CreateRole(s.ctx, req)
 	c.Assert(err, check.IsNil)
@@ -71,6 +73,8 @@ func (s *IAMAPISuite) TestCreateRoleSuccessWithUpdate(c *check.C) {
 	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy())}).Times(1).Return(nil, nil)
 	s.mockI.EXPECT().PutRolePolicy(&iam.PutRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(&iam.PutRolePolicyOutput{}, nil)
 	s.mockI.EXPECT().AttachRolePolicy(&iam.AttachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.AttachRolePolicyOutput{}, nil)
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(&iam.UpdateRoleOutput{}, nil)
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{RoleName: aws.String("VALID_ROLE"), PolicyDocument: aws.String("SOMETHING")}).Times(1).Return(&iam.UpdateAssumeRolePolicyOutput{}, nil)
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(), ManagedPolicies: config.Props.ManagedPolicies()}
 	_, err := s.mockIAM.CreateRole(s.ctx, req)
 	c.Assert(err, check.IsNil)
@@ -470,6 +474,55 @@ func (s *IAMAPISuite) TestGetRolePolicyFailureUnmodififiablePolicyDocument(c *ch
 	s.mockI.EXPECT().GetRolePolicy(&iam.GetRolePolicyInput{RoleName: aws.String("UNMODIFIABLE_POLICY"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeUnmodifiableEntityException, "", errors.New(iam.ErrCodeUnmodifiableEntityException)))
 	req := awsapi.IAMRoleRequest{Name: "UNMODIFIABLE_POLICY", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
 	_, err := s.mockIAM.GetRolePolicy(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+//###########
+
+func (s *IAMAPISuite) TestGetRoleSuccess(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{}, nil)
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.IsNil)
+}
+
+func (s *IAMAPISuite) TestGetRoleInvalidRequest(c *check.C) {
+	req := awsapi.IAMRoleRequest{PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestGetRoleFailureMalformedPolicyDocument(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("MALFORMED_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeMalformedPolicyDocumentException, "", errors.New(iam.ErrCodeMalformedPolicyDocumentException)))
+	req := awsapi.IAMRoleRequest{Name: "MALFORMED_POLICY", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestGetRoleFailureLimitExceeded(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("TOO_MANY_REQUEST")}).Times(1).Return(nil, awserr.New(iam.ErrCodeLimitExceededException, "", errors.New(iam.ErrCodeLimitExceededException)))
+	req := awsapi.IAMRoleRequest{Name: "TOO_MANY_REQUEST", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestGetRoleFailureNoSuchEntity(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("NO_SUCH_ENTITY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
+	req := awsapi.IAMRoleRequest{Name: "NO_SUCH_ENTITY", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+func (s *IAMAPISuite) TestGetRoleFailureServiceFailure(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("SERVICE_FAILURE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)))
+	req := awsapi.IAMRoleRequest{Name: "SERVICE_FAILURE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *IAMAPISuite) TestGetRoleFailureUnmodififiablePolicyDocument(c *check.C) {
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("UNMODIFIABLE_POLICY")}).Times(1).Return(nil, awserr.New(iam.ErrCodeUnmodifiableEntityException, "", errors.New(iam.ErrCodeUnmodifiableEntityException)))
+	req := awsapi.IAMRoleRequest{Name: "UNMODIFIABLE_POLICY", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING"}
+	_, err := s.mockIAM.GetRole(s.ctx, req)
 	c.Assert(err, check.NotNil)
 }
 

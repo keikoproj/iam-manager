@@ -456,6 +456,18 @@ spec:
               required:
               - Statement
               type: object
+            TrustPolicy:
+              properties:
+                Principal:
+                  properties:
+                    AWS:
+                      items:
+                        type: string
+                      type: array
+                    Service:
+                      type: string
+                  type: object
+              type: object
           required:
           - PolicyDocument
           type: object

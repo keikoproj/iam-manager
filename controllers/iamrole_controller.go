@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/keikoproj/iam-manager/pkg/validation"
@@ -115,19 +116,6 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-var roleTrust = `{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::000065563193:role/masters.ops-prim-ppd.cluster.k8s.local"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}`
-
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
@@ -135,12 +123,18 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
+
+	trustPolicy, err := utils.GetTrustPolicy(ctx, &iamRole.Spec.TrustPolicy)
+	if err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
+		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error)
+	}
 	input := awsapi.IAMRoleRequest{
 		Name:                            roleName,
 		PolicyName:                      config.InlinePolicyName,
 		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
 		SessionDuration:                 3600,
-		TrustPolicy:                     roleTrust,
+		TrustPolicy:                     trustPolicy,
 		PermissionPolicy:                string(role),
 		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
 		ManagedPolicies:                 config.Props.ManagedPolicies(),
@@ -162,6 +156,17 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
 		// Check with state of the world to figure out if this event is because of status update
+		targetRole, err := r.IAMClient.GetRole(ctx, input)
+		if err != nil {
+			// THIS SHOULD NEVER HAPPEN
+			// Just requeue in case if it happens
+			log.Error(err, "error in verifying the status of the iam role with state of the world")
+			log.Info("retry count error", "count", iamRole.Status.RetryCount)
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, 3000)
+
+		}
+
 		targetPolicy, err := r.IAMClient.GetRolePolicy(ctx, input)
 		if err != nil {
 			// THIS SHOULD NEVER HAPPEN
@@ -173,7 +178,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		}
 
-		if validation.ComparePolicy(ctx, input.PermissionPolicy, *targetPolicy) {
+		if validation.CompareRole(ctx, input, targetRole, *targetPolicy) {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
 			return ctrl.Result{}, nil
 		}
@@ -282,14 +287,16 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update status due to error "+err.Error())
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
+
+	if state != iammanagerv1alpha1.Error {
+		return ctrl.Result{}, nil
+	}
+
 	//if wait time is specified, requeue it after provided time
 	if len(requeueTime) == 0 {
 		requeueTime[0] = 0
 	}
 
-	if state != iammanagerv1alpha1.Error {
-		return ctrl.Result{}, nil
-	}
 	log.Info("Requeue time", "time", requeueTime[0])
 	return ctrl.Result{RequeueAfter: time.Duration(requeueTime[0]) * time.Millisecond}, nil
 }

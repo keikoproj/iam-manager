@@ -3,8 +3,12 @@ package validation_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/golang/mock/gomock"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/validation"
 	"gopkg.in/check.v1"
 	"testing"
@@ -86,7 +90,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceFailure(c *check.C) {
 	c.Assert(err, check.NotNil)
 }
 
-func (s *ValidateSuite) TestComparePolicySuccess(c *check.C) {
+func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {
+
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -108,11 +113,88 @@ func (s *ValidateSuite) TestComparePolicySuccess(c *check.C) {
 
 	role1, _ := json.Marshal(input1)
 	role2, _ := json.Marshal(input2)
-	flag := validation.ComparePolicy(s.ctx, string(role1), string(role2))
+
+	input3 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+
+	input4 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+	role3, _ := json.Marshal(input3)
+	role4, _ := json.Marshal(input4)
+	doc := string(role4)
+	boundary := config.Props.ManagedPermissionBoundaryPolicy()
+	target := iam.GetRoleOutput{
+		Role: &iam.Role{
+			AssumeRolePolicyDocument: &doc,
+			PermissionsBoundary: &iam.AttachedPermissionsBoundary{
+				PermissionsBoundaryArn: &boundary,
+			},
+		},
+	}
+
+	i1 := awsapi.IAMRoleRequest{
+		PermissionPolicy:                string(role1),
+		TrustPolicy:                     string(role3),
+		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
+	}
+
+	flag := validation.CompareRole(s.ctx, i1, &target, string(role2))
 	c.Assert(flag, check.Equals, true)
 }
 
-func (s *ValidateSuite) TestComparePolicy2Success(c *check.C) {
+func (s *ValidateSuite) TestComparePermissionPolicySuccess(c *check.C) {
+
+	input1 := v1alpha1.PolicyDocument{
+		Statement: []v1alpha1.Statement{
+			{
+				Action:   []string{"route53:Get"},
+				Effect:   "Allow",
+				Resource: []string{"policy-resource"},
+			},
+		},
+	}
+	input2 := v1alpha1.PolicyDocument{
+		Statement: []v1alpha1.Statement{
+			{
+				Action:   []string{"route53:Get"},
+				Effect:   "Allow",
+				Resource: []string{"policy-resource"},
+			},
+		},
+	}
+
+	role1, _ := json.Marshal(input1)
+	role2, _ := json.Marshal(input2)
+
+	i1 := awsapi.IAMRoleRequest{
+		PermissionPolicy: string(role1),
+	}
+
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
+	c.Assert(flag, check.Equals, true)
+}
+
+func (s *ValidateSuite) TestComparePermissionPolicy2Success(c *check.C) {
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -134,11 +216,15 @@ func (s *ValidateSuite) TestComparePolicy2Success(c *check.C) {
 
 	role1, _ := json.Marshal(input1)
 	role2, _ := json.Marshal(input2)
-	flag := validation.ComparePolicy(s.ctx, string(role1), string(role2))
+	i1 := awsapi.IAMRoleRequest{
+		PermissionPolicy: string(role1),
+	}
+
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
 	c.Assert(flag, check.Equals, true)
 }
 
-func (s *ValidateSuite) TestComparePolicyFailure(c *check.C) {
+func (s *ValidateSuite) TestComparePermissionPolicyFailure(c *check.C) {
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -160,7 +246,141 @@ func (s *ValidateSuite) TestComparePolicyFailure(c *check.C) {
 
 	role1, _ := json.Marshal(input1)
 	role2, _ := json.Marshal(input2)
-	flag := validation.ComparePolicy(s.ctx, string(role1), string(role2))
+	i1 := awsapi.IAMRoleRequest{
+		PermissionPolicy: string(role1),
+	}
+
+	flag := validation.ComparePermissionPolicy(s.ctx, i1.PermissionPolicy, string(role2))
+	c.Assert(flag, check.Equals, false)
+}
+
+func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
+
+	input1 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+
+	input2 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+	role1, _ := json.Marshal(input1)
+	role2, _ := json.Marshal(input2)
+	doc := string(role2)
+	target := iam.GetRoleOutput{
+		Role: &iam.Role{
+			AssumeRolePolicyDocument: &doc,
+		},
+	}
+
+	i1 := awsapi.IAMRoleRequest{
+		TrustPolicy: string(role1),
+	}
+
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
+	c.Assert(flag, check.Equals, true)
+}
+
+func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
+	input1 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+
+	input2 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Effect: "Allow",
+				Action: "route53:Get",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+	role1, _ := json.Marshal(input1)
+	role2, _ := json.Marshal(input2)
+	doc := string(role2)
+	target := iam.GetRoleOutput{
+		Role: &iam.Role{
+			AssumeRolePolicyDocument: &doc,
+		},
+	}
+
+	i1 := awsapi.IAMRoleRequest{
+		TrustPolicy: string(role1),
+	}
+
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
+	c.Assert(flag, check.Equals, true)
+}
+
+func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
+	input1 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Action: "route53:Get",
+				Effect: "Allow",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+
+	input2 := utils.TrustPolicy{
+		Statement: []utils.Statement{
+			{
+				Effect: "Deny",
+				Action: "route53:Get",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/user_request_role"},
+				},
+			},
+		},
+		Version: "2012-10-17",
+	}
+	role1, _ := json.Marshal(input1)
+	role2, _ := json.Marshal(input2)
+	doc := string(role2)
+	target := iam.GetRoleOutput{
+		Role: &iam.Role{
+			AssumeRolePolicyDocument: &doc,
+		},
+	}
+
+	i1 := awsapi.IAMRoleRequest{
+		TrustPolicy: string(role1),
+	}
+
+	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
 	c.Assert(flag, check.Equals, false)
 }
 

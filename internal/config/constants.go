@@ -29,7 +29,7 @@ const (
 	propertAWSAccountID = "aws.accountId"
 
 	// aws master role
-	propertyAwsMasterRole = "aws.MasterRole"
+	propertyDefaultTrustPolicyARNList = "iam.default.trust.policy.role.arn.list"
 
 	// user managed policies
 	propertyManagedPolicies = "iam.managed.policies"

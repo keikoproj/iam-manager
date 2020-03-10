@@ -11,3 +11,4 @@ This document explains configmap variables.
 | webhook.enabled                   |  Enable webhhok?              | false              | Required           |
 | iam.role.max.limit.per.namespace      | Maximum number of roles per namespace |   1        | Required |
 | aws.region                        | AWS Region                    | us-west-2          | Required |
+| iam.default.trust.policy.role.arn.list| Default trust policy role arn list |           | Optional |

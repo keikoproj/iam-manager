@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
+	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -86,28 +89,76 @@ func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument
 	return nil
 }
 
-//ComparePolicy function compares input policy doc to target policy doc
-func ComparePolicy(ctx context.Context, request string, target string) bool {
+//CompareRole function compares input role to target role
+func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole *iam.GetRoleOutput, targetRolePolicy string) bool {
 	log := log.Logger(ctx, "pkg.validation", "ComparePolicy")
+
+	// Step 1: Compare the permission policy
+	if !ComparePermissionPolicy(ctx, request.PermissionPolicy, targetRolePolicy) {
+		return false
+	}
+
+	//Step 2: Compare Assume Role Policy Document
+	if !CompareAssumeRolePolicy(ctx, request.TrustPolicy, *targetRole.Role.AssumeRolePolicyDocument) {
+		return false
+	}
+	//Step 3: Compare Permission Boundary
+	if !reflect.DeepEqual(request.ManagedPermissionBoundaryPolicy, *targetRole.Role.PermissionsBoundary.PermissionsBoundaryArn) {
+		log.Info("input permission boundary and target permission boundary are NOT equal")
+		return false
+	}
+
+	return true
+}
+
+//ComparePermissionPolicy compares role policy from request and response
+func ComparePermissionPolicy(ctx context.Context, request string, target string) bool {
+	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
 	d, _ := url.QueryUnescape(target)
 	dest := v1alpha1.PolicyDocument{}
 	err := json.Unmarshal([]byte(d), &dest)
 	if err != nil {
-		log.Error(err, "failed to unmarshal policy document", target)
+		log.Error(err, "failed to unmarshal policy document")
 	}
 
 	req := v1alpha1.PolicyDocument{}
 	err = json.Unmarshal([]byte(request), &req)
 	if err != nil {
-		log.Error(err, "failed to marshal policy document", request)
+		log.Error(err, "failed to marshal policy document")
 	}
 	//compare
-	if reflect.DeepEqual(req, dest) {
-		log.Info("input policy and target policy are equal")
-		return true
+	if !reflect.DeepEqual(req, dest) {
+		log.Info("input policy and target policy are NOT equal")
+		return false
 	}
-	return false
+
+	return true
+}
+
+//CompareAssumeRolePolicy compares assume role policy from request and response
+func CompareAssumeRolePolicy(ctx context.Context, request string, target string) bool {
+	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
+
+	a, _ := url.QueryUnescape(target)
+	destAssume := utils.TrustPolicy{}
+	err := json.Unmarshal([]byte(a), &destAssume)
+	if err != nil {
+		log.Error(err, "failed to unmarshal assume role policy document")
+	}
+
+	reqAssume := utils.TrustPolicy{}
+	err = json.Unmarshal([]byte(request), &reqAssume)
+	if err != nil {
+		log.Error(err, "failed to marshal assume role policy document")
+	}
+	//compare
+	if !reflect.DeepEqual(reqAssume, destAssume) {
+		log.Info("input assume role policy and target assume role policy are NOT equal", "req", reqAssume, "dest", destAssume)
+		return false
+	}
+
+	return true
 }
 
 //ContainsString  Helper functions to check from a slice of strings.

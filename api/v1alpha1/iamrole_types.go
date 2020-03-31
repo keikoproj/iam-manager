@@ -34,7 +34,6 @@ type IamroleSpec struct {
 //PolicyDocument type defines IAM policy struct
 type PolicyDocument struct {
 
-	// +kubebuilder:default:="2012-10-17"
 	// Version specifies IAM policy version
 	// By default, this value is "2012-10-17"
 	// +optional

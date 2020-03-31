@@ -1,7 +1,8 @@
+---
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: dev-patterns-iksmanager-usw2-ppd-idev
+  name: sds
 spec:
   PolicyDocument:
     Version: '2012-10-17'
@@ -20,7 +21,7 @@ spec:
           - arn:aws:s3:::ami-query-prd-us-east-2/*
       - Effect: Allow
         Resource:
-          -  "*"
+          - "*"
         Action:
           - sts:AssumeRole
       - Effect: Allow

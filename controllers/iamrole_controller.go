@@ -76,6 +76,11 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
+
+	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
+		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+	}
+
 	// Isit being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
@@ -113,7 +118,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		r.Recorder.Event(&iamRole, v1.EventTypeNormal, "Deleted", "Successfully deleted iam role")
 	}
 
-	return ctrl.Result{}, nil
+	return successRequeueIt()
 }
 
 //HandleReconcile function handles all the reconcile
@@ -123,6 +128,11 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
+
+	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
+		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+	}
+	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
 
 	trustPolicy, err := utils.GetTrustPolicy(ctx, &iamRole.Spec.TrustPolicy)
 	if err != nil {
@@ -180,7 +190,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		if validation.CompareRole(ctx, input, targetRole, *targetPolicy) {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-			return ctrl.Result{}, nil
+			return successRequeueIt()
 		}
 		fallthrough
 
@@ -230,7 +240,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	}
 	log.Info("Successfully reconciled")
 
-	return ctrl.Result{}, nil
+	return successRequeueIt()
 }
 
 type StatusUpdatePredicate struct {
@@ -289,7 +299,7 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 	}
 
 	if state != iammanagerv1alpha1.Error {
-		return ctrl.Result{}, nil
+		return successRequeueIt()
 	}
 
 	//if wait time is specified, requeue it after provided time
@@ -321,4 +331,10 @@ func ignoreNotFound(err error) error {
 		return nil
 	}
 	return err
+}
+
+//successRequeueIt function requeues it after defined time
+func successRequeueIt() (ctrl.Result, error) {
+
+	return ctrl.Result{RequeueAfter: time.Duration(config.Props.ControllerDesiredFrequency()) * time.Second}, nil
 }

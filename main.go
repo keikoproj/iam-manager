@@ -64,6 +64,7 @@ func main() {
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		Port:               9443,
+		LeaderElectionID:   "controller-leader-election-helper",
 	})
 
 	if err != nil {

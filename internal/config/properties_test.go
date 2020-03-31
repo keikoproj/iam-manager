@@ -93,6 +93,24 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
 }
 
+func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
+			"aws.accountId":                          "123456789012",
+			"iam.role.derive.from.namespace":         "true",
+			"controller.desired.frequency":           "30",
+			"iam.role.max.limit.per.namespace":       "5",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
+	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
+	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, true)
+}
+
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {
 	value := Props.AllowedPolicyAction()
 	c.Assert(value, check.NotNil)

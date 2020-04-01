@@ -29,6 +29,8 @@ type Properties struct {
 	awsRegion                       string
 	isWebhookEnabled                string
 	maxRolesAllowed                 int
+	deriveNameFromNamespace         string
+	controllerDesiredFrequency      int
 }
 
 func init() {
@@ -75,6 +77,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
 			awsRegion:                       os.Getenv("AWS_REGION"),
 			isWebhookEnabled:                os.Getenv("ENABLE_WEBHOOK"),
+			deriveNameFromNamespace:         os.Getenv("DERIVE_NAME_FROM_NAMESPACE"),
 		}
 		return nil
 	}
@@ -102,6 +105,13 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.isWebhookEnabled = "false"
 	}
 
+	deriveNameFromNS := cm[0].Data[propertyDeriveNameFromNameSpace]
+	if deriveNameFromNS == "true" {
+		Props.deriveNameFromNamespace = "true"
+	} else {
+		Props.deriveNameFromNamespace = "false"
+	}
+
 	awsRegion := cm[0].Data[propertyAwsRegion]
 	if awsRegion != "" {
 		Props.awsRegion = awsRegion
@@ -118,6 +128,17 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.maxRolesAllowed = maxRolesAllowed
 	} else {
 		Props.maxRolesAllowed = 1
+	}
+
+	controllerDesiredFreq := cm[0].Data[propertyDesiredStateFrequency]
+	if controllerDesiredFreq != "" {
+		controllerDesiredFreq, err := strconv.Atoi(controllerDesiredFreq)
+		if err != nil {
+			return err
+		}
+		Props.controllerDesiredFrequency = controllerDesiredFreq
+	} else {
+		Props.controllerDesiredFrequency = 300
 	}
 
 	awsAccountID := cm[0].Data[propertAWSAccountID]
@@ -203,8 +224,20 @@ func (p *Properties) IsWebHookEnabled() bool {
 	return resp
 }
 
+func (p *Properties) DeriveNameFromNamespace() bool {
+	resp := false
+	if p.deriveNameFromNamespace == "true" {
+		resp = true
+	}
+	return resp
+}
+
 func (p *Properties) MaxRolesAllowed() int {
 	return p.maxRolesAllowed
+}
+
+func (p *Properties) ControllerDesiredFrequency() int {
+	return p.controllerDesiredFrequency
 }
 
 func RunConfigMapInformer(ctx context.Context) {

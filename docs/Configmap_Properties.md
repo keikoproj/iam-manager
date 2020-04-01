@@ -12,3 +12,5 @@ This document explains configmap variables.
 | iam.role.max.limit.per.namespace      | Maximum number of roles per namespace |   1        | Required |
 | aws.region                        | AWS Region                    | us-west-2          | Required |
 | iam.default.trust.policy.role.arn.list| Default trust policy role arn list |           | Optional |
+| iam.role.derive.from.namespace    | Derive iam role name from namespace? if true it will be k8s-<namespace> | false | Optional|
+| controller.desired.frequency      | Controller frequency to check the state of the world (in seconds) | 300  | Optional |

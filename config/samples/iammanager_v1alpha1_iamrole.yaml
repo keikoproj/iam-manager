@@ -1,7 +1,8 @@
+---
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: dev-patterns-iksmanager-usw2-ppd-idev
+  name: sds
 spec:
   PolicyDocument:
     Version: '2012-10-17'
@@ -10,17 +11,17 @@ spec:
         Action:
           - s3:ListBucket
         Resource:
-          - arn:aws:s3:::iksm-nmogulla-us-west-2-dev
+          - arn:aws:s3:::iksm-dummy-us-west-2-dev
       - Effect: Allow
         Action:
           - s3:*
         Resource:
-          - arn:aws:s3:::iksm-nmogulla-us-west-2-dev/*
-          - arn:aws:s3:::ami-query-prd-us-west-2/*
-          - arn:aws:s3:::ami-query-prd-us-east-2/*
+          - arn:aws:s3:::dummy-us-west-2-dev/*
+          - arn:aws:s3:::dummy-prd-us-west-2/*
+          - arn:aws:s3:::dummy-prd-us-east-2/*
       - Effect: Allow
         Resource:
-          -  "*"
+          - "*"
         Action:
           - sts:AssumeRole
       - Effect: Allow

@@ -86,9 +86,29 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(err, check.IsNil)
 	c.Assert(Props.AWSRegion(), check.Equals, "us-west-2")
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 1)
+	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 300)
 	c.Assert(Props.IsWebHookEnabled(), check.Equals, false)
+	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, false)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
+}
+
+func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
+			"aws.accountId":                          "123456789012",
+			"iam.role.derive.from.namespace":         "true",
+			"controller.desired.frequency":           "30",
+			"iam.role.max.limit.per.namespace":       "5",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
+	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
+	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, true)
 }
 
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {
@@ -134,4 +154,14 @@ func (s *PropertiesSuite) TestGetManagedPermissionBoundaryPolicy(c *check.C) {
 func (s *PropertiesSuite) TestIsWebhookEnabled(c *check.C) {
 	value := Props.IsWebHookEnabled()
 	c.Assert(value, check.Equals, false)
+}
+
+func (s *PropertiesSuite) TestDeriveNameFromNamespace(c *check.C) {
+	value := Props.DeriveNameFromNamespace()
+	c.Assert(value, check.Equals, false)
+}
+
+func (s *PropertiesSuite) TestControllerDesiredFrequency(c *check.C) {
+	value := Props.ControllerDesiredFrequency()
+	c.Assert(value, check.Equals, 0)
 }

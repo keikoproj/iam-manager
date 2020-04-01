@@ -42,6 +42,12 @@ const (
 
 	//max allowed aws iam roles per namespace
 	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
+
+	//propertyDeriveNameFromNameSpace is a bool value and can be used to configure the name construction
+	propertyDeriveNameFromNameSpace = "iam.role.derive.from.namespace"
+
+	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 5 mins (300 seconds)
+	propertyDesiredStateFrequency = "controller.desired.frequency"
 )
 
 const (

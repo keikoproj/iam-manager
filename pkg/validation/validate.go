@@ -23,6 +23,10 @@ func ValidateIAMPolicyAction(ctx context.Context, pDoc v1alpha1.PolicyDocument) 
 
 	//Check the incoming policy actions
 	for _, statement := range pDoc.Statement {
+		if statement.Effect == "Deny" {
+			//This should ignore the validation for all Deny action
+			continue
+		}
 		for _, action := range statement.Action {
 			isAllowed := false
 			for _, prefix := range config.Props.AllowedPolicyAction() {
@@ -69,6 +73,10 @@ func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument
 
 	//Check the incoming policy resource
 	for _, statement := range pDoc.Statement {
+		if statement.Effect == "Deny" {
+			//This should ignore the validation for all Deny action
+			continue
+		}
 		for _, resource := range statement.Resource {
 			isAllowed := true
 			for _, res := range config.Props.RestrictedPolicyResources() {

@@ -62,6 +62,39 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionS3RestrictedSuccess(c *check.
 	c.Assert(err, check.NotNil)
 }
 
+func (s *ValidateSuite) TestValidateIAMPolicyActionWithDeny(c *check.C) {
+	input := v1alpha1.PolicyDocument{
+		Statement: []v1alpha1.Statement{
+			{
+				Action:   []string{"s3:*"},
+				Effect:   "Deny",
+				Resource: []string{"s3-resource"},
+			},
+		},
+	}
+	err := validation.ValidateIAMPolicyAction(s.ctx, input)
+	c.Assert(err, check.IsNil)
+}
+
+func (s *ValidateSuite) TestValidateIAMPolicyDefaultWithDeny(c *check.C) {
+	input := v1alpha1.PolicyDocument{
+		Statement: []v1alpha1.Statement{
+			{
+				Action:   []string{"ec2:*"},
+				Effect:   "Deny",
+				Resource: []string{"*"},
+			},
+			{
+				Action:   []string{"iam:*"},
+				Effect:   "Deny",
+				Resource: []string{"*"},
+			},
+		},
+	}
+	err := validation.ValidateIAMPolicyAction(s.ctx, input)
+	c.Assert(err, check.IsNil)
+}
+
 func (s *ValidateSuite) TestValidateIAMPolicyResourceSuccess(c *check.C) {
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
@@ -82,12 +115,26 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceFailure(c *check.C) {
 			{
 				Action:   []string{"route53:Get"},
 				Effect:   "Allow",
-				Resource: []string{"policy-resource"},
+				Resource: []string{"policy-resource"}, //policy-resource is in Makefile
 			},
 		},
 	}
 	err := validation.ValidateIAMPolicyResource(s.ctx, input)
 	c.Assert(err, check.NotNil)
+}
+
+func (s *ValidateSuite) TestValidateIAMPolicyResourceDeny(c *check.C) {
+	input := v1alpha1.PolicyDocument{
+		Statement: []v1alpha1.Statement{
+			{
+				Action:   []string{"route53:Get"},
+				Effect:   "Deny",
+				Resource: []string{"policy-resource"}, //policy-resource is in Makefile
+			},
+		},
+	}
+	err := validation.ValidateIAMPolicyResource(s.ctx, input)
+	c.Assert(err, check.IsNil)
 }
 
 func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {

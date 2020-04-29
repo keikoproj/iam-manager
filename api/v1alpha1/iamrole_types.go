@@ -67,7 +67,9 @@ type Statement struct {
 type Effect string
 
 //TrustPolicy struct holds principal
+// +optional
 type TrustPolicy struct {
+	// +optional
 	Principal Principal `json:"Principal,omitempty"`
 }
 
@@ -91,12 +93,20 @@ const (
 type IamroleStatus struct {
 	//RoleName represents the name of the iam role created in AWS
 	RoleName string `json:"roleName,omitempty"`
+	//RoleARN represents the ARN of an IAM role
+	RoleARN string `json:"roleARN,omitempty"`
+	//RoleID represents the unique ID of the role which can be used in S3 policy etc
+	RoleID string `json:"roleID,omitempty"`
 	//State of the resource
 	State State `json:"state,omitempty"`
 	//RetryCount in case of error
 	RetryCount int `json:"retryCount"`
 	//ErrorDescription in case of error
+	// +optional
 	ErrorDescription string `json:"errorDescription,omitempty"`
+	//LastUpdatedTimestamp represents the last time the iam role has been modified
+	// +optional
+	LastUpdatedTimestamp metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
 }
 
 type State string
@@ -114,6 +124,7 @@ const (
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state",description="current state of the iam role"
 // +kubebuilder:printcolumn:name="RoleName",type="string",JSONPath=".status.roleName",description="Name of the role"
 // +kubebuilder:printcolumn:name="RetryCount",type="integer",JSONPath=".status.retryCount",description="Retry count"
+// +kubebuilder:printcolumn:name="LastUpdatedTimestamp",type="string",format="date-time",JSONPath=".status.lastUpdatedTimestamp",description="last updated iam role timestamp"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",description="time passed since iamrole creation"
 // Iamrole is the Schema for the iamroles API
 type Iamrole struct {

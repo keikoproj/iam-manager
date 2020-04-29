@@ -45,7 +45,7 @@ func (s *IAMAPISuite) TearDownTest(c *check.C) {
 //############
 
 func (s *IAMAPISuite) TestCreateRoleSuccess(c *check.C) {
-	s.mockI.EXPECT().CreateRole(&iam.CreateRoleInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()), MaxSessionDuration: aws.Int64(3600), AssumeRolePolicyDocument: aws.String("SOMETHING"), Description: aws.String("")}).Times(1).Return(nil, nil)
+	s.mockI.EXPECT().CreateRole(&iam.CreateRoleInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()), MaxSessionDuration: aws.Int64(3600), AssumeRolePolicyDocument: aws.String("SOMETHING"), Description: aws.String("")}).Times(1).Return(&iam.CreateRoleOutput{Role: &iam.Role{RoleId: aws.String("ABCDE1234"), Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE")}}, nil)
 	s.mockI.EXPECT().TagRole(&iam.TagRoleInput{RoleName: aws.String("VALID_ROLE"), Tags: []*iam.Tag{
 		{
 			Key:   aws.String("managedBy"),

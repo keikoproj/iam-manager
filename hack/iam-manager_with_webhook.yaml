@@ -30,6 +30,11 @@ spec:
     description: Retry count
     name: RetryCount
     type: integer
+  - JSONPath: .status.lastUpdatedTimestamp
+    description: last updated iam role timestamp
+    format: date-time
+    name: LastUpdatedTimestamp
+    type: string
   - JSONPath: .metadata.creationTimestamp
     description: time passed since iamrole creation
     name: Age
@@ -131,9 +136,21 @@ spec:
             errorDescription:
               description: ErrorDescription in case of error
               type: string
+            lastUpdatedTimestamp:
+              description: LastUpdatedTimestamp represents the last time the iam role
+                has been modified
+              format: date-time
+              type: string
             retryCount:
               description: RetryCount in case of error
               type: integer
+            roleARN:
+              description: RoleARN represents the ARN of an IAM role
+              type: string
+            roleID:
+              description: RoleID represents the unique ID of the role which can be
+                used in S3 policy etc
+              type: string
             roleName:
               description: RoleName represents the name of the iam role created in
                 AWS
@@ -268,6 +285,8 @@ rules:
   - create
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - iammanager.keikoproj.io

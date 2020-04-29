@@ -43,6 +43,8 @@ type IAMRoleRequest struct {
 }
 
 type IAMRoleResponse struct {
+	RoleARN string
+	RoleID  string
 }
 
 type IAM struct {
@@ -79,7 +81,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	roleAlreadyExists := false
-	_, err := i.Client.CreateRole(input)
+	iResp, err := i.Client.CreateRole(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -100,6 +102,13 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		if !roleAlreadyExists {
 			return nil, err
 		}
+	}
+
+	resp := &IAMRoleResponse{}
+
+	if !roleAlreadyExists {
+		resp.RoleID = aws.StringValue(iResp.Role.Arn)
+		resp.RoleID = aws.StringValue(iResp.Role.RoleId)
 	}
 
 	//Attach a tag
@@ -129,7 +138,14 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	}
 
 	log.V(1).Info("Attaching Inline role policies")
-	return i.UpdateRole(ctx, req)
+
+	_, err = i.UpdateRole(ctx, req)
+	if err != nil {
+		log.Error(err, "Error while updating role")
+		return &IAMRoleResponse{}, err
+	}
+
+	return resp, nil
 }
 
 //TagRole tags role with appropriate tags

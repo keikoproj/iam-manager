@@ -67,7 +67,9 @@ type Statement struct {
 type Effect string
 
 //TrustPolicy struct holds principal
+// +optional
 type TrustPolicy struct {
+	// +optional
 	Principal Principal `json:"Principal,omitempty"`
 }
 

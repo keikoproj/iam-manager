@@ -107,7 +107,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	resp := &IAMRoleResponse{}
 
 	if !roleAlreadyExists {
-		resp.RoleID = aws.StringValue(iResp.Role.Arn)
+		resp.RoleARN = aws.StringValue(iResp.Role.Arn)
 		resp.RoleID = aws.StringValue(iResp.Role.RoleId)
 	}
 

@@ -14,5 +14,6 @@ This document explains configmap variables.
 | iam.default.trust.policy.role.arn.list| Default trust policy role arn list |           | Optional |
 | iam.role.derive.from.namespace    | Derive iam role name from namespace? if true it will be k8s-<namespace> | false | Optional|
 | controller.desired.frequency      | Controller frequency to check the state of the world (in seconds) | 300  | Optional |
-| cluster.name                      | Name of the cluster           |                    | Optional | 
-| cluster.identity.oidc.issuer      | OIDC issuer of the cluster    |                    | Optional |
+| k8s.cluster.name                  | Name of the cluster           |                    | Optional | 
+| k8s.cluster.oidc.issuer.url       | OIDC issuer of the cluster    |                    | Optional |
+| iam.irsa.enabled                  | IRSA option enabled

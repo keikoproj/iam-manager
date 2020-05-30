@@ -3,11 +3,10 @@ package config
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"os"
 	"strconv"
@@ -206,7 +205,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		if err != nil {
 			return err
 		}
-		oidcUrl = aws.StringValue(res.Cluster.Identity.Oidc.Issuer)
+		oidcUrl = *res.Cluster.Identity.Oidc.Issuer
 	}
 	Props.clusterOIDCIssuerUrl = oidcUrl
 

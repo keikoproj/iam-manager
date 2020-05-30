@@ -16,4 +16,4 @@ This document explains configmap variables.
 | controller.desired.frequency      | Controller frequency to check the state of the world (in seconds) | 300  | Optional |
 | k8s.cluster.name                  | Name of the cluster           |                    | Optional | 
 | k8s.cluster.oidc.issuer.url       | OIDC issuer of the cluster    |                    | Optional |
-| iam.irsa.enabled                  | IRSA option enabled
+| iam.irsa.enabled                  | Enable IRSA option?           | false              | Optional |

@@ -23,6 +23,8 @@ export AWS_REGION=us-west-2
 export TRUST_POLICY_ARN_LIST=arn:aws:iam::123456789012:role/trust_role
 export MANAGED_POLICIES=arn:aws:iam::123456789012:policy/SOMETHING
 export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
+export CLUSTER_NAME=k8s_test_keiko
+export CLUSTER_OIDC_ISSUER_URL=https://google.com/OIDC
 
 mock:
 	go get -u github.com/golang/mock/mockgen

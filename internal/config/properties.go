@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
@@ -31,6 +32,9 @@ type Properties struct {
 	maxRolesAllowed                 int
 	deriveNameFromNamespace         string
 	controllerDesiredFrequency      int
+	clusterName                     string
+	isIRSAEnabled                   string
+	clusterOIDCIssuerUrl            string
 }
 
 func init() {
@@ -78,6 +82,8 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			awsRegion:                       os.Getenv("AWS_REGION"),
 			isWebhookEnabled:                os.Getenv("ENABLE_WEBHOOK"),
 			deriveNameFromNamespace:         os.Getenv("DERIVE_NAME_FROM_NAMESPACE"),
+			clusterName:                     os.Getenv("CLUSTER_NAME"),
+			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
 		}
 		return nil
 	}
@@ -90,15 +96,17 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	allowedPolicyAction := strings.Split(cm[0].Data[propertyIamPolicyWhitelist], separator)
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
+	clusterName := cm[0].Data[propertyClusterName]
 
 	Props = &Properties{
 		allowedPolicyAction:       allowedPolicyAction,
 		restrictedPolicyResources: restrictedPolicyResources,
 		restrictedS3Resources:     restrictedS3Resources,
+		clusterName:               clusterName,
 	}
 
 	//Defaults
-	isWebhook := cm[0].Data[propertWebhookEnabled]
+	isWebhook := cm[0].Data[propertyWebhookEnabled]
 	if isWebhook == "true" {
 		Props.isWebhookEnabled = "true"
 	} else {
@@ -181,6 +189,27 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	}
 	Props.trustPolicyARNs = trustPolicyARNs
 
+	isIRSAEnabled := cm[0].Data[propertyIRSAEnabled]
+	if isIRSAEnabled == "true" {
+		Props.isIRSAEnabled = "true"
+	} else {
+		Props.isIRSAEnabled = "false"
+	}
+
+	oidcUrl := cm[0].Data[propertyK8sClusterOIDCIssuerUrl]
+	if isIRSAEnabled == "true" && oidcUrl == "" {
+		if clusterName == "" {
+			return fmt.Errorf("cluster name must be provided when IRSA is enabled to retrieve the OIDC url")
+		}
+		//call EKS describe cluster and get the OIDC URL
+		res, err := awsapi.NewEKS(Props.awsRegion).DescribeCluster(context.Background(), clusterName)
+		if err != nil {
+			return err
+		}
+		oidcUrl = aws.StringValue(res.Cluster.Identity.Oidc.Issuer)
+	}
+	Props.clusterOIDCIssuerUrl = oidcUrl
+
 	return nil
 }
 
@@ -238,6 +267,22 @@ func (p *Properties) MaxRolesAllowed() int {
 
 func (p *Properties) ControllerDesiredFrequency() int {
 	return p.controllerDesiredFrequency
+}
+
+func (p *Properties) IsIRSAEnabled() bool {
+	resp := false
+	if p.isIRSAEnabled == "true" {
+		resp = true
+	}
+	return resp
+}
+
+func (p *Properties) ClusterName() string {
+	return p.clusterName
+}
+
+func (p *Properties) OIDCIssuerUrl() string {
+	return p.clusterOIDCIssuerUrl
 }
 
 func RunConfigMapInformer(ctx context.Context) {

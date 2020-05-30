@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pkg/errors"
@@ -149,13 +148,13 @@ func CompareAssumeRolePolicy(ctx context.Context, request string, target string)
 	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
 	a, _ := url.QueryUnescape(target)
-	destAssume := utils.TrustPolicy{}
+	destAssume := v1alpha1.AssumeRolePolicyDocument{}
 	err := json.Unmarshal([]byte(a), &destAssume)
 	if err != nil {
 		log.Error(err, "failed to unmarshal assume role policy document")
 	}
 
-	reqAssume := utils.TrustPolicy{}
+	reqAssume := v1alpha1.AssumeRolePolicyDocument{}
 	err = json.Unmarshal([]byte(request), &reqAssume)
 	if err != nil {
 		log.Error(err, "failed to marshal assume role policy document")

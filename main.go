@@ -21,6 +21,7 @@ import (
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
@@ -75,9 +76,14 @@ func main() {
 	log.V(1).Info("Setting up reconciler with manager")
 	log.Info("region ", "region", config.Props.AWSRegion())
 
+	iamClient := awsapi.NewIAM(config.Props.AWSRegion())
+	if err := handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
+		log.Error(err, "unable to complete/verify oidc setup for IRSA")
+		os.Exit(1)
+	}
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
-		IAMClient: awsapi.NewIAM(config.Props.AWSRegion()),
+		IAMClient: iamClient,
 		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")
@@ -101,4 +107,30 @@ func main() {
 		log.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+//handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
+func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
+	log := log.Logger(ctx, "main", "handleOIDCSetupForIRSA")
+
+	//Creating OIDC provider if config map has an entry
+
+	if config.Props.IsIRSAEnabled() {
+		//Fetch cert thumb print
+		thumbprint, err := utils.GetIdpServerCertThumbprint(context.Background(), config.Props.OIDCIssuerUrl())
+		if err != nil {
+			log.Error(err, "unable to get the OIDC IDP server thumbprint")
+			return err
+		}
+
+		err = iamClient.CreateOIDCProvider(ctx, config.Props.OIDCIssuerUrl(), config.OIDCAudience, thumbprint)
+		if err != nil {
+			log.Error(err, "unable to setup OIDC with the url", "url", config.Props.OIDCIssuerUrl())
+			return err
+		}
+		log.Info("OIDC provider setup is successfully completed")
+
+	}
+
+	return nil
 }

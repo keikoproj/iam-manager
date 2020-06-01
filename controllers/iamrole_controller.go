@@ -65,7 +65,7 @@ type IamroleReconciler struct {
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Printf("panic occured%v", err)
+			fmt.Printf("panic occured %v", err)
 		}
 	}()
 

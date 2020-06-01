@@ -28,25 +28,6 @@ Following features are supported by IAM Manager
 [Attaching Managed IAM Policies for All Roles](docs/Features.md#attaching-managed-iam-policies-for-all-roles)  
 [Multiple Trust policies](docs/Features.md#multiple-trust-policies)
 
-#### Installation:
- 
-Simplest way to install iam-manager along with the role required for it to do the job is to run [install.sh](hack/install.sh) command.  
-
-Update the allowed policies in [allowed_policies.txt](hack/allowed_policies.txt) and config map properties [config_map](hack/iammanager.keikoproj.io_iamroles-configmap.yaml) as per your environment before you run install.sh.
-
-Note: You must be cluster admin and have exported KUBECONFIG and also has Administrator access to underlying AWS account and have the credentials exported.
-
-example:
-```bash
-export KUBECONFIG=/Users/myhome/.kube/admin@eks-dev2-k8s  
-export AWS_PROFILE=admin_123456789012_account
-./install.sh [cluster_name] [aws_region] [aws_profile]
-./install.sh eks-dev2-k8s us-west-2 aws_profile
-
-```
-
-To enable web hook or/and also update your installation of iam-manager to work with kiam please check [Installation](docs/Install.md) for detailed instructions.
-
 ##### iam-manager config-map
 This [document](docs/Configmap_Properties.md) provide explanation on configmap variables.
 
@@ -85,6 +66,26 @@ spec:
 ```
 
 To submit, kubectl apply -f iam_role.yaml --ns namespace1
+
+#### Installation:
+ 
+Simplest way to install iam-manager along with the role required for it to do the job is to run [install.sh](hack/install.sh) command.  
+
+Update the allowed policies in [allowed_policies.txt](hack/allowed_policies.txt) and config map properties [config_map](hack/iammanager.keikoproj.io_iamroles-configmap.yaml) as per your environment before you run install.sh.
+
+Note: You must be cluster admin and have exported KUBECONFIG and also has Administrator access to underlying AWS account and have the credentials exported.
+
+example:
+```bash
+export KUBECONFIG=/Users/myhome/.kube/admin@eks-dev2-k8s  
+export AWS_PROFILE=admin_123456789012_account
+./install.sh [cluster_name] [aws_region] [aws_profile]
+./install.sh eks-dev2-k8s us-west-2 aws_profile
+
+```
+
+To enable web hook or/and also update your installation of iam-manager to work with kiam please check [Installation](docs/Install.md) for detailed instructions.
+
 
 ## ❤ Contributing ❤
 

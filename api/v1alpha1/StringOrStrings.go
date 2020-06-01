@@ -8,9 +8,10 @@ type StringOrStrings []string
 
 //MarshalJSON function is a custom implementation of json.Marshal for StringOrStrings
 func (s StringOrStrings) MarshalJSON() ([]byte, error) {
-	if len(s) == 1 {
-		return json.Marshal(s[0])
-	}
+	//This is going to be tricky
+	//if len(s) == 1 {
+	//	return json.Marshal(s[0])
+	//}
 	//I need to convert it to string array
 	// if i use json.Marshal(s) here it is going to go into infinite loop
 	// since json.Marshal for type StringOrStrings are overwritten in this very own method

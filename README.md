@@ -16,6 +16,18 @@ AWS IAM role management for K8s namespaces inside cluster using k8s CRD Operator
 
 Security will be a main concern when we design a solution to create/update/delete IAM roles inside a cluster independently. iam-manager uses AWS IAM Permission Boundary concept along with other solutions to secure the implementation. Please check [AWS Security](docs/AWS_Security.md) for more details.
 
+#### Supported Features
+
+Following features are supported by IAM Manager
+
+[IAM Roles Management](docs/Features.md#iam-roles-management)  
+[IAM Role for Service Accounts (IRSA)](docs/Features.md#iam-role-for-service-accounts-irsa)  
+[AWS Service-Linked Roles](docs/Features.md#aws-service-linked-roles)  
+[Default Trust Policy for All Roles](docs/Features.md#default-trust-policy-for-all-roles)  
+[Maximum Number of Roles per Namespace](docs/Features.md#maximum-number-of-roles-per-namespace)  
+[Attaching Managed IAM Policies for All Roles](docs/Features.md#attaching-managed-iam-policies-for-all-roles)  
+[Multiple Trust policies](docs/Features.md#multiple-trust-policies)
+
 #### Installation:
  
 Simplest way to install iam-manager along with the role required for it to do the job is to run [install.sh](hack/install.sh) command.  
@@ -49,43 +61,27 @@ Following is the sample Iamrole spec.
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: iamrole-sample2
+  name: iam-manager-iamrole
 spec:
+  # Add fields here
   PolicyDocument:
-    Version: '2012-10-17'
     Statement:
-      - Effect: Allow
+      -
+        Effect: "Allow"
         Action:
-          - s3:ListBucket
+          - "s3:Get*"
         Resource:
-          - arn:aws:s3:::1234-dummy-s3-cucket-name
-          - arn:aws:s3:::5678-dummy-s3-bucket-name
-      - Effect: Allow
-        Resource:
-          -  "*"
-        Action:
-          - sts:AssumeRole
-      - Effect: Allow
-        Action:
-          - ec2:Describe*
-        Resource:
-          - "*"
-      - Effect: Allow
-        Action:
-          - route53:Get*
-          - route53:List*
-          - route53:Create*
-          - route53:Delete*
-          - route53:Change*
-        Resource:
-          - "*"
-      - Effect: Allow
-        Action:
-          - s3:PutObject
-          - s3:PutObjectAcl
-        Resource:
-          - arn:aws:s3:::intu-oim*
-
+          - "arn:aws:s3:::intu-oim*"
+        Sid: "AllowS3Access"
+  AssumeRolePolicyDocument:
+    Version: "2012-10-17"
+    Statement:
+      -
+        Effect: "Allow"
+        Action: "sts:AssumeRole"
+        Principal:
+          AWS:
+            - "arn:aws:iam::XXXXXXXXXXX:role/20190504-k8s-kiam-role"
 ```
 
 To submit, kubectl apply -f iam_role.yaml --ns namespace1

@@ -129,7 +129,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
-	log.WithValues("iamrole", iamRole.Name)
+	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
@@ -282,7 +282,7 @@ func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iam
 		Name:                            roleName,
 		PolicyName:                      config.InlinePolicyName,
 		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
-		SessionDuration:                 86400,
+		SessionDuration:                 43200,
 		TrustPolicy:                     trustPolicy,
 		PermissionPolicy:                string(role),
 		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
@@ -347,6 +347,8 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		status.RoleID = iamRole.Status.RoleID
 	}
 
+	status.LastUpdatedTimestamp = metav1.Now()
+
 	iamRole.Status = status
 	if err := r.Status().Update(ctx, iamRole); err != nil {
 		log.Error(err, "Unable to update status", "status", status.State)
@@ -370,7 +372,8 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 //UpdateMeta function updates the metadata (mostly finalizers in this case)
 func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
-	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
+	log = log.WithValues("iam_role_cr", iamRole.ObjectMeta.Name)
+
 	if err := r.Update(ctx, iamRole); err != nil {
 		log.Error(err, "Unable to update object metadata (finalizer)")
 		panic(err)

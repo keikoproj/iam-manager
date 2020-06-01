@@ -92,6 +92,7 @@ Resources:
             Action:
               - "iam:TagRole"
               - "iam:UntagRole"
+              - "iam:ListRoleTags"
             Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/k8s-*"
             Sid: "Allow"
           - Effect: "Allow"

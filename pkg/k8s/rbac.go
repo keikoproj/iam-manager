@@ -40,7 +40,6 @@ func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string
 			log.Error(err, msg)
 			return errors.New(msg)
 		}
-		return nil
 	}
 	log.Info("Service account got created successfully", "serviceAccount", sa.Name, "namespace", ns)
 	return nil

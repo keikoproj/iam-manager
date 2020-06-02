@@ -59,7 +59,7 @@ You can provide OIDC URL (OIDC IDP must be created in AWS IAM)
 k8s.cluster.oidc.issuer.url: "<OIDC URL from K8s cluster>"
 ```
 Request:  
-Once pre-requisites are completed, Attach following annotation to the pod and IAM Manager will automatically attaches required trust policy to IAM Role.  
+Once pre-requisites are completed, Attach following annotation to the IAM Role CR and IAM Manager will automatically attaches required trust policy to IAM Role.  
 ```bash
 iam.amazonaws.com/irsa-service-account: "service_account_name"
 ```

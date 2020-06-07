@@ -24,6 +24,7 @@ import (
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/keikoproj/iam-manager/pkg/validation"
 	"github.com/pborman/uuid"
@@ -35,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"strings"
 	"time"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
@@ -55,6 +57,7 @@ type IamroleReconciler struct {
 	Recorder  record.EventRecorder
 }
 
+// +kubebuilder:rbac:groups=core,resources=serviceaccounts,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
@@ -62,7 +65,7 @@ type IamroleReconciler struct {
 func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			fmt.Printf("panic occured %v", err)
 		}
 	}()
 
@@ -105,7 +108,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error)
+				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
 				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
 
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
@@ -126,9 +129,9 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
-	log.WithValues("iamrole", iamRole.Name)
+	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
-	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
+
 	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
 
 	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
@@ -136,30 +139,9 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	}
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
 
-	trustPolicy, err := utils.GetTrustPolicy(ctx, &iamRole.Spec.TrustPolicy)
+	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
 	if err != nil {
-		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error)
-	}
-	input := awsapi.IAMRoleRequest{
-		Name:                            roleName,
-		PolicyName:                      config.InlinePolicyName,
-		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
-		SessionDuration:                 3600,
-		TrustPolicy:                     trustPolicy,
-		PermissionPolicy:                string(role),
-		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
-		ManagedPolicies:                 config.Props.ManagedPolicies(),
-	}
-	//Validate IAM Policy and Resource
-	if err := validation.ValidateIAMPolicyAction(ctx, iamRole.Spec.PolicyDocument); err != nil {
-		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
-	}
-
-	if err := validation.ValidateIAMPolicyResource(ctx, iamRole.Spec.PolicyDocument); err != nil {
-		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.PolicyNotAllowed)
+		return r.UpdateStatus(ctx, iamRole, *status)
 	}
 
 	var requeueTime float64
@@ -168,31 +150,31 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
 		// Check with state of the world to figure out if this event is because of status update
-		targetRole, err := r.IAMClient.GetRole(ctx, input)
+		targetRole, err := r.IAMClient.GetRole(ctx, *input)
 		if err != nil {
 			// THIS SHOULD NEVER HAPPEN
 			// Just requeue in case if it happens
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, 3000)
 
 		}
 
-		targetPolicy, err := r.IAMClient.GetRolePolicy(ctx, input)
+		targetPolicy, err := r.IAMClient.GetRolePolicy(ctx, *input)
 		if err != nil {
 			// THIS SHOULD NEVER HAPPEN
 			// Just requeue in case if it happens
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, 3000)
 
 		}
 
-		if validation.CompareRole(ctx, input, targetRole, *targetPolicy) {
+		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp}, iammanagerv1alpha1.Ready)
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
 
 			return successRequeueIt()
 		}
@@ -227,24 +209,92 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
 			log.Error(errors.New(errMsg), errMsg)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg}, iammanagerv1alpha1.RolesMaxLimitReached)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached})
 		}
 		fallthrough
 	default:
 
-		resp, err := r.IAMClient.CreateRole(ctx, input)
+		resp, err := r.IAMClient.CreateRole(ctx, *input)
 		if err != nil {
 			log.Error(err, "error in creating a role")
-			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error()}, iammanagerv1alpha1.Error, requeueTime)
+			state := iammanagerv1alpha1.Error
+
+			if strings.Contains(err.Error(), awsapi.RoleAlreadyExistsError) {
+				state = iammanagerv1alpha1.RoleNameNotAvailable
+			}
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(state), "Unable to create/update iam role due to error "+err.Error())
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state}, requeueTime)
 		}
 		//OK. Successful!!
+		// Is this IRSA role? If yes, Create/update Service Account with required annotation
+		flag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
+		if flag {
+			//CreateOrUpdateServiceAccount
+			roleARN := resp.RoleARN
+			if roleARN == "" {
+				roleARN = iamRole.Status.RoleARN
+			}
+			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, roleARN); err != nil {
+				log.Error(err, "error in updating service account for IRSA role")
+				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
+				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, requeueTime)
+			}
+		}
+
 		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
-		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now()}, iammanagerv1alpha1.Ready)
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready})
 	}
 	log.Info("Successfully reconciled")
 
 	return successRequeueIt()
+}
+
+//ConstructInput function constructs input for
+func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, roleName string) (*awsapi.IAMRoleRequest, *iammanagerv1alpha1.IamroleStatus, error) {
+	log := log.Logger(ctx, "controllers", "iamrole_controller", "ConstructInput")
+	log.WithValues("iamrole", iamRole.Name)
+	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
+
+	//Validate IAM Policy and Resource
+	if err := validation.ValidateIAMPolicyAction(ctx, iamRole.Spec.PolicyDocument); err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
+		return nil, &iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.PolicyNotAllowed}, err
+	}
+
+	if err := validation.ValidateIAMPolicyResource(ctx, iamRole.Spec.PolicyDocument); err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.PolicyNotAllowed), "Unable to create/update iam role due to error "+err.Error())
+		return nil, &iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.PolicyNotAllowed}, err
+	}
+
+	trustPolicy, err := utils.GetTrustPolicy(ctx, iamRole)
+	if err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
+		return nil, &iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, err
+	}
+
+	//Attach some tags
+	tags := map[string]string{
+		"managedBy": "iam-manager",
+		"Namespace": iamRole.Namespace,
+	}
+
+	if config.Props.ClusterName() != "" {
+		tags["Cluster"] = config.Props.ClusterName()
+	}
+
+	input := &awsapi.IAMRoleRequest{
+		Name:                            roleName,
+		PolicyName:                      config.InlinePolicyName,
+		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
+		SessionDuration:                 43200,
+		TrustPolicy:                     trustPolicy,
+		PermissionPolicy:                string(role),
+		ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(),
+		ManagedPolicies:                 config.Props.ManagedPolicies(),
+		Tags:                            tags,
+	}
+
+	return input, nil, nil
 }
 
 type StatusUpdatePredicate struct {
@@ -291,7 +341,7 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 //UpdateStatus function updates the status based on the process step
-func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, state iammanagerv1alpha1.State, requeueTime ...float64) (ctrl.Result, error) {
+func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, requeueTime ...float64) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
 	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
 	if status.RoleARN == "" {
@@ -301,15 +351,18 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		status.RoleID = iamRole.Status.RoleID
 	}
 
-	status.State = state
+	if iamRole.Status.LastUpdatedTimestamp.IsZero() {
+		status.LastUpdatedTimestamp = metav1.Now()
+	}
+
 	iamRole.Status = status
 	if err := r.Status().Update(ctx, iamRole); err != nil {
-		log.Error(err, "Unable to update status", "status", state)
+		log.Error(err, "Unable to update status", "status", status.State)
 		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update status due to error "+err.Error())
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
-	if state != iammanagerv1alpha1.Error {
+	if status.State != iammanagerv1alpha1.Error {
 		return successRequeueIt()
 	}
 
@@ -325,7 +378,8 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 //UpdateMeta function updates the metadata (mostly finalizers in this case)
 func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
-	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
+	log = log.WithValues("iam_role_cr", iamRole.ObjectMeta.Name)
+
 	if err := r.Update(ctx, iamRole); err != nil {
 		log.Error(err, "Unable to update object metadata (finalizer)")
 		panic(err)

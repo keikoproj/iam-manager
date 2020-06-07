@@ -60,6 +60,53 @@ spec:
         spec:
           description: IamroleSpec defines the desired state of Iamrole
           properties:
+            AssumeRolePolicyDocument:
+              properties:
+                Statement:
+                  description: Statement allows list of TrustPolicyStatement objects
+                  items:
+                    description: TrustPolicy struct holds Trust policy
+                    properties:
+                      Action:
+                        description: Action can be performed
+                        type: string
+                      Condition:
+                        description: Condition struct holds Condition
+                        properties:
+                          StringEquals:
+                            additionalProperties:
+                              type: string
+                            description: StringEquals can be used to define Equal
+                              condition
+                            type: object
+                        type: object
+                      Effect:
+                        description: Effect allowed/denied
+                        enum:
+                        - Allow
+                        - Deny
+                        type: string
+                      Principal:
+                        description: Principal struct holds AWS principal
+                        properties:
+                          AWS:
+                            description: StringOrStrings type accepts one string or
+                              multiple strings
+                            items:
+                              type: string
+                            type: array
+                          Federated:
+                            type: string
+                          Service:
+                            type: string
+                        type: object
+                    type: object
+                  type: array
+                Version:
+                  description: Version specifies IAM policy version By default, this
+                    value is "2012-10-17"
+                  type: string
+              type: object
             PolicyDocument:
               description: PolicyDocument type defines IAM policy struct
               properties:
@@ -69,12 +116,12 @@ spec:
                     description: Statement type defines the AWS IAM policy statement
                     properties:
                       Action:
-                        description: Action allowed/denied on specific resources
+                        description: Action allowed on specific resources
                         items:
                           type: string
                         type: array
                       Effect:
-                        description: Effect on target resource
+                        description: Effect allowed/denied
                         enum:
                         - Allow
                         - Deny
@@ -101,22 +148,6 @@ spec:
                   type: string
               required:
               - Statement
-              type: object
-            TrustPolicy:
-              description: TrustPolicy struct holds principal
-              properties:
-                Principal:
-                  description: Principal struct holds AWS principal
-                  properties:
-                    AWS:
-                      description: StringOrStrings type accepts one string or multiple
-                        strings
-                      items:
-                        type: string
-                      type: array
-                    Service:
-                      type: string
-                  type: object
               type: object
           required:
           - PolicyDocument

@@ -38,7 +38,7 @@ const (
 	propertyPermissionBoundary = "iam.managed.permission.boundary.policy"
 
 	//enable webhook property
-	propertWebhookEnabled = "webhook.enabled"
+	propertyWebhookEnabled = "webhook.enabled"
 
 	//max allowed aws iam roles per namespace
 	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
@@ -48,8 +48,21 @@ const (
 
 	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 5 mins (300 seconds)
 	propertyDesiredStateFrequency = "controller.desired.frequency"
+
+	//propertyClusterName can be used to set cluster name
+	propertyClusterName = "k8s.cluster.name"
+
+	//propertyIRSAEnabled can be used to enable/disable IRSA support by IAM-Manager
+	propertyIRSAEnabled = "iam.irsa.enabled"
+
+	//propertyK8sClusterOIDCIssuerUrl can be used to provide OIDC issuer url
+	propertyK8sClusterOIDCIssuerUrl = "k8s.cluster.oidc.issuer.url"
 )
 
 const (
 	separator = ","
+
+	OIDCAudience = "sts.amazonaws.com"
+
+	IRSAAnnotation = "iam.amazonaws.com/irsa-service-account"
 )

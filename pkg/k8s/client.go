@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,6 +26,7 @@ import (
 type Client struct {
 	cl  kubernetes.Interface
 	dCl dynamic.Interface
+	rCl client.Client
 }
 
 //NewK8sClient gets the new k8s go client
@@ -47,8 +49,8 @@ func NewK8sClient() (*Client, error) {
 	}
 
 	cl := &Client{
-		client,
-		dClient,
+		cl:  client,
+		dCl: dClient,
 	}
 	return cl, nil
 }
@@ -73,10 +75,19 @@ func NewK8sClientDoOrDie() *Client {
 	}
 
 	cl := &Client{
-		client,
-		dClient,
+		cl:  client,
+		dCl: dClient,
 	}
 	return cl
+}
+
+//NewK8sManagerClient func will be used in future and all others should migrate to this
+func NewK8sManagerClient(client client.Client) *Client {
+	cl := &Client{
+		rCl: client,
+	}
+	return cl
+
 }
 
 //Iface defines required functions to be implemented by receivers
@@ -84,6 +95,7 @@ type Iface interface {
 	IamrolesCount(ctx context.Context, ns string)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
 	SetUpEventHandler(ctx context.Context) record.EventRecorder
+	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
 }
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace

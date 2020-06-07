@@ -7,7 +7,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/validation"
 	"gopkg.in/check.v1"
@@ -161,8 +160,8 @@ func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {
 	role1, _ := json.Marshal(input1)
 	role2, _ := json.Marshal(input2)
 
-	input3 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input3 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -174,8 +173,8 @@ func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {
 		Version: "2012-10-17",
 	}
 
-	input4 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input4 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -303,8 +302,8 @@ func (s *ValidateSuite) TestComparePermissionPolicyFailure(c *check.C) {
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
 
-	input1 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input1 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -316,8 +315,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
 		Version: "2012-10-17",
 	}
 
-	input2 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input2 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -346,8 +345,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
-	input1 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input1 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -359,8 +358,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
 		Version: "2012-10-17",
 	}
 
-	input2 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input2 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Effect: "Allow",
 				Action: "route53:Get",
@@ -389,8 +388,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
-	input1 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input1 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Action: "route53:Get",
 				Effect: "Allow",
@@ -402,8 +401,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
 		Version: "2012-10-17",
 	}
 
-	input2 := utils.TrustPolicy{
-		Statement: []utils.Statement{
+	input2 := v1alpha1.AssumeRolePolicyDocument{
+		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Effect: "Deny",
 				Action: "route53:Get",

@@ -26,7 +26,7 @@ import (
 type IamroleSpec struct {
 	PolicyDocument PolicyDocument `json:"PolicyDocument"`
 	// +optional
-	TrustPolicy TrustPolicy `json:"TrustPolicy,omitempty"`
+	AssumeRolePolicyDocument *AssumeRolePolicyDocument `json:"AssumeRolePolicyDocument,omitempty"`
 }
 
 // +kubebuilder:validation:Required
@@ -46,10 +46,10 @@ type PolicyDocument struct {
 // +kubebuilder:validation:Required
 // Statement type defines the AWS IAM policy statement
 type Statement struct {
-	//Effect on target resource
+	//Effect allowed/denied
 	Effect Effect `json:"Effect"`
 
-	//Action allowed/denied on specific resources
+	//Action allowed on specific resources
 	Action []string `json:"Action"`
 
 	//Resources defines target resources which IAM policy will be applied
@@ -66,19 +66,48 @@ type Statement struct {
 // +kubebuilder:validation:Enum=Allow;Deny
 type Effect string
 
-//TrustPolicy struct holds principal
 // +optional
-type TrustPolicy struct {
+type AssumeRolePolicyDocument struct {
+	// Version specifies IAM policy version
+	// By default, this value is "2012-10-17"
+	// +optional
+	Version string `json:"Version,omitempty"`
+
+	// Statement allows list of TrustPolicyStatement objects
+	// +optional
+	Statement []TrustPolicyStatement `json:"Statement,omitempty"`
+}
+
+//TrustPolicy struct holds Trust policy
+// +optional
+type TrustPolicyStatement struct {
+	//Effect allowed/denied
+	Effect Effect `json:"Effect,omitempty"`
+	//Action can be performed
+	Action string `json:"Action,omitempty"`
 	// +optional
 	Principal Principal `json:"Principal,omitempty"`
+	// +optional
+	Condition *Condition `json:"Condition,omitempty"`
 }
 
 //Principal struct holds AWS principal
+// +optional
 type Principal struct {
 	// +optional
 	AWS StringOrStrings `json:"AWS,omitempty"`
 	// +optional
 	Service string `json:"Service,omitempty"`
+	// +optional
+	Federated string `json:"Federated,omitempty"`
+}
+
+//Condition struct holds Condition
+// +optional
+type Condition struct {
+	//StringEquals can be used to define Equal condition
+	// +optional
+	StringEquals map[string]string `json:"StringEquals,omitempty"`
 }
 
 const (
@@ -116,6 +145,7 @@ const (
 	Error                State = "Error"
 	PolicyNotAllowed     State = "PolicyNotAllowed"
 	RolesMaxLimitReached State = "RolesMaxLimitReached"
+	RoleNameNotAvailable State = "RoleNameNotAvailable"
 )
 
 // +kubebuilder:object:root=true

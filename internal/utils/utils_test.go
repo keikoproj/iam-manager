@@ -32,7 +32,8 @@ func (s *UtilsTestSuite) TearDownTest(c *check.C) {
 	s.mockCtrl.Finish()
 }
 
-func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRole(c *check.C) {
+func (s *UtilsTestSuite) TestDefaultTrustPolicyNoGoTemplate(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -45,8 +46,150 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRole(c *check.C) {
 			},
 		},
 	}
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(*resp, check.DeepEquals, expect)
+
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyEmptyString(c *check.C) {
+	tD := ""
+	_, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.NotNil)
+
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyInvalidJsonString(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": ["Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	_, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.NotNil)
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyUnknownGoTemplateValue(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": ["Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountI}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	_, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.NotNil)
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+		},
+	}
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(*resp, check.DeepEquals, expect)
+
+}
+func (s *UtilsTestSuite) TestDefaultTrustPolicyMultipleNoGoTemplate(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:SERVICE_ACCOUNT_NAME"}}}]}`
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:SERVICE_ACCOUNT_NAME",
+					},
+				},
+			},
+		},
+	}
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(resp.Statement[0], check.DeepEquals, expect.Statement[0])
+	c.Assert(len(resp.Statement), check.Equals, len(expect.Statement))
+	c.Assert(*resp.Statement[1].Condition, check.DeepEquals, *expect.Statement[1].Condition)
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyMultipleWithGoTemplate(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}]}`
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:valid_namespace:SERVICE_ACCOUNT_NAME",
+					},
+				},
+			},
+		},
+	}
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(*resp, check.DeepEquals, expect)
+
+}
+
+func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultiple(c *check.C) {
+	//Add Env variable
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:valid_namespace:SERVICE_ACCOUNT_NAME",
+					},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+		},
+	}
 
 	input := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: "valid_namespace",
+		},
 		Spec: v1alpha1.IamroleSpec{},
 	}
 
@@ -54,6 +197,74 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRole(c *check.C) {
 	resp, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(resp, check.DeepEquals, string(expected))
+}
+
+func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultipleAndStringLikeWithNoGoTemplate(c *check.C) {
+	//Add Env variable
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringLike": {"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:*"}}}]}`
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringLike: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:*",
+					},
+				},
+			},
+		},
+	}
+
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(*resp, check.DeepEquals, expect)
+}
+
+func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultipleAndStringLikeWithGoTemplate(c *check.C) {
+	//Add Env variable
+	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringLike": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:*"}}}]}`
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringLike: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:valid_namespace:*",
+					},
+				},
+			},
+		},
+	}
+
+	resp, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
+	c.Assert(*resp, check.DeepEquals, expect)
 }
 
 func (s *UtilsTestSuite) TestGetTrustPolicyAWSRoleSuccess(c *check.C) {

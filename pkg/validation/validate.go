@@ -120,7 +120,7 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole 
 
 //ComparePermissionPolicy compares role policy from request and response
 func ComparePermissionPolicy(ctx context.Context, request string, target string) bool {
-	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
+	log := log.Logger(ctx, "pkg.validation", "ComparePermissionPolicy")
 
 	d, _ := url.QueryUnescape(target)
 	dest := v1alpha1.PolicyDocument{}
@@ -136,7 +136,7 @@ func ComparePermissionPolicy(ctx context.Context, request string, target string)
 	}
 	//compare
 	if !reflect.DeepEqual(req, dest) {
-		log.Info("input policy and target policy are NOT equal")
+		log.Info("input policy and target policy are NOT equal", "req", req, "dest", dest)
 		return false
 	}
 

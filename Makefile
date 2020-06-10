@@ -20,11 +20,11 @@ export RESTRICTED_POLICY_RESOURCES=policy-resource
 export RESTRICTED_S3_RESOURCES=s3-resource
 export AWS_ACCOUNT_ID=123456789012
 export AWS_REGION=us-west-2
-export TRUST_POLICY_ARN_LIST=arn:aws:iam::123456789012:role/trust_role
 export MANAGED_POLICIES=arn:aws:iam::123456789012:policy/SOMETHING
 export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
 export CLUSTER_NAME=k8s_test_keiko
 export CLUSTER_OIDC_ISSUER_URL=https://google.com/OIDC
+export DEFAULT_TRUST_POLICY={"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}
 
 mock:
 	go get -u github.com/golang/mock/mockgen

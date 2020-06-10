@@ -79,6 +79,12 @@ spec:
                             description: StringEquals can be used to define Equal
                               condition
                             type: object
+                          StringLike:
+                            additionalProperties:
+                              type: string
+                            description: StringLike can be used for regex as supported
+                              by AWS
+                            type: object
                         type: object
                       Effect:
                         description: Effect allowed/denied

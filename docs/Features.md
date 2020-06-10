@@ -58,6 +58,16 @@ You can provide OIDC URL (OIDC IDP must be created in AWS IAM)
 ```bash 
 k8s.cluster.oidc.issuer.url: "<OIDC URL from K8s cluster>"
 ```
+Note: To setup OIDC IDP in AWS IAM, you must provide required permissions to iam-manager role. Here is the minimum permissions needed for this setup
+```yaml
+          - Effect: "Allow"
+            Action:
+              - "iam:CreateOpenIDConnectProvider"
+              - "eks:DescribeCluster"
+            Resource: "*"
+            Sid: "IRSANeededPermissions"
+```
+
 Request:  
 Once pre-requisites are completed, Attach following annotation to the IAM Role CR and IAM Manager will automatically attaches required trust policy to IAM Role.  
 ```bash
@@ -139,8 +149,20 @@ spec:
 ##### Default Trust Policy for All Roles
 There might be a situations where as an administrator you might want to control the trust policy. For example, in KIAM use case every role must be trusted by master server role where kiam server is deployed. That can be configured in IAM Manager using config map variable  
 ```bash
-iam.default.trust.policy.role.arn.list : "Comma delimited AWS IAM Role ARNs"
+iam.default.trust.policy : "Assume Role Policy Json as a string"
 ```
+The above config map variable does also accept Go Template to replace following values during runtime
+1. AccountID
+2. ClusterName
+3. NamespaceName
+4. Region
+
+Here is a sample value from config map
+```bash
+iam.default.trust.policy: '{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::{{.AccountID}}:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}'
+```
+AccountID and NamespaceName will be replaced at run time.
+
 Example:
 ```yaml
 apiVersion: iammanager.keikoproj.io/v1alpha1
@@ -159,7 +181,7 @@ spec:
           - "arn:aws:s3:::intu-oim*"
         Sid: "AllowS3Access"
 ```
-This should automatically add the trust policy with sts:AssumeRole and Prinipal from config map variable value
+This should automatically add the default trust policy from config map.
 
 ##### Maximum Number of Roles per Namespace
 By default, maximum number of roles per namespace is 1. You can configure the max roles per namespace using config map variable

@@ -43,7 +43,7 @@ var iamrolelog = logf.Log.WithName("iamrole-resource")
 var wClient *k8s.Client
 
 func NewWClient() {
-	log := log.Logger(context.Background(), "v1alpha1", "LoadProperties")
+	log := log.Logger(context.Background(), "v1alpha1", "NewWClient")
 	log.Info("loading k8s client")
 	k8sClient, err := k8s.NewK8sClient()
 	if err != nil {

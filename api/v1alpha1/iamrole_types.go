@@ -108,6 +108,9 @@ type Condition struct {
 	//StringEquals can be used to define Equal condition
 	// +optional
 	StringEquals map[string]string `json:"StringEquals,omitempty"`
+	//StringLike can be used for regex as supported by AWS
+	// +optional
+	StringLike map[string]string `json:"StringLike,omitempty"`
 }
 
 const (

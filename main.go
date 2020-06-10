@@ -79,8 +79,8 @@ func main() {
 	iamClient := awsapi.NewIAM(config.Props.AWSRegion())
 	if err := handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
 		log.Error(err, "unable to complete/verify oidc setup for IRSA")
-		os.Exit(1)
 	}
+
 	if err = (&controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
 		IAMClient: iamClient,

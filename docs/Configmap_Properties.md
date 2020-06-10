@@ -11,7 +11,7 @@ This document explains configmap variables.
 | webhook.enabled                   |  Enable webhook?              | false              | Required           |
 | iam.role.max.limit.per.namespace      | Maximum number of roles per namespace |   1        | Required |
 | aws.region                        | AWS Region                    | us-west-2          | Required |
-| iam.default.trust.policy.role.arn.list| Default trust policy role arn list |           | Optional |
+| iam.default.trust.policy| Default trust policy role. This must follow v1alpha1.AssumeRolePolicyDocument syntax|           | Optional |
 | iam.role.derive.from.namespace    | Derive iam role name from namespace? if true it will be k8s-<namespace> | false | Optional|
 | controller.desired.frequency      | Controller frequency to check the state of the world (in seconds) | 300  | Optional |
 | k8s.cluster.name                  | Name of the cluster           |                    | Optional | 

@@ -151,7 +151,7 @@ There might be a situations where as an administrator you might want to control 
 ```bash
 iam.default.trust.policy : "Assume Role Policy Json as a string"
 ```
-The above config map variable does accept Go Template to replace following values during runtime
+The above config map variable does also accept Go Template to replace following values during runtime
 1. AccountID
 2. ClusterName
 3. NamespaceName

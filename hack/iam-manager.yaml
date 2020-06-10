@@ -90,6 +90,8 @@ spec:
                           StringLike:
                             additionalProperties:
                               type: string
+                            description: StringLike can be used for regex as supported
+                              by AWS
                             type: object
                         type: object
                       Effect:

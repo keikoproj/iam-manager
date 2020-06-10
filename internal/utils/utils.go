@@ -85,7 +85,7 @@ type Fields struct {
 	Region        string
 }
 
-//DefaultTrustPolicy is a one time check to make sure trust policy provided in config map is a valid trust policy doc
+//DefaultTrustPolicy converts the config map variable string to v1alpha1.AssumeRolePolicyDocument and executes Go Template if any
 func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (*iammanagerv1alpha1.AssumeRolePolicyDocument, error) {
 	log := log.Logger(ctx, "internal.utils.utils", "defaultTrustPolicy")
 	if trustPolicyDoc == "" {

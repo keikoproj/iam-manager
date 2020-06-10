@@ -60,6 +60,18 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyEmptyString(c *check.C) {
 
 }
 
+func (s *UtilsTestSuite) TestDefaultTrustPolicyInvalidJsonString(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": ["Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	_, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.NotNil)
+}
+
+func (s *UtilsTestSuite) TestDefaultTrustPolicyUnknownGoTemplateValue(c *check.C) {
+	tD := `{"Version": "2012-10-17", "Statement": ["Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountI}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	_, err := utils.DefaultTrustPolicy(s.ctx, tD, "valid_namespace")
+	c.Assert(err, check.NotNil)
+}
+
 func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
 	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{

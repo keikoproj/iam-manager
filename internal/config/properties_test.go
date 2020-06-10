@@ -160,3 +160,24 @@ func (s *PropertiesSuite) TestControllerDesiredFrequency(c *check.C) {
 	value := Props.ControllerDesiredFrequency()
 	c.Assert(value, check.Equals, 0)
 }
+
+func (s *PropertiesSuite) TestIsIRSAEnabled(c *check.C) {
+	value := Props.IsIRSAEnabled()
+	c.Assert(value, check.Equals, false)
+}
+
+func (s *PropertiesSuite) TestControllerClusterName(c *check.C) {
+	value := Props.ClusterName()
+	c.Assert(value, check.Equals, "k8s_test_keiko")
+}
+
+func (s *PropertiesSuite) TestControllerOIDCIssuerUrl(c *check.C) {
+	value := Props.OIDCIssuerUrl()
+	c.Assert(value, check.Equals, "https://google.com/OIDC")
+}
+
+func (s *PropertiesSuite) TestControllerDefaultTrustPolicy(c *check.C) {
+	def := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
+	value := Props.DefaultTrustPolicy()
+	c.Assert(value, check.Equals, def)
+}

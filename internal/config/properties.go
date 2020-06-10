@@ -23,7 +23,6 @@ type Properties struct {
 	restrictedPolicyResources       []string
 	restrictedS3Resources           []string
 	awsAccountID                    string
-	trustPolicyARNs                 []string
 	managedPolicies                 []string
 	managedPermissionBoundaryPolicy string
 	awsRegion                       string
@@ -34,6 +33,7 @@ type Properties struct {
 	clusterName                     string
 	isIRSAEnabled                   string
 	clusterOIDCIssuerUrl            string
+	defaultTrustPolicy              string
 }
 
 func init() {
@@ -75,7 +75,6 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			restrictedPolicyResources:       strings.Split(os.Getenv("RESTRICTED_POLICY_RESOURCES"), separator),
 			restrictedS3Resources:           strings.Split(os.Getenv("RESTRICTED_S3_RESOURCES"), separator),
 			awsAccountID:                    os.Getenv("AWS_ACCOUNT_ID"),
-			trustPolicyARNs:                 strings.Split(os.Getenv("TRUST_POLICY_ARN_LIST"), separator),
 			managedPolicies:                 strings.Split(os.Getenv("MANAGED_POLICIES"), separator),
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
 			awsRegion:                       os.Getenv("AWS_REGION"),
@@ -83,6 +82,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			deriveNameFromNamespace:         os.Getenv("DERIVE_NAME_FROM_NAMESPACE"),
 			clusterName:                     os.Getenv("CLUSTER_NAME"),
 			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
+			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
 		}
 		return nil
 	}
@@ -96,12 +96,13 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	restrictedPolicyResources := strings.Split(cm[0].Data[propertyIamPolicyBlacklist], separator)
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
 	clusterName := cm[0].Data[propertyClusterName]
-
+	defaultTrustPolicy := cm[0].Data[propertyDefaultTrustPolicy]
 	Props = &Properties{
 		allowedPolicyAction:       allowedPolicyAction,
 		restrictedPolicyResources: restrictedPolicyResources,
 		restrictedS3Resources:     restrictedS3Resources,
 		clusterName:               clusterName,
+		defaultTrustPolicy:        defaultTrustPolicy,
 	}
 
 	//Defaults
@@ -180,14 +181,6 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	}
 	Props.managedPolicies = managedPolicies
 
-	trustPolicyARNs := strings.Split(cm[0].Data[propertyDefaultTrustPolicyARNList], separator)
-	for i := range trustPolicyARNs {
-		if !strings.HasPrefix(trustPolicyARNs[i], "arn:aws:iam::") {
-			trustPolicyARNs[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, trustPolicyARNs[i])
-		}
-	}
-	Props.trustPolicyARNs = trustPolicyARNs
-
 	isIRSAEnabled := cm[0].Data[propertyIRSAEnabled]
 	if isIRSAEnabled == "true" {
 		Props.isIRSAEnabled = "true"
@@ -230,10 +223,6 @@ func (p *Properties) ManagedPolicies() []string {
 
 func (p *Properties) AWSAccountID() string {
 	return p.awsAccountID
-}
-
-func (p *Properties) TrustPolicyARNs() []string {
-	return p.trustPolicyARNs
 }
 
 func (p *Properties) ManagedPermissionBoundaryPolicy() string {
@@ -282,6 +271,10 @@ func (p *Properties) ClusterName() string {
 
 func (p *Properties) OIDCIssuerUrl() string {
 	return p.clusterOIDCIssuerUrl
+}
+
+func (p *Properties) DefaultTrustPolicy() string {
+	return p.defaultTrustPolicy
 }
 
 func RunConfigMapInformer(ctx context.Context) {

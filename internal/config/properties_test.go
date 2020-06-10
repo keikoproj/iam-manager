@@ -141,11 +141,6 @@ func (s *PropertiesSuite) TestGetAWSRegion(c *check.C) {
 	c.Assert(value, check.NotNil)
 }
 
-func (s *PropertiesSuite) TestTrustPolicyARNs(c *check.C) {
-	value := Props.TrustPolicyARNs()
-	c.Assert(value, check.NotNil)
-}
-
 func (s *PropertiesSuite) TestGetManagedPermissionBoundaryPolicy(c *check.C) {
 	value := Props.ManagedPermissionBoundaryPolicy()
 	c.Assert(value, check.NotNil)

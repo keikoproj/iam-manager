@@ -28,9 +28,6 @@ const (
 	//enable webhook property
 	propertAWSAccountID = "aws.accountId"
 
-	// aws master role
-	propertyDefaultTrustPolicyARNList = "iam.default.trust.policy.role.arn.list"
-
 	// user managed policies
 	propertyManagedPolicies = "iam.managed.policies"
 
@@ -57,6 +54,9 @@ const (
 
 	//propertyK8sClusterOIDCIssuerUrl can be used to provide OIDC issuer url
 	propertyK8sClusterOIDCIssuerUrl = "k8s.cluster.oidc.issuer.url"
+
+	//propertyDefaultTrustPolicy can be used to provide default trust policy
+	propertyDefaultTrustPolicy = "iam.default.trust.policy"
 )
 
 const (

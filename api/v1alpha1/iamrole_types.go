@@ -138,7 +138,7 @@ type IamroleStatus struct {
 	ErrorDescription string `json:"errorDescription,omitempty"`
 	//LastUpdatedTimestamp represents the last time the iam role has been modified
 	// +optional
-	LastUpdatedTimestamp metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
+	LastUpdatedTimestamp *metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
 }
 
 type State string

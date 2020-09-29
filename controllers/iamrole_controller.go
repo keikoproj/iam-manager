@@ -108,7 +108,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
+				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
 				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
 
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
@@ -141,7 +141,11 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
 	if err != nil {
-		return r.UpdateStatus(ctx, iamRole, *status)
+		if status == nil {
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role due to error "+err.Error())
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: status.RoleName, ErrorDescription: status.ErrorDescription, State: status.State, LastUpdatedTimestamp: metav1.Now()})
 	}
 
 	var requeueTime float64
@@ -157,7 +161,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, 3000)
 
 		}
 
@@ -209,7 +213,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
 			log.Error(errors.New(errMsg), errMsg)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached})
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()})
 		}
 		fallthrough
 	default:
@@ -223,7 +227,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 				state = iammanagerv1alpha1.RoleNameNotAvailable
 			}
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(state), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state}, requeueTime)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 		}
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
@@ -237,7 +241,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, roleARN); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
-				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, requeueTime)
+				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 			}
 		}
 

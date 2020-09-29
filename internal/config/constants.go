@@ -43,7 +43,7 @@ const (
 	//propertyDeriveNameFromNameSpace is a bool value and can be used to configure the name construction
 	propertyDeriveNameFromNameSpace = "iam.role.derive.from.namespace"
 
-	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 5 mins (300 seconds)
+	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 30 mins (1800 seconds)
 	propertyDesiredStateFrequency = "controller.desired.frequency"
 
 	//propertyClusterName can be used to set cluster name

@@ -146,7 +146,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		}
 		Props.controllerDesiredFrequency = controllerDesiredFreq
 	} else {
-		Props.controllerDesiredFrequency = 300
+		Props.controllerDesiredFrequency = 1800
 	}
 
 	awsAccountID := cm[0].Data[propertAWSAccountID]

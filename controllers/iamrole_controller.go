@@ -246,7 +246,11 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
-		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready})
+
+		timeNow := metav1.Now()
+		if _, err = r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: &timeNow, State: iammanagerv1alpha1.Ready}); err != nil {
+			log.Error(err, "error in updating status")
+		}
 	}
 	log.Info("Successfully reconciled")
 
@@ -355,8 +359,9 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		status.RoleID = iamRole.Status.RoleID
 	}
 
+	metav1NowTime := metav1.Now()
 	if iamRole.Status.LastUpdatedTimestamp.IsZero() {
-		status.LastUpdatedTimestamp = metav1.Now()
+		status.LastUpdatedTimestamp = &metav1NowTime
 	}
 
 	iamRole.Status = status

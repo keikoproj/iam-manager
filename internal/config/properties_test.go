@@ -86,7 +86,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(err, check.IsNil)
 	c.Assert(Props.AWSRegion(), check.Equals, "us-west-2")
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 1)
-	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 300)
+	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 1800)
 	c.Assert(Props.IsWebHookEnabled(), check.Equals, false)
 	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, false)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")

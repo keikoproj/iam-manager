@@ -86,7 +86,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
 	}
 
-	// Isit being deleted?
+	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
 		//Lets check if this is very first time use case
@@ -132,10 +132,10 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
-	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
+	roleName := fmt.Sprintf("%s%s%s", config.Props.IamRolePrefix(), config.Props.IamRoleSeparator(), iamRole.ObjectMeta.Name)
 
 	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
-		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+		roleName = fmt.Sprintf("%s%s%s", config.Props.IamRolePrefix(), config.Props.IamRoleSeparator(), iamRole.ObjectMeta.Namespace)
 	}
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
 

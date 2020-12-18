@@ -34,6 +34,8 @@ type Properties struct {
 	isIRSAEnabled                   string
 	clusterOIDCIssuerUrl            string
 	defaultTrustPolicy              string
+	iamRolePrefix                   string
+	iamRoleSeparator                string
 }
 
 func init() {
@@ -83,6 +85,8 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			clusterName:                     os.Getenv("CLUSTER_NAME"),
 			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
 			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
+			iamRolePrefix:                   os.Getenv("IAM_ROLE_PREFIX"),
+			iamRoleSeparator:                os.Getenv("IAM_ROLE_SEPARATOR"),
 		}
 		return nil
 	}
@@ -159,6 +163,20 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.awsAccountID = awsAccountID
 	} else {
 		Props.awsAccountID = awsAccountID
+	}
+
+	iamRolePrefix := cm[0].Data[propertyIamRolePrefix]
+	if iamRolePrefix == "" {
+		Props.iamRolePrefix = "k8s"
+	} else {
+		Props.iamRolePrefix = iamRolePrefix
+	}
+
+	iamRoleSeparator := cm[0].Data[propertyIamRoleSeparator]
+	if iamRoleSeparator == "" {
+		Props.iamRoleSeparator = "k8s"
+	} else {
+		Props.iamRoleSeparator = iamRoleSeparator
 	}
 
 	managedPermissionBoundaryPolicyArn := cm[0].Data[propertyPermissionBoundary]
@@ -247,6 +265,14 @@ func (p *Properties) DeriveNameFromNamespace() bool {
 		resp = true
 	}
 	return resp
+}
+
+func (p *Properties) IamRolePrefix() string {
+	return p.iamRolePrefix
+}
+
+func (p *Properties) IamRoleSeparator() string {
+	return p.iamRoleSeparator
 }
 
 func (p *Properties) MaxRolesAllowed() int {

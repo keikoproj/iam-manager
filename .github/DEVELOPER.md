@@ -8,15 +8,18 @@
 * kubebuilder
 
 ### Quickstart
-```
-$ git clone https://github.com/keikoproj/iam-manager
-$ cd iam-manager
-$ go mod
-$ go vendor
-```
 
+First, go and fork the Github repo to your own personal project. Once that's
+done, set up a local build environment off of the original Github repo. Then we
+add in your fork'ed repo as a new target for doing git pushes.
+
+    $ go clean -modcache
+    $ go get -v github.com/keikoproj/iam-manager
+    $ cd "$(go env GOPATH)/src/github.com/keikoproj/iam-manager"
+    $ make test
+    $ go mod vendor
+    $ git remote add myfork <your fork>
 
 ### Build project
-```
-$ make
-```
+
+    $ make

@@ -59,14 +59,14 @@ func (s *ControllerSuite) TestGenerateNameFunction(c *check.C) {
 func (s *ControllerSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(c *check.C) {
 	cm := &v1.ConfigMap{
 		Data: map[string]string{
+			"aws.accountId":                  "012345678901",
 			"iam.role.derive.from.namespace": "true",
 			"iam.role.prefix":                "pfx",
 			"iam.role.separator":             "+",
 		},
 	}
 	Props = nil
-	err := LoadProperties("", cm)
-	c.Assert(err, check.Equals, nil)
+	LoadProperties("", cm)
 
 	resource := &iammanagerv1alpha1.Iamrole{
 		ObjectMeta: metav1.ObjectMeta{

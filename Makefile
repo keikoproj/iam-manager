@@ -1,30 +1,43 @@
-
 # Image URL to use all building/pushing image targets
-IMG ?= keikoproj/iam-manager:latest
+IMG         ?= keikoproj/iam-manager:latest
+
+# Tools required to run the full suite of tests properly
+OSNAME           ?= $(shell uname -s | tr A-Z a-z)
+KUBEBUILDER_VER  ?= 2.2.0
+KUBEBUILDER_ARCH ?= amd64
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
+KUBECONFIG                  ?= $(HOME)/.kube/config
+LOCAL                       ?= true
+ALLOWED_POLICY_ACTION       ?= s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
+RESTRICTED_POLICY_RESOURCES ?= policy-resource
+RESTRICTED_S3_RESOURCES     ?= s3-resource
+AWS_ACCOUNT_ID              ?= 123456789012
+AWS_REGION                  ?= us-west-2
+MANAGED_POLICIES            ?= arn:aws:iam::123456789012:policy/SOMETHING
+MANAGED_PERMISSION_BOUNDARY_POLICY ?= arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
+CLUSTER_NAME                ?= k8s_test_keiko
+CLUSTER_OIDC_ISSUER_URL     ?= https://google.com/OIDC
+DEFAULT_TRUST_POLICY        ?= '{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}'
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+	GOBIN := $(shell go env GOPATH)/bin
 else
-GOBIN=$(shell go env GOBIN)
+	GOBIN := $(shell go env GOBIN)
 endif
 
 all: manager
 
-setup: ; $(info $(M) setting up env variables for test…) @ ## Setup env variables
-export LOCAL=true
-export ALLOWED_POLICY_ACTION=s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
-export RESTRICTED_POLICY_RESOURCES=policy-resource
-export RESTRICTED_S3_RESOURCES=s3-resource
-export AWS_ACCOUNT_ID=123456789012
-export AWS_REGION=us-west-2
-export MANAGED_POLICIES=arn:aws:iam::123456789012:policy/SOMETHING
-export MANAGED_PERMISSION_BOUNDARY_POLICY=arn:aws:iam::1123456789012:role/iam-manager-permission-boundary
-export CLUSTER_NAME=k8s_test_keiko
-export CLUSTER_OIDC_ISSUER_URL=https://google.com/OIDC
-export DEFAULT_TRUST_POLICY={"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}
+.PHONY: kubebuilder
+kubebuilder:
+	@echo "Downloading and installing Kubebuilder - this requires sudo privileges"
+	curl -fsSL -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VER)/kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz"
+	rm -rf kubebuilder && mkdir -p kubebuilder
+	tar -zxvf kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz --strip-components 1 -C kubebuilder
+	sudo cp -rf kubebuilder /usr/local
 
 mock:
 	go get -u github.com/golang/mock/mockgen
@@ -34,7 +47,19 @@ mock:
 	done
 
 # Run tests
-test: setup mock generate fmt manifests
+test: mock generate fmt manifests
+	KUBECONFIG=$(KUBECONFIG) \
+	LOCAL=$(LOCAL) \
+	ALLOWED_POLICY_ACTION=$(ALLOWED_POLICY_ACTION) \
+	RESTRICTED_POLICY_RESOURCES=$(RESTRICTED_POLICY_RESOURCES) \
+	RESTRICTED_S3_RESOURCES=$(RESTRICTED_S3_RESOURCES) \
+	AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
+	AWS_REGION=$(AWS_REGION) \
+	MANAGED_POLICIES=$(MANAGED_POLICIES) \
+	MANAGED_PERMISSION_BOUNDARY_POLICY=$(MANAGED_PERMISSION_BOUNDARY_POLICY) \
+	CLUSTER_NAME=$(CLUSTER_NAME) \
+	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
+	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
 	go test ./... -coverprofile cover.out
 
 # Build manager binary

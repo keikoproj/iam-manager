@@ -125,3 +125,28 @@ func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (
 
 	return &trustPolicy, nil
 }
+
+// GenerateRoleName returns a roleName that should be created in IAM using
+// the supplied iam.role.pattern. This pattern can be customized by the
+// end-user.
+func GenerateRoleName(ctx context.Context, iamRole iammanagerv1alpha1.Iamrole, props config.Properties) (string, error) {
+	log := log.Logger(ctx, "internal.utils.utils", "GenerateRoleNam")
+	tmpl, err := template.New("rolename").Parse(props.IamRolePattern())
+	if err != nil {
+		msg := "unable to parse supplied iam.role.pattern"
+		log.Error(err, msg)
+		return "", err
+	}
+
+	// Write the template output into a buffer and then grab that as a string.
+	// There is no way in GoLang natively to do this.
+	buf := &bytes.Buffer{}
+	err = tmpl.ExecuteTemplate(buf, "rolename", iamRole)
+	if err != nil {
+		msg := "unable to execute iam.role.pattern template against the iamrole object"
+		log.Error(err, msg)
+		return "", err
+	}
+
+	return buf.String(), nil
+}

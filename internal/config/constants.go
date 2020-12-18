@@ -26,7 +26,7 @@ const (
 	propertyAwsRegion = "aws.region"
 
 	//enable webhook property
-	propertAWSAccountID = "aws.accountId"
+	propertyAWSAccountID = "aws.accountId"
 
 	// user managed policies
 	propertyManagedPolicies = "iam.managed.policies"
@@ -37,11 +37,11 @@ const (
 	//enable webhook property
 	propertyWebhookEnabled = "webhook.enabled"
 
+	//golang-templated pattern to use for iam role name generation
+	propertyIamRolePattern = "iam.role.pattern"
+
 	//max allowed aws iam roles per namespace
 	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
-
-	//propertyDeriveNameFromNameSpace is a bool value and can be used to configure the name construction
-	propertyDeriveNameFromNameSpace = "iam.role.derive.from.namespace"
 
 	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 30 mins (1800 seconds)
 	propertyDesiredStateFrequency = "controller.desired.frequency"

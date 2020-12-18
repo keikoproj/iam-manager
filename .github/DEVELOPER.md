@@ -23,3 +23,13 @@ add in your fork'ed repo as a new target for doing git pushes.
 ### Build project
 
     $ make
+
+### Running Tests
+
+There are several environment variables that must be set in order for the
+test suite to work.
+
+    $ export KUBECONFIG=$HOME/.kube/config
+    $ export LOCAL=true
+    $ export KUBERNETES_SERVICE_HOST=foo KUBERNETES_SERVICE_PORT=123
+    $ make test

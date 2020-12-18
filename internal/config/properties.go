@@ -153,7 +153,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.controllerDesiredFrequency = 1800
 	}
 
-	awsAccountID := cm[0].Data[propertAWSAccountID]
+	awsAccountID := cm[0].Data[propertyAWSAccountID]
 	// Load AWS account ID
 	if Props.awsAccountID == "" && awsAccountID == "" {
 		awsAccountID, err := awsapi.NewSTS(Props.awsRegion).GetAccountID(context.Background())
@@ -174,7 +174,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 
 	iamRoleSeparator := cm[0].Data[propertyIamRoleSeparator]
 	if iamRoleSeparator == "" {
-		Props.iamRoleSeparator = "k8s"
+		Props.iamRoleSeparator = "-"
 	} else {
 		Props.iamRoleSeparator = iamRoleSeparator
 	}

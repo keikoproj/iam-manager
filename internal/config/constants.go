@@ -26,7 +26,7 @@ const (
 	propertyAwsRegion = "aws.region"
 
 	//enable webhook property
-	propertAWSAccountID = "aws.accountId"
+	propertyAWSAccountID = "aws.accountId"
 
 	// user managed policies
 	propertyManagedPolicies = "iam.managed.policies"

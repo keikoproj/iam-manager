@@ -59,7 +59,7 @@ func (s *ControllerSuite) TestGenerateNameFunction(c *check.C) {
 func (s *ControllerSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(c *check.C) {
 	cm := &v1.ConfigMap{
 		Data: map[string]string{
-			"aws.accountId":                  "012345678901",
+			"aws.accountId":                  "012345678901",  // Required mock for testing
 			"iam.role.derive.from.namespace": "true",
 			"iam.role.prefix":                "pfx",
 			"iam.role.separator":             "+",

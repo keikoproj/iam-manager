@@ -81,7 +81,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	roleName := GenerateRoleName(iamRole, *config.Props)
+	roleName := utils.GenerateRoleName(iamRole, *config.Props)
 
 	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -129,7 +129,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
-	roleName := GenerateRoleName(*iamRole, *config.Props)
+	roleName := utils.GenerateRoleName(*iamRole, *config.Props)
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
 
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
@@ -381,17 +381,6 @@ func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv
 		log.Error(err, "Unable to update object metadata (finalizer)")
 		panic(err)
 	}
-}
-
-//GenerateRoleName returns a roleName that should be created in IAM
-func GenerateRoleName(iamRole iammanagerv1alpha1.Iamrole, props config.Properties) string {
-	roleName := fmt.Sprintf("%s%s%s", props.IamRolePrefix(), props.IamRoleSeparator(), iamRole.ObjectMeta.Name)
-
-	if props.DeriveNameFromNamespace() && props.MaxRolesAllowed() == 1 {
-		roleName = fmt.Sprintf("%s%s%s", props.IamRolePrefix(), props.IamRoleSeparator(), iamRole.ObjectMeta.Namespace)
-	}
-
-	return roleName
 }
 
 /*

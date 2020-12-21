@@ -8,6 +8,7 @@ import (
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"gopkg.in/check.v1"
+	v12 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -515,4 +516,47 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
 
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"iam.role.derive.from.namespace": "false",
+			"iam.role.prefix":                "pfx",
+			"iam.role.separator":             "+",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.Equals, nil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+foo")
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.prefix":                "pfx",
+			"iam.role.separator":             "+",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.Equals, nil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+test-ns")
 }

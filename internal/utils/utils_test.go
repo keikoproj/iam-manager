@@ -528,6 +528,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 	cm := &v12.ConfigMap{
 		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
 			"iam.role.derive.from.namespace": "false",
 			"iam.role.prefix":                "pfx",
 			"iam.role.separator":             "+",

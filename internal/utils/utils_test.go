@@ -27,6 +27,9 @@ func TestUtilsTestSuite(t *testing.T) {
 func (s *UtilsTestSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
+	config.Props = nil
+	err := config.LoadProperties("LOCAL")
+	c.Assert(err, check.Equals, nil)
 }
 
 func (s *UtilsTestSuite) TearDownTest(c *check.C) {
@@ -537,26 +540,4 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 		},
 	}
 	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+foo")
-}
-
-func (s *UtilsTestSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(c *check.C) {
-	config.Props = nil
-	cm := &v12.ConfigMap{
-		Data: map[string]string{
-			"aws.accountId":                  "123456789012", // Required mock for testing
-			"iam.role.derive.from.namespace": "true",
-			"iam.role.prefix":                "pfx",
-			"iam.role.separator":             "+",
-		},
-	}
-	err := config.LoadProperties("", cm)
-	c.Assert(err, check.Equals, nil)
-
-	resource := &v1alpha1.Iamrole{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "test-ns",
-		},
-	}
-	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+test-ns")
 }

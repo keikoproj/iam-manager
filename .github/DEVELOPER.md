@@ -20,6 +20,13 @@ add in your fork'ed repo as a new target for doing git pushes.
     $ go mod vendor
     $ git remote add myfork <your fork>
 
+### Install Kubebuilder
+
+Kubebuilder is a requirement for the testsuite.. you can install it quickly
+on your own or with our make target:
+
+    $ make kubebuilder
+
 ### Build project
 
     $ make
@@ -27,9 +34,7 @@ add in your fork'ed repo as a new target for doing git pushes.
 ### Running Tests
 
 There are several environment variables that must be set in order for the
-test suite to work.
+test suite to work. The [Makefile](/Makefile) sets these for you, so please
+use the `make test` target to run tests:
 
-    $ export KUBECONFIG=$HOME/.kube/config
-    $ export LOCAL=true
-    $ export KUBERNETES_SERVICE_HOST=foo KUBERNETES_SERVICE_PORT=123
     $ make test

@@ -1,6 +1,11 @@
 # Image URL to use all building/pushing image targets
 IMG         ?= keikoproj/iam-manager:latest
 
+# Tools required to run the full suite of tests properly
+OSNAME           ?= $(shell uname -s | tr A-Z a-z)
+KUBEBUILDER_VER  ?= 2.2.0
+KUBEBUILDER_ARCH ?= amd64
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -25,6 +30,14 @@ else
 endif
 
 all: manager
+
+.PHONY: kubebuilder
+kubebuilder:
+	@echo "Downloading and installing Kubebuilder - this requires sudo privileges"
+	curl -fsSL -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VER)/kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz"
+	rm -rf kubebuilder && mkdir -p kubebuilder
+	tar -zxvf kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz --strip-components 1 -C kubebuilder
+	sudo cp -rf kubebuilder /usr/local
 
 mock:
 	go get -u github.com/golang/mock/mockgen

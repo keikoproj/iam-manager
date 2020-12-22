@@ -27,6 +27,13 @@ func TestUtilsTestSuite(t *testing.T) {
 func (s *UtilsTestSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
+
+	// Always reset the config.Props between tests - we make changes to them
+	// during certain tests, and we want to ensure that they are predictable
+	// between each test.
+	config.Props = nil
+	err := config.LoadProperties("LOCAL")
+	c.Assert(err, check.IsNil)
 }
 
 func (s *UtilsTestSuite) TearDownTest(c *check.C) {
@@ -528,7 +535,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 	}
 	config.Props = nil
 	err := config.LoadProperties("", cm)
-	c.Assert(err, check.Equals, nil)
+	c.Assert(err, check.IsNil)
 
 	resource := &v1alpha1.Iamrole{
 		ObjectMeta: v1.ObjectMeta{
@@ -550,7 +557,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(
 	}
 	config.Props = nil
 	err := config.LoadProperties("", cm)
-	c.Assert(err, check.Equals, nil)
+	c.Assert(err, check.IsNil)
 
 	resource := &v1alpha1.Iamrole{
 		ObjectMeta: v1.ObjectMeta{

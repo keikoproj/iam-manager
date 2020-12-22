@@ -4,8 +4,6 @@
 *.dll
 *.so
 *.dylib
-*.swp
-*.swo
 
 # Test binary, built with `go test -c`
 *.test
@@ -17,6 +15,7 @@
 vendor/
 mocks/
 gomock*/
+kubebuilder*
 
 #IDE files
 .idea/

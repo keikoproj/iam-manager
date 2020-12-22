@@ -91,6 +91,10 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, false)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
+	//when an emty string passed split strings gives you array of 1 with ""
+	c.Assert(len(Props.ManagedPolicies()), check.Equals, 1)
+	c.Assert(Props.ManagedPolicies()[0], check.Equals, "")
+
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {

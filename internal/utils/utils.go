@@ -125,3 +125,14 @@ func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (
 
 	return &trustPolicy, nil
 }
+
+//GenerateRoleName returns a roleName that should be created in IAM
+func GenerateRoleName(iamRole iammanagerv1alpha1.Iamrole, props config.Properties) string {
+	roleName := fmt.Sprintf("%s%s%s", props.IamRolePrefix(), props.IamRoleSeparator(), iamRole.ObjectMeta.Name)
+
+	if props.DeriveNameFromNamespace() && props.MaxRolesAllowed() == 1 {
+		roleName = fmt.Sprintf("%s%s%s", props.IamRolePrefix(), props.IamRoleSeparator(), iamRole.ObjectMeta.Namespace)
+	}
+
+	return roleName
+}

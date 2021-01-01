@@ -91,6 +91,8 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, false)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
+	c.Assert(Props.IamRolePrefix(), check.Equals, "k8s")
+	c.Assert(Props.IamRoleSeparator(), check.Equals, "-")
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
@@ -102,6 +104,8 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 			"iam.role.derive.from.namespace":         "true",
 			"controller.desired.frequency":           "30",
 			"iam.role.max.limit.per.namespace":       "5",
+			"iam.role.prefix":                        "pfx",
+			"iam.role.separator":                     "+",
 		},
 	}
 	err := LoadProperties("", cm)
@@ -109,6 +113,8 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
 	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
 	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, true)
+	c.Assert(Props.IamRolePrefix(), check.Equals, "pfx")
+	c.Assert(Props.IamRoleSeparator(), check.Equals, "+")
 }
 
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {

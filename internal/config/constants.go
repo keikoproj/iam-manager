@@ -37,6 +37,12 @@ const (
 	//enable webhook property
 	propertyWebhookEnabled = "webhook.enabled"
 
+	//prefix for all iam roles that this manager creates
+	propertyIamRolePrefix = "iam.role.prefix"
+
+	//separator used for iam role name creation
+	propertyIamRoleSeparator = "iam.role.separator"
+
 	//max allowed aws iam roles per namespace
 	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
 

@@ -88,11 +88,9 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 1)
 	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 1800)
 	c.Assert(Props.IsWebHookEnabled(), check.Equals, false)
-	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, false)
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
-	c.Assert(Props.IamRolePrefix(), check.Equals, "k8s")
-	c.Assert(Props.IamRoleSeparator(), check.Equals, "-")
+	c.Assert(Props.IamRolePattern(), check.Equals, "k8s-{{ .ObjectMeta.Name }}")
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
@@ -104,17 +102,14 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 			"iam.role.derive.from.namespace":         "true",
 			"controller.desired.frequency":           "30",
 			"iam.role.max.limit.per.namespace":       "5",
-			"iam.role.prefix":                        "pfx",
-			"iam.role.separator":                     "+",
+			"iam.role.pattern":                       "pfx-{{ .ObjectMeta.Name }}",
 		},
 	}
 	err := LoadProperties("", cm)
 	c.Assert(err, check.IsNil)
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
 	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
-	c.Assert(Props.DeriveNameFromNamespace(), check.Equals, true)
-	c.Assert(Props.IamRolePrefix(), check.Equals, "pfx")
-	c.Assert(Props.IamRoleSeparator(), check.Equals, "+")
+	c.Assert(Props.IamRolePattern(), check.Equals, "pfx-{{ .ObjectMeta.Name }}")
 }
 
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {
@@ -157,11 +152,6 @@ func (s *PropertiesSuite) TestIsWebhookEnabled(c *check.C) {
 	c.Assert(value, check.Equals, false)
 }
 
-func (s *PropertiesSuite) TestDeriveNameFromNamespace(c *check.C) {
-	value := Props.DeriveNameFromNamespace()
-	c.Assert(value, check.Equals, false)
-}
-
 func (s *PropertiesSuite) TestControllerDesiredFrequency(c *check.C) {
 	value := Props.ControllerDesiredFrequency()
 	c.Assert(value, check.Equals, 0)
@@ -186,4 +176,9 @@ func (s *PropertiesSuite) TestControllerDefaultTrustPolicy(c *check.C) {
 	def := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	value := Props.DefaultTrustPolicy()
 	c.Assert(value, check.Equals, def)
+}
+
+func (s *PropertiesSuite) TestIamRolePattern(c *check.C) {
+	value := Props.IamRolePattern()
+	c.Assert(value, check.Equals, "k8s-{{ .ObjectMeta.Name }}")
 }

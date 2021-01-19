@@ -81,7 +81,11 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	roleName := utils.GenerateRoleName(iamRole, *config.Props)
+	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props)
+	if err != nil {
+		r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
 
 	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -129,8 +133,15 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
-	roleName := utils.GenerateRoleName(*iamRole, *config.Props)
+	roleName, err := utils.GenerateRoleName(ctx, *iamRole, *config.Props)
+
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
+	if err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
+		// It is not clear to me that we want to requeue here - as this is a fairly permanent
+		// error. Is there a better pattern here?
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
 
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
 	if err != nil {

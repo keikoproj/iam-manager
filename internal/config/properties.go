@@ -28,14 +28,12 @@ type Properties struct {
 	awsRegion                       string
 	isWebhookEnabled                string
 	maxRolesAllowed                 int
-	deriveNameFromNamespace         string
 	controllerDesiredFrequency      int
 	clusterName                     string
 	isIRSAEnabled                   string
 	clusterOIDCIssuerUrl            string
 	defaultTrustPolicy              string
-	iamRolePrefix                   string
-	iamRoleSeparator                string
+	iamRolePattern                  string
 }
 
 func init() {
@@ -81,12 +79,10 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			managedPermissionBoundaryPolicy: os.Getenv("MANAGED_PERMISSION_BOUNDARY_POLICY"),
 			awsRegion:                       os.Getenv("AWS_REGION"),
 			isWebhookEnabled:                os.Getenv("ENABLE_WEBHOOK"),
-			deriveNameFromNamespace:         os.Getenv("DERIVE_NAME_FROM_NAMESPACE"),
 			clusterName:                     os.Getenv("CLUSTER_NAME"),
 			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
 			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
-			iamRolePrefix:                   os.Getenv("IAM_ROLE_PREFIX"),
-			iamRoleSeparator:                os.Getenv("IAM_ROLE_SEPARATOR"),
+			iamRolePattern:                  os.Getenv("IAM_ROLE_PATTERN"),
 		}
 		return nil
 	}
@@ -115,13 +111,6 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.isWebhookEnabled = "true"
 	} else {
 		Props.isWebhookEnabled = "false"
-	}
-
-	deriveNameFromNS := cm[0].Data[propertyDeriveNameFromNameSpace]
-	if deriveNameFromNS == "true" {
-		Props.deriveNameFromNamespace = "true"
-	} else {
-		Props.deriveNameFromNamespace = "false"
 	}
 
 	awsRegion := cm[0].Data[propertyAwsRegion]
@@ -165,18 +154,11 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.awsAccountID = awsAccountID
 	}
 
-	iamRolePrefix := cm[0].Data[propertyIamRolePrefix]
-	if iamRolePrefix == "" {
-		Props.iamRolePrefix = "k8s"
+	iamRolePattern := cm[0].Data[propertyIamRolePattern]
+	if iamRolePattern == "" {
+		Props.iamRolePattern = "k8s-{{ .ObjectMeta.Name }}"
 	} else {
-		Props.iamRolePrefix = iamRolePrefix
-	}
-
-	iamRoleSeparator := cm[0].Data[propertyIamRoleSeparator]
-	if iamRoleSeparator == "" {
-		Props.iamRoleSeparator = "-"
-	} else {
-		Props.iamRoleSeparator = iamRoleSeparator
+		Props.iamRolePattern = iamRolePattern
 	}
 
 	managedPermissionBoundaryPolicyArn := cm[0].Data[propertyPermissionBoundary]
@@ -259,20 +241,8 @@ func (p *Properties) IsWebHookEnabled() bool {
 	return resp
 }
 
-func (p *Properties) DeriveNameFromNamespace() bool {
-	resp := false
-	if p.deriveNameFromNamespace == "true" {
-		resp = true
-	}
-	return resp
-}
-
-func (p *Properties) IamRolePrefix() string {
-	return p.iamRolePrefix
-}
-
-func (p *Properties) IamRoleSeparator() string {
-	return p.iamRoleSeparator
+func (p *Properties) IamRolePattern() string {
+	return p.iamRolePattern
 }
 
 func (p *Properties) MaxRolesAllowed() int {

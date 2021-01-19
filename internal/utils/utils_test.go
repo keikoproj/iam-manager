@@ -530,8 +530,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 		Data: map[string]string{
 			"aws.accountId":                  "123456789012", // Required mock for testing
 			"iam.role.derive.from.namespace": "false",
-			"iam.role.prefix":                "pfx",
-			"iam.role.separator":             "+",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Name }}",
 		},
 	}
 	config.Props = nil
@@ -544,16 +543,17 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+foo")
+	name, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(name, check.Equals, "pfx+foo")
+	c.Assert(err, check.IsNil)
 }
 
-func (s *UtilsTestSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(c *check.C) {
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithNamespace(c *check.C) {
 	cm := &v12.ConfigMap{
 		Data: map[string]string{
 			"aws.accountId":                  "123456789012", // Required mock for testing
 			"iam.role.derive.from.namespace": "true",
-			"iam.role.prefix":                "pfx",
-			"iam.role.separator":             "+",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Namespace}}+{{ .ObjectMeta.Name }}",
 		},
 	}
 	config.Props = nil
@@ -566,5 +566,62 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithDeriveFromNamespaceEnabled(
 			Namespace: "test-ns",
 		},
 	}
-	c.Assert(utils.GenerateRoleName(*resource, *config.Props), check.Equals, "pfx+test-ns")
+	roleName, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(roleName, check.Equals, "pfx+test-ns+foo")
+	c.Assert(err, check.IsNil)
+}
+
+func assertPanic(t *testing.T, f func()) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+	f()
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ invalid-template }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, ".*unexpected bad character.*")
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionBadObjectReference(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .invalid.data }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, ".*field invalid in type.*")
 }

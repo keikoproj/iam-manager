@@ -10,7 +10,7 @@ KUBEBUILDER_ARCH ?= amd64
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
 KUBECONFIG                  ?= $(HOME)/.kube/config
-LOCAL 			    ?= true
+LOCAL                       ?= true
 ALLOWED_POLICY_ACTION       ?= s3:,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl
 RESTRICTED_POLICY_RESOURCES ?= policy-resource
 RESTRICTED_S3_RESOURCES     ?= s3-resource

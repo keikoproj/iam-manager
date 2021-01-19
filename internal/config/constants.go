@@ -43,11 +43,11 @@ const (
 	//separator used for iam role name creation
 	propertyIamRoleSeparator = "iam.role.separator"
 
+	//golang-templated pattern to use for iam role name generation
+	propertyIamRolePattern = "iam.role.pattern"
+
 	//max allowed aws iam roles per namespace
 	propertyMaxIamRoles = "iam.role.max.limit.per.namespace"
-
-	//propertyDeriveNameFromNameSpace is a bool value and can be used to configure the name construction
-	propertyDeriveNameFromNameSpace = "iam.role.derive.from.namespace"
 
 	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 30 mins (1800 seconds)
 	propertyDesiredStateFrequency = "controller.desired.frequency"

@@ -175,8 +175,10 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 
 	managedPolicies := strings.Split(cm[0].Data[propertyManagedPolicies], separator)
 	for i := range managedPolicies {
-		if !strings.HasPrefix(managedPolicies[i], "arn:aws:iam::") {
-			managedPolicies[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPolicies[i])
+		if managedPolicies[i] != "" {
+			if !strings.HasPrefix(managedPolicies[i], "arn:aws:iam::") {
+				managedPolicies[i] = fmt.Sprintf(PolicyARNFormat, awsAccountID, managedPolicies[i])
+			}
 		}
 	}
 	Props.managedPolicies = managedPolicies

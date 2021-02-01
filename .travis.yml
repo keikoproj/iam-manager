@@ -35,6 +35,9 @@ jobs:
       if: type IN (push)
       script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        # this should overwrite "latest" image with the latest version one
+        - make docker-build
+        - make docker-push
         - if [ $TRAVIS_EVENT_TYPE = push ]; then export IMG=keikoproj/iam-manager:$TRAVIS_BRANCH; fi
         - make docker-build
         - make docker-push

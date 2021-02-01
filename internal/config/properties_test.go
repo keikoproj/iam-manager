@@ -91,6 +91,33 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaults(c *check.C) {
 	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
 	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
 	c.Assert(Props.IamRolePattern(), check.Equals, "k8s-{{ .ObjectMeta.Name }}")
+	//when an emty string passed split strings gives you array of 1 with ""
+	c.Assert(len(Props.ManagedPolicies()), check.Equals, 1)
+	c.Assert(Props.ManagedPolicies()[0], check.Equals, "")
+
+}
+
+func (s *PropertiesSuite) TestLoadPropertiesSuccessWithDefaultsManagedPoliciesWithNoPrefix(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"iam.managed.permission.boundary.policy": "iam-manager-permission-boundary",
+			"aws.accountId":                          "123456789012",
+			"iam.managed.policies":                   "DescribeEC2",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.AWSRegion(), check.Equals, "us-west-2")
+	c.Assert(Props.MaxRolesAllowed(), check.Equals, 1)
+	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 1800)
+	c.Assert(Props.IsWebHookEnabled(), check.Equals, false)
+	c.Assert(Props.AWSAccountID(), check.Equals, "123456789012")
+	c.Assert(strings.HasPrefix(Props.ManagedPermissionBoundaryPolicy(), "arn:aws:iam:"), check.Equals, true)
+	//when an emty string passed split strings gives you array of 1 with ""
+	c.Assert(len(Props.ManagedPolicies()), check.Equals, 1)
+	c.Assert(Props.ManagedPolicies()[0], check.Equals, "arn:aws:iam::123456789012:policy/DescribeEC2")
+
 }
 
 func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {

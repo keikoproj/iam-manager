@@ -73,6 +73,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
 	log.WithValues("iamrole", req.NamespacedName)
 	log.Info("Start of the request")
+
 	//Get the resource
 	var iamRole iammanagerv1alpha1.Iamrole
 
@@ -80,13 +81,20 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
-
-	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
-		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
+	// TODO: Remove the need to do this here.
+	//
+	// We are generating the roleName here for the potential call to the
+	// delete function. The right way to do this is to record the created
+	// IAM role ARN in the IamRole object itself, so that we can then
+	// guarantee the delete even if the operator has changed their
+	// iam.role.pattern setting.
+	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props)
+	if err != nil {
+		r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
-	// Isit being deleted?
+	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
 		//Lets check if this is very first time use case
@@ -132,12 +140,15 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
-	roleName := fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Name)
+	roleName, err := utils.GenerateRoleName(ctx, *iamRole, *config.Props)
 
-	if config.Props.DeriveNameFromNamespace() && config.Props.MaxRolesAllowed() == 1 {
-		roleName = fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace)
-	}
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
+	if err != nil {
+		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
+		// It is not clear to me that we want to requeue here - as this is a fairly permanent
+		// error. Is there a better pattern here?
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
 
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
 	if err != nil {

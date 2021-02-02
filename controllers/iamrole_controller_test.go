@@ -9,7 +9,6 @@ import (
 )
 
 var _ = Describe("IamroleController", func() {
-
 	Describe("When checking a StatusUpdatePredicate", func() {
 		instance := StatusUpdatePredicate{}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"gopkg.in/check.v1"
+	v12 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -26,6 +27,13 @@ func TestUtilsTestSuite(t *testing.T) {
 func (s *UtilsTestSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
+
+	// Always reset the config.Props between tests - we make changes to them
+	// during certain tests, and we want to ensure that they are predictable
+	// between each test.
+	config.Props = nil
+	err := config.LoadProperties("LOCAL")
+	c.Assert(err, check.IsNil)
 }
 
 func (s *UtilsTestSuite) TearDownTest(c *check.C) {
@@ -515,4 +523,105 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
 
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "false",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	name, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(name, check.Equals, "pfx+foo")
+	c.Assert(err, check.IsNil)
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithNamespace(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Namespace}}+{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	roleName, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(roleName, check.Equals, "pfx+test-ns+foo")
+	c.Assert(err, check.IsNil)
+}
+
+func assertPanic(t *testing.T, f func()) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+	f()
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ invalid-template }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, ".*unexpected bad character.*")
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionBadObjectReference(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .invalid.data }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, ".*field invalid in type.*")
 }

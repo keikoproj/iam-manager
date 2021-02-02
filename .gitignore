@@ -15,6 +15,7 @@
 vendor/
 mocks/
 gomock*/
+kubebuilder*
 
 #IDE files
 .idea/

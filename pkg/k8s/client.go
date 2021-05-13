@@ -92,10 +92,10 @@ func NewK8sManagerClient(client client.Client) *Client {
 
 //Iface defines required functions to be implemented by receivers
 type Iface interface {
-	IamrolesCount(ctx context.Context, ns string)
+	IamrolesCount(ctx context.Context, ns string) (int, error)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
 	SetUpEventHandler(ctx context.Context) record.EventRecorder
-	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
+	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string, roleARN string) error
 }
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace

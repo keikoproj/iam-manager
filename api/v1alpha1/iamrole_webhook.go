@@ -222,11 +222,11 @@ func (r *Iamrole) validateNumberOfRoles(isItUpdate bool) *field.Error {
 	}
 
 	if isItUpdate {
-		if count > 1 {
+		if count > config.Props.MaxRolesAllowed() {
 			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
 		}
 	} else {
-		if count >= 1 {
+		if count >= config.Props.MaxRolesAllowed() {
 			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
 		}
 	}

@@ -40,7 +40,7 @@ const (
 // log is for logging in this package.
 var iamrolelog = logf.Log.WithName("iamrole-resource")
 
-var wClient *k8s.Client
+var wClient k8s.Iface
 
 func NewWClient() {
 	log := log.Logger(context.Background(), "v1alpha1", "NewWClient")

@@ -34,8 +34,16 @@ func (s *WebhookSuite) SetUpTest(c *check.C) {
 	s.mockk8sClient = mock_client.NewMockIface(s.mockCtrl)
 
 	s.iamRole = &Iamrole{}
-	// Should maybe be populated?
 	s.iamRole.Default()
+
+	// A very basic policy
+	s.iamRole.Spec.PolicyDocument.Statement = []Statement{
+		{
+			Effect:   "Allowed",
+			Action:   []string{"s3:PutObject", "s3:DeleteObject"},
+			Resource: []string{"arn:aws:s3:::bucket_name"},
+		},
+	}
 }
 
 func (s *WebhookSuite) TearDownTest(c *check.C) {
@@ -77,12 +85,44 @@ func (s *WebhookSuite) TestNameTooLong(c *check.C) {
 func (s *WebhookSuite) TestRestrictedPolicyResources(c *check.C) {
 	s.mockk8sClient.EXPECT().IamrolesCount(s.ctx, s.iamRole.ObjectMeta.Namespace).Return(0, nil)
 
-	s.iamRole.Spec.PolicyDocument.Statement = []Statement{{
-		Effect: "Allowed",
-		Action: []string{"policy-resource:create"},
-		// Not allowed by config
-		Resource: []string{"arn:aws:policy-resource:*:*:res/name"},
-	}}
+	s.iamRole.Spec.PolicyDocument.Statement = []Statement{
+		{
+			Effect: "Allowed",
+			Action: []string{"policy-resource:Create"},
+			// Not allowed by config
+			Resource: []string{"arn:aws:policy-resource:::res/name"},
+		},
+	}
+
+	err := s.iamRole.validateIAMPolicy(s.ctx, false, s.mockk8sClient)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *WebhookSuite) TestRestrictedAction(c *check.C) {
+	s.mockk8sClient.EXPECT().IamrolesCount(s.ctx, s.iamRole.ObjectMeta.Namespace).Return(0, nil)
+
+	s.iamRole.Spec.PolicyDocument.Statement = []Statement{
+		{
+			Effect:   "Allowed",
+			Action:   []string{"ec2:RunInstances"},
+			Resource: []string{"*"},
+		},
+	}
+
+	err := s.iamRole.validateIAMPolicy(s.ctx, false, s.mockk8sClient)
+	c.Assert(err, check.NotNil)
+}
+
+func (s *WebhookSuite) TestRestrictedS3Resource(c *check.C) {
+	s.mockk8sClient.EXPECT().IamrolesCount(s.ctx, s.iamRole.ObjectMeta.Namespace).Return(0, nil)
+
+	s.iamRole.Spec.PolicyDocument.Statement = []Statement{
+		{
+			Effect:   "Allowed",
+			Action:   []string{"s3:*"},
+			Resource: []string{"s3-resource", "arn:aws:s3:::bucket_name"},
+		},
+	}
 
 	err := s.iamRole.validateIAMPolicy(s.ctx, false, s.mockk8sClient)
 	c.Assert(err, check.NotNil)

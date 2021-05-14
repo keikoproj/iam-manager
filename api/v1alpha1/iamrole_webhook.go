@@ -93,7 +93,7 @@ func (r *Iamrole) ValidateCreate() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateUpdate(old runtime.Object) error {
 	ctx := context.Background()
-	log := log.Logger(ctx, "v1alpha1", "ValidateCreate")
+	log := log.Logger(ctx, "v1alpha1", "ValidateUpdate")
 	log.Info("validate update", "name", r.Name)
 
 	return r.validateIAMPolicy(ctx, true, wClient)

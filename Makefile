@@ -21,6 +21,7 @@ MANAGED_PERMISSION_BOUNDARY_POLICY ?= arn:aws:iam::1123456789012:role/iam-manage
 CLUSTER_NAME                ?= k8s_test_keiko
 CLUSTER_OIDC_ISSUER_URL     ?= https://google.com/OIDC
 DEFAULT_TRUST_POLICY        ?= '{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}'
+MAX_ROLES_ALLOWED           ?= 2
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -60,6 +61,7 @@ test: mock generate fmt manifests
 	CLUSTER_NAME=$(CLUSTER_NAME) \
 	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
 	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
+	MAX_ROLES_ALLOWED=$(MAX_ROLES_ALLOWED) \
 	go test ./... -coverprofile cover.out
 
 # Build manager binary

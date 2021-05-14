@@ -65,6 +65,14 @@ func init() {
 	log.Info("Loaded properties in init func")
 }
 
+func atoi(a string) int {
+	i, err := strconv.Atoi(a)
+	if err != nil {
+		panic(fmt.Sprintf("%s was not an int", a))
+	}
+	return i
+}
+
 func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	log := log.Logger(context.Background(), "internal.config.properties", "LoadProperties")
 
@@ -83,6 +91,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
 			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
 			iamRolePattern:                  os.Getenv("IAM_ROLE_PATTERN"),
+			maxRolesAllowed:                 atoi(os.Getenv("MAX_ROLES_ALLOWED")),
 		}
 		return nil
 	}

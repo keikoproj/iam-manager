@@ -23,6 +23,8 @@ import (
 	"k8s.io/klog"
 )
 
+//go:generate mockgen -destination=mocks/mock_clientiface.go -package=mock_client github.com/keikoproj/iam-manager/pkg/k8s Iface
+
 type Client struct {
 	cl  kubernetes.Interface
 	dCl dynamic.Interface

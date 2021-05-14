@@ -83,18 +83,20 @@ var _ webhook.Validator = &Iamrole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateCreate() error {
-	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	ctx := context.Background()
+	log := log.Logger(ctx, "v1alpha1", "ValidateCreate")
 	log.Info("validating create request", "name", r.Name)
 
-	return r.validateIAMPolicy(false, wClient)
+	return r.validateIAMPolicy(ctx, false, wClient)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateUpdate(old runtime.Object) error {
-	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	ctx := context.Background()
+	log := log.Logger(ctx, "v1alpha1", "ValidateCreate")
 	log.Info("validate update", "name", r.Name)
 
-	return r.validateIAMPolicy(true, wClient)
+	return r.validateIAMPolicy(ctx, true, wClient)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -106,8 +108,8 @@ func (r *Iamrole) ValidateDelete() error {
 	return nil
 }
 
-func (r *Iamrole) validateIAMPolicy(isItUpdate bool, k8sClient k8s.Iface) error {
-	log := log.Logger(context.Background(), "v1alpha1", "validateIAMPolicy")
+func (r *Iamrole) validateIAMPolicy(ctx context.Context, isItUpdate bool, k8sClient k8s.Iface) error {
+	log := log.Logger(ctx, "v1alpha1", "validateIAMPolicy")
 	log.Info("validating IAM policy", "name", r.Name)
 	var allErrs field.ErrorList
 	if err := r.validateCustomResourceName(); err != nil {
@@ -120,7 +122,7 @@ func (r *Iamrole) validateIAMPolicy(isItUpdate bool, k8sClient k8s.Iface) error 
 		allErrs = append(allErrs, err)
 	}
 
-	if err := r.validateNumberOfRoles(isItUpdate, k8sClient); err != nil {
+	if err := r.validateNumberOfRoles(ctx, isItUpdate, k8sClient); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if len(allErrs) == 0 {
@@ -215,8 +217,8 @@ func (r *Iamrole) validateCustomResourceName() *field.Error {
 
 //Lets do a cheesy way to talk to API server
 
-func (r *Iamrole) validateNumberOfRoles(isItUpdate bool, k8sClient k8s.Iface) *field.Error {
-	count, err := k8sClient.IamrolesCount(context.Background(), r.ObjectMeta.Namespace)
+func (r *Iamrole) validateNumberOfRoles(ctx context.Context, isItUpdate bool, k8sClient k8s.Iface) *field.Error {
+	count, err := k8sClient.IamrolesCount(ctx, r.ObjectMeta.Namespace)
 	if err != nil {
 		panic(err)
 	}

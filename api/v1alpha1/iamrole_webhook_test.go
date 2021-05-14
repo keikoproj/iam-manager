@@ -68,7 +68,7 @@ func (s *WebhookSuite) TestTooManyRolesOnCreate(c *check.C) {
 func (s *WebhookSuite) TestTooManyRolesOnUpdate(c *check.C) {
 	s.mockk8sClient.EXPECT().IamrolesCount(s.ctx, s.iamRole.ObjectMeta.Namespace).Return(config.Props.MaxRolesAllowed()+1, nil)
 
-	err := s.iamRole.validateIAMPolicy(s.ctx, false, s.mockk8sClient)
+	err := s.iamRole.validateIAMPolicy(s.ctx, true, s.mockk8sClient)
 	c.Assert(err, check.NotNil)
 }
 

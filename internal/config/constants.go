@@ -65,4 +65,6 @@ const (
 	OIDCAudience = "sts.amazonaws.com"
 
 	IRSAAnnotation = "iam.amazonaws.com/irsa-service-account"
+
+	IamManagerPrivilegedNamespaceAnnotation = "iammanager.keikoproj.io/privileged"
 )

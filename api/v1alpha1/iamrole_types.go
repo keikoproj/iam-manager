@@ -27,6 +27,9 @@ type IamroleSpec struct {
 	PolicyDocument PolicyDocument `json:"PolicyDocument"`
 	// +optional
 	AssumeRolePolicyDocument *AssumeRolePolicyDocument `json:"AssumeRolePolicyDocument,omitempty"`
+	//RoleName can be passed only for privileged namespaces
+	// +optional
+	RoleName string `json:"RoleName"`
 }
 
 // +kubebuilder:validation:Required

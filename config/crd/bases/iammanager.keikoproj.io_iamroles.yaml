@@ -155,6 +155,9 @@ spec:
               required:
               - Statement
               type: object
+            RoleName:
+              description: RoleName can be passed only for privileged namespaces
+              type: string
           required:
           - PolicyDocument
           type: object

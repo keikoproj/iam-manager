@@ -129,8 +129,12 @@ func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (
 // GenerateRoleName returns a roleName that should be created in IAM using
 // the supplied iam.role.pattern. This pattern can be customized by the
 // end-user.
-func GenerateRoleName(ctx context.Context, iamRole iammanagerv1alpha1.Iamrole, props config.Properties) (string, error) {
-	log := log.Logger(ctx, "internal.utils.utils", "GenerateRoleNam")
+func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, props config.Properties) (string, error) {
+	log := log.Logger(ctx, "internal.utils.utils", "GenerateRoleName")
+	// Lets check if rolename is passed in the CR and validate that this iamRole resource belongs to privileged namespace
+	if ParsePrivilegedAnnotation(ctx, iamRole) && iamRole.Spec.RoleName != "" {
+		return iamRole.Spec.RoleName, nil
+	}
 	tmpl, err := template.New("rolename").Parse(props.IamRolePattern())
 	if err != nil {
 		msg := "unable to parse supplied iam.role.pattern"
@@ -149,4 +153,28 @@ func GenerateRoleName(ctx context.Context, iamRole iammanagerv1alpha1.Iamrole, p
 	}
 
 	return buf.String(), nil
+}
+
+//parseAnnotations parses annotations attached to iam role resource and returns the value if found
+// input: Name of the annotation, IamRole resource
+func parseAnnotations(ctx context.Context, name string, iamRole *iammanagerv1alpha1.Iamrole) (bool, string) {
+	log := log.Logger(ctx, "internal.utils.utils", "ParseIRSAAnnotation")
+	flag := false
+	response := ""
+	//Look for the specific annotation in iam role CR
+	if val, ok := iamRole.Annotations[name]; ok {
+		flag = true
+		response = val
+		log.Info("Annotation found", "name", val)
+	}
+	return flag, response
+}
+
+//ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
+func ParsePrivilegedAnnotation(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) bool {
+	flag, value := parseAnnotations(ctx, config.IamManagerPrivilegedNamespaceAnnotation, iamRole)
+	if flag && value == "true" {
+		return flag
+	}
+	return flag
 }

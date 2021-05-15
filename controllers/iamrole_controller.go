@@ -81,19 +81,6 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	// TODO: Remove the need to do this here.
-	//
-	// We are generating the roleName here for the potential call to the
-	// delete function. The right way to do this is to record the created
-	// IAM role ARN in the IamRole object itself, so that we can then
-	// guarantee the delete even if the operator has changed their
-	// iam.role.pattern setting.
-	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props)
-	if err != nil {
-		r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
-	}
-
 	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
 		//Good. This is not Delete use case
@@ -113,6 +100,8 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		log.Info("Iamrole delete request")
 		if iamRole.Status.State != iammanagerv1alpha1.PolicyNotAllowed {
+			//Get the roleName from status
+			roleName := iamRole.Status.RoleName
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
@@ -140,7 +129,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 
-	roleName, err := utils.GenerateRoleName(ctx, *iamRole, *config.Props)
+	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props)
 
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
 	if err != nil {

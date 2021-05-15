@@ -543,7 +543,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	name, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	name, err := utils.GenerateRoleName(s.ctx, resource, *config.Props)
 	c.Assert(name, check.Equals, "pfx+foo")
 	c.Assert(err, check.IsNil)
 }
@@ -566,8 +566,37 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithNamespace(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	roleName, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props)
 	c.Assert(roleName, check.Equals, "pfx+test-ns+foo")
+	c.Assert(err, check.IsNil)
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithPrivilegedNamespace(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Namespace}}+{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+		Spec: v1alpha1.IamroleSpec{
+			RoleName: "k8s-myownname",
+		},
+	}
+	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props)
+	c.Assert(roleName, check.Equals, "k8s-myownname")
 	c.Assert(err, check.IsNil)
 }
 
@@ -598,7 +627,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	_, err = utils.GenerateRoleName(s.ctx, resource, *config.Props)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, ".*unexpected bad character.*")
 }
@@ -621,7 +650,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionBadObjectReference(c *check.C) 
 			Namespace: "test-ns",
 		},
 	}
-	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	_, err = utils.GenerateRoleName(s.ctx, resource, *config.Props)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, ".*field invalid in type.*")
 }

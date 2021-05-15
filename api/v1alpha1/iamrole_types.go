@@ -28,6 +28,7 @@ type IamroleSpec struct {
 	// +optional
 	AssumeRolePolicyDocument *AssumeRolePolicyDocument `json:"AssumeRolePolicyDocument,omitempty"`
 	//RoleName can be passed only for privileged namespaces
+	// Please check the documentation for more on how to configure privileged namespace using annotation for iam-manager
 	// +optional
 	RoleName string `json:"RoleName"`
 }

@@ -95,6 +95,7 @@ type Iface interface {
 	IamrolesCount(ctx context.Context, ns string)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
 	SetUpEventHandler(ctx context.Context) record.EventRecorder
+	GetNamespace(ctx context.Context, ns string) *v1.Namespace
 	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
 }
 
@@ -129,6 +130,25 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	}
 
 	return res
+}
+
+//GetNamespace gets the namespace metadata. This will be used to validate if the namespace is annotated for privileged namespace.
+func (c *Client) GetNamespace(ctx context.Context, ns string) (*v1.Namespace, error) {
+	log := log.Logger(ctx, "k8s", "client", "GetNamespace")
+	log.WithValues("namespace", ns)
+	log.Info("Retrieving Namespace")
+	resp := &v1.Namespace{}
+	resp, err := c.cl.CoreV1().Namespaces().Get(ns, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "unable to get the namespace details")
+		return nil, err
+	}
+
+	if err != nil {
+		log.Error(err, "unable to get namespace metadata")
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (c *Client) ClientInterface() kubernetes.Interface {

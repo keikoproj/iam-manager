@@ -8,7 +8,8 @@ Following features are supported by IAM Manager
 [Default Trust Policy for All Roles](#default-trust-policy-for-all-roles)  
 [Maximum Number of Roles per Namespace](#maximum-number-of-roles-per-namespace)  
 [Attaching Managed IAM Policies for All Roles](#attaching-managed-iam-policies-for-all-roles)  
-[Multiple Trust policies](#multiple-trust-policies)
+[Multiple Trust policies](#multiple-trust-policies)   
+[Custom IAM RoleName in the CR](#custom-iam-role-name-in-the-cr)
 
 #### Note: Please Note that Permission Boundary will be automatically added for each role and you can configure permission boundary name using config map variable.
 ```bash
@@ -227,4 +228,44 @@ spec:
         Principal:
           Service: "eks.amazonaws.com"
 ```
-This will have both AssumeRoleWithWebIdentity to assume role from a pod and also sts:AssumeRole for "eks.amazonaws.com" to allow access.
+This will have both AssumeRoleWithWebIdentity to assume role from a pod and also sts:AssumeRole for "eks.amazonaws.com" to allow access.   
+
+#### Custom IAM RoleName in the CR
+
+You can customize/overwrite default iam role name construction if namespace is annotated with "iammanager.keikoproj.io/privileged: true". You must pass RoleName in the spec but make sure to follow the prefix "k8s-" if you have used CFN template supplied in the docs. This is important since iam-manager can create/update/delete only roles starting with k8s- to avoid accidental deleting of roles created outside of iam-manager.
+
+Please update ClusterRole to include namespace get:list:watch operations.
+
+Namespace with privileged annotation Sample:
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    iammanager.keikoproj.io/privileged: "true"
+  name: test-namespace1
+```
+
+Sample IamRole:
+```yaml
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: iamrole
+spec:
+  RoleName: k8s-my-own-name
+  PolicyDocument:
+    Statement:
+    - Action:
+      - ec2:*
+      Effect: Deny
+      Resource:
+      - "*"
+    - Action:
+      - iam:*
+      Effect: Deny
+      Resource:
+      - "*"
+```
+
+Please note overwriting existing role with custom name is not supported. RoleName will be respected only during iamrole creation and will be ignored during update.

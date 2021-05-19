@@ -543,7 +543,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	name, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	name, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, nil)
 	c.Assert(name, check.Equals, "pfx+foo")
 	c.Assert(err, check.IsNil)
 }
@@ -566,8 +566,80 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithNamespace(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	roleName, err := utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, nil)
 	c.Assert(roleName, check.Equals, "pfx+test-ns+foo")
+	c.Assert(err, check.IsNil)
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithPrivilegedNamespace(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Namespace}}+{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+		Spec: v1alpha1.IamroleSpec{
+			RoleName: "k8s-myownname",
+		},
+	}
+
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+	}
+	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, &ns)
+	c.Assert(roleName, check.Equals, "k8s-myownname")
+	c.Assert(err, check.IsNil)
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithPrivilegedNamespaceButexistingName(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "true",
+			"iam.role.pattern":               "pfx+{{ .ObjectMeta.Namespace }}+{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "foo",
+			Namespace: "test-ns",
+		},
+		Spec: v1alpha1.IamroleSpec{
+			RoleName: "k8s-myownname",
+		},
+		Status: v1alpha1.IamroleStatus{
+			RoleName: "k8s-test-ns-foo",
+		},
+	}
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+	}
+	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, &ns)
+	c.Assert(roleName, check.Equals, "k8s-test-ns-foo")
 	c.Assert(err, check.IsNil)
 }
 
@@ -598,7 +670,15 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
 			Namespace: "test-ns",
 		},
 	}
-	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, resource, *config.Props, &ns)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, ".*unexpected bad character.*")
 }
@@ -621,7 +701,64 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionBadObjectReference(c *check.C) 
 			Namespace: "test-ns",
 		},
 	}
-	_, err = utils.GenerateRoleName(s.ctx, *resource, *config.Props)
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+	}
+	_, err = utils.GenerateRoleName(s.ctx, resource, *config.Props, &ns)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, ".*field invalid in type.*")
+}
+
+func (s *UtilsTestSuite) TestParsePrivilegedAnnotationNone(c *check.C) {
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
+	c.Assert(resp, check.Equals, false)
+}
+
+func (s *UtilsTestSuite) TestParsePrivilegedAnnotationBadKey(c *check.C) {
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/foo": "true",
+			},
+		},
+	}
+	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
+	c.Assert(resp, check.Equals, false)
+}
+
+func (s *UtilsTestSuite) TestParsePrivilegedAnnotationBadValue(c *check.C) {
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "foo",
+			},
+		},
+	}
+	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
+	c.Assert(resp, check.Equals, false)
+}
+
+func (s *UtilsTestSuite) TestParsePrivilegedAnnotationSuccess(c *check.C) {
+	ns := v12.Namespace{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "foo",
+			Annotations: map[string]string{
+				"iammanager.keikoproj.io/privileged": "true",
+			},
+		},
+	}
+	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
+	c.Assert(resp, check.Equals, true)
 }

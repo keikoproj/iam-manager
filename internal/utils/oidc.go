@@ -79,14 +79,5 @@ func parseURL(ctx context.Context, idpUrl string) (string, error) {
 
 //ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
 func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, string) {
-	log := log.Logger(ctx, "internal.utils.oidc", "ParseIRSAAnnotation")
-	flag := false
-	serviceAccountName := ""
-	//Look for the specific annotation in iam role CR
-	if val, ok := iamRole.Annotations[config.IRSAAnnotation]; ok {
-		flag = true
-		serviceAccountName = val
-		log.Info("IRSA enabled role", "service_account", serviceAccountName)
-	}
-	return flag, serviceAccountName
+	return parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
 }

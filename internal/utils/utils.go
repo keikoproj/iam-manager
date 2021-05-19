@@ -9,6 +9,7 @@ import (
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
+	"k8s.io/api/core/v1"
 	"strings"
 	"text/template"
 )
@@ -129,14 +130,31 @@ func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (
 // GenerateRoleName returns a roleName that should be created in IAM using
 // the supplied iam.role.pattern. This pattern can be customized by the
 // end-user.
-func GenerateRoleName(ctx context.Context, iamRole iammanagerv1alpha1.Iamrole, props config.Properties) (string, error) {
-	log := log.Logger(ctx, "internal.utils.utils", "GenerateRoleNam")
+func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, props config.Properties, ns *v1.Namespace) (string, error) {
+	log := log.Logger(ctx, "internal.utils.utils", "GenerateRoleName")
+
+	//For already created roles - don't change the name but pick it up from the status
+	if iamRole.Status.RoleName != "" {
+		return iamRole.Status.RoleName, nil
+	}
+	// For new roles
+	// Lets check if rolename is passed in the CR and validate that this iamRole resource belongs to privileged namespace
+	// Check if spec has a roleName
+	if iamRole.Spec.RoleName != "" {
+
+		//Verify if it is a privileged namespace
+		if ParsePrivilegedAnnotation(ctx, ns) {
+			return iamRole.Spec.RoleName, nil
+		}
+	}
+
 	tmpl, err := template.New("rolename").Parse(props.IamRolePattern())
 	if err != nil {
 		msg := "unable to parse supplied iam.role.pattern"
 		log.Error(err, msg)
 		return "", err
 	}
+	log.Info("role name constructed using pattern", "pattern", props.IamRolePattern())
 
 	// Write the template output into a buffer and then grab that as a string.
 	// There is no way in GoLang natively to do this.
@@ -149,4 +167,29 @@ func GenerateRoleName(ctx context.Context, iamRole iammanagerv1alpha1.Iamrole, p
 	}
 
 	return buf.String(), nil
+}
+
+//parseAnnotations parses annotations attached to iam role resource and returns the value if found
+// input: Name of the annotation, IamRole resource
+func parseAnnotations(ctx context.Context, name string, annotations map[string]string) (bool, string) {
+	log := log.Logger(ctx, "internal.utils.utils", "ParseIRSAAnnotation")
+	flag := false
+	response := ""
+	//Look for the specific annotation in iam role CR
+	if val, ok := annotations[name]; ok {
+		flag = true
+		response = val
+		log.Info("Annotation found", "name", val)
+	}
+	return flag, response
+}
+
+//ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
+func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
+
+	flag, value := parseAnnotations(ctx, config.IamManagerPrivilegedNamespaceAnnotation, ns.Annotations)
+	if flag && value == "true" {
+		return true
+	}
+	return false
 }

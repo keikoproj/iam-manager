@@ -79,5 +79,5 @@ func parseURL(ctx context.Context, idpUrl string) (string, error) {
 
 //ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
 func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, string) {
-	return parseAnnotations(ctx, config.IRSAAnnotation, iamRole)
+	return parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
 }

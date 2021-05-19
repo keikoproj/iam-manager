@@ -27,10 +27,10 @@ type IamroleSpec struct {
 	PolicyDocument PolicyDocument `json:"PolicyDocument"`
 	// +optional
 	AssumeRolePolicyDocument *AssumeRolePolicyDocument `json:"AssumeRolePolicyDocument,omitempty"`
-	//RoleName can be passed only for privileged namespaces
+	// RoleName can be passed only for privileged namespaces. This will be respected only during new iamrole creation and will be ignored during iamrole update
 	// Please check the documentation for more on how to configure privileged namespace using annotation for iam-manager
 	// +optional
-	RoleName string `json:"RoleName"`
+	RoleName string `json:"RoleName,omitempty"`
 }
 
 // +kubebuilder:validation:Required

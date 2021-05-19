@@ -128,10 +128,21 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
+	ns := v1.Namespace{}
+	if iamRole.Status.RoleName == "" && iamRole.Spec.RoleName != "" {
+		//Get Namespace metadata
+		ns2, err := k8s.NewK8sClientDoOrDie().GetNamespace(ctx, iamRole.Namespace)
+		if err != nil {
+			log.Error(err, "unable to get namespace metadata. please update Cluster Role to allow namespace get operations")
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to get namespace metadata. please update Cluster Role to allow namespace get operations "+err.Error())
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+		ns = *ns2
+	}
 
-	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props)
-
+	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props, &ns)
 	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
+
 	if err != nil {
 		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
 		// It is not clear to me that we want to requeue here - as this is a fairly permanent
@@ -225,6 +236,8 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 			if strings.Contains(err.Error(), awsapi.RoleAlreadyExistsError) {
 				state = iammanagerv1alpha1.RoleNameNotAvailable
+				//Role itself is not created
+				roleName = ""
 			}
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(state), "Unable to create/update iam role due to error "+err.Error())
 			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state, LastUpdatedTimestamp: metav1.Now()}, requeueTime)

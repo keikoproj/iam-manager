@@ -229,29 +229,28 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		fallthrough
 	default:
 
-		resp, err := r.IAMClient.CreateRole(ctx, *input)
+		// Default behavior on new Iamrole resource state is to go off and create it
+		resp, err := r.IAMClient.EnsureRole(ctx, *input)
 		if err != nil {
 			log.Error(err, "error in creating a role")
 			state := iammanagerv1alpha1.Error
 
-			if strings.Contains(err.Error(), awsapi.RoleAlreadyExistsError) {
+			// This check verifies whether or not the IAM Role somehow already exists, but is allocated to another namespace based on the tag applied to it.
+			if strings.Contains(err.Error(), awsapi.RoleExistsAlreadyForOtherNamespace) {
 				state = iammanagerv1alpha1.RoleNameNotAvailable
+
 				//Role itself is not created
 				roleName = ""
 			}
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(state), "Unable to create/update iam role due to error "+err.Error())
 			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 		}
+
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
 		flag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
 		if flag {
-			//CreateOrUpdateServiceAccount
-			roleARN := resp.RoleARN
-			if roleARN == "" {
-				roleARN = iamRole.Status.RoleARN
-			}
-			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, roleARN); err != nil {
+			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
 				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)

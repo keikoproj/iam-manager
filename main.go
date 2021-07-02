@@ -19,6 +19,7 @@ import (
 	"context"
 	"flag"
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
@@ -123,7 +124,7 @@ func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
 			return err
 		}
 
-		err = iamClient.CreateOIDCProvider(ctx, config.Props.OIDCIssuerUrl(), config.OIDCAudience, thumbprint)
+		err = iamClient.CreateOIDCProvider(ctx, config.Props.OIDCIssuerUrl(), constants.OIDCAudience, thumbprint)
 		if err != nil {
 			log.Error(err, "unable to setup OIDC with the url", "url", config.Props.OIDCIssuerUrl())
 			return err

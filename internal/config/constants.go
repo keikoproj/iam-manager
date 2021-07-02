@@ -1,17 +1,5 @@
 package config
 
-// Global constants
-const (
-	// InlinePolicyName defines user managed inline policy
-	InlinePolicyName = "custom"
-
-	// IamManagerNamespaceName is the namespace name where iam-manager controllers are running
-	IamManagerNamespaceName = "iam-manager-system"
-
-	// IamManagerConfigMapName is the config map name for iam-manager namespace
-	IamManagerConfigMapName = "iam-manager-iamroles-v1alpha1-configmap"
-)
-
 const (
 	// iam policy action prefix
 	propertyIamPolicyWhitelist = "iam.policy.action.prefix.whitelist"
@@ -57,14 +45,6 @@ const (
 
 	//propertyDefaultTrustPolicy can be used to provide default trust policy
 	propertyDefaultTrustPolicy = "iam.default.trust.policy"
-)
 
-const (
 	separator = ","
-
-	OIDCAudience = "sts.amazonaws.com"
-
-	IRSAAnnotation = "iam.amazonaws.com/irsa-service-account"
-
-	IamManagerPrivilegedNamespaceAnnotation = "iammanager.keikoproj.io/privileged"
 )

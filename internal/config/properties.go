@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
@@ -54,7 +55,7 @@ func init() {
 		log.Error(err, "unable to create new k8s client")
 		panic(err)
 	}
-	res := k8sClient.GetConfigMap(context.Background(), IamManagerNamespaceName, IamManagerConfigMapName)
+	res := k8sClient.GetConfigMap(context.Background(), constants.IamManagerNamespaceName, constants.IamManagerConfigMapName)
 
 	// load properties into a global variable
 	err = LoadProperties("", res)
@@ -277,7 +278,7 @@ func (p *Properties) DefaultTrustPolicy() string {
 
 func RunConfigMapInformer(ctx context.Context) {
 	log := log.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
-	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
+	cmInformer := k8s.GetConfigMapInformer(ctx, constants.IamManagerNamespaceName, constants.IamManagerConfigMapName)
 	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: updateProperties,
 	},

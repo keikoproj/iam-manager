@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
@@ -72,29 +73,28 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.WithValue(context.Background(), requestId, uuid.New())
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
 	log.WithValues("iamrole", req.NamespacedName)
-	log.Info("Start of the request")
+	log.Info("Start of the request", "resource", req)
 
-	//Get the resource
+	// Get the resource and (if debugging is on) print out the current state as it sits in K8S
 	var iamRole iammanagerv1alpha1.Iamrole
-
 	if err := r.Get(ctx, req.NamespacedName, &iamRole); err != nil {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
+	log.V(1).Info("Current state of the resource", "iamrole", iamRole)
 
 	// Is it being deleted?
 	if iamRole.ObjectMeta.DeletionTimestamp.IsZero() {
-		//Good. This is not Delete use case
-		//Lets check if this is very first time use case
+		// Good. This is not Delete use case
+		// Lets check if this is very first time use case
 		if !validation.ContainsString(iamRole.ObjectMeta.Finalizers, finalizerName) {
 			log.Info("New iamrole resource. Adding the finalizer", "finalizer", finalizerName)
 			iamRole.ObjectMeta.Finalizers = append(iamRole.ObjectMeta.Finalizers, finalizerName)
 			r.UpdateMeta(ctx, &iamRole)
 		}
 		return r.HandleReconcile(ctx, req, &iamRole)
-
 	} else {
-		//oh oh.. This is delete use case
-		//Lets make sure to clean up the iam role
+		// oh oh.. This is delete use case
+		// Lets make sure to clean up the iam role
 		if iamRole.Status.RetryCount != 0 {
 			iamRole.Status.RetryCount = iamRole.Status.RetryCount + 1
 		}
@@ -127,7 +127,8 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
 	log = log.WithValues("iam_role_cr", iamRole.Name)
-	log.Info("state of the custom resource ", "state", iamRole.Status.State)
+
+	log.Info("Current resource state", "state", iamRole.Status.State)
 	ns := v1.Namespace{}
 	if iamRole.Status.RoleName == "" && iamRole.Spec.RoleName != "" {
 		//Get Namespace metadata
@@ -140,9 +141,9 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		ns = *ns2
 	}
 
+	// Figure out the name of the IAM Role itself that will be created based on the Iamrole resource name, namespace,
+	// and the configuration settings.
 	roleName, err := utils.GenerateRoleName(ctx, iamRole, *config.Props, &ns)
-	log.V(1).Info("roleName constructed successfully", "roleName", roleName)
-
 	if err != nil {
 		r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role name to error "+err.Error())
 		// It is not clear to me that we want to requeue here - as this is a fairly permanent
@@ -150,6 +151,13 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
+	// Determine whether or not this Iamrole is supposed to be connected to a ServiceAccount or not. This is
+	// used during the 'Ready' and 'default' status case handlers below to ensure the connection between the
+	// ServiceAccount and IAM Role (if desired).
+	shouldManageSa, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
+
+	// Create the desired-state of the IAM Role. This is used during create-calls as well as during comparison
+	// and validation calls throughout this handler.
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
 	if err != nil {
 		if status == nil {
@@ -162,6 +170,8 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	var requeueTime float64
 	switch iamRole.Status.State {
 	case iammanagerv1alpha1.Ready:
+
+		shouldReconcile := false
 
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
 		// Check with state of the world to figure out if this event is because of status update
@@ -187,12 +197,35 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		}
 
-		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
-			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
+		if shouldManageSa {
+			// Ensure that the ServiceAccount is configured correctly. In the "Ready" handler here, we are getting the
+			// RoleARN from the Iamrole status itself.
+			saRequest := k8s.ServiceAccountRequest{
+				Namespace:          iamRole.Namespace,
+				IamRoleARN:         iamRole.Status.RoleARN,
+				ServiceAccountName: saName,
+			}
+			if err := k8s.NewK8sManagerClient(r.Client).EnsureServiceAccount(ctx, saRequest); err != nil {
+				log.Error(err, "error in updating service account for IRSA role")
+				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
+				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+			}
+		}
 
+		if !validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
+			shouldReconcile = true
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Detected difference between desired IAM policy and existing policy")
+		} else {
+			log.V(1).Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
+		}
+
+		if !shouldReconcile {
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
 			return successRequeueIt()
 		}
+
+		// If we got here, something is actually wrong and we need to force a full reconciliation with the 'default'
+		// handler below.
 		fallthrough
 
 	case iammanagerv1alpha1.Error:
@@ -246,11 +279,15 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: state, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 		}
 
-		//OK. Successful!!
-		// Is this IRSA role? If yes, Create/update Service Account with required annotation
-		flag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if flag {
-			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN); err != nil {
+		if shouldManageSa {
+			// Ensure that the ServiceAccount is configured correctly. We pass the RoleARN in directly from the
+			// EnsureRole() functions response above which explicitly includes the RoleARN.
+			saRequest := k8s.ServiceAccountRequest{
+				Namespace:          iamRole.Namespace,
+				IamRoleARN:         resp.RoleARN,
+				ServiceAccountName: saName,
+			}
+			if err := k8s.NewK8sManagerClient(r.Client).EnsureServiceAccount(ctx, saRequest); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
 				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
@@ -269,6 +306,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, roleName string) (*awsapi.IAMRoleRequest, *iammanagerv1alpha1.IamroleStatus, error) {
 	log := log.Logger(ctx, "controllers", "iamrole_controller", "ConstructInput")
 	log.WithValues("iamrole", iamRole.Name)
+	log.V(1).Info("Constructing IAM Role Input...")
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 
 	//Validate IAM Policy and Resource
@@ -300,7 +338,7 @@ func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iam
 
 	input := &awsapi.IAMRoleRequest{
 		Name:                            roleName,
-		PolicyName:                      config.InlinePolicyName,
+		PolicyName:                      constants.InlinePolicyName,
 		Description:                     "#DO NOT DELETE#. Managed by iam-manager",
 		SessionDuration:                 43200,
 		TrustPolicy:                     trustPolicy,

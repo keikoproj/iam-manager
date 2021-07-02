@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/pkg/log"
 
 	"net/url"
@@ -77,7 +77,17 @@ func parseURL(ctx context.Context, idpUrl string) (string, error) {
 	return hostName, nil
 }
 
-//ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
+// ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method.
+//
+// Returns back both a boolean to indicate whether or not the IRSA system should be used,
+// and also returns back the name of the ServiceAccount that should be referenced based
+// on the annotation value.
 func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, string) {
-	return parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
+	log := log.Logger(ctx, "internal.utils.oidc", "ParseIRSAAnnotation")
+	value, err := getAnnotation(ctx, constants.IRSAAnnotation, iamRole.Annotations)
+	if err != nil {
+		log.V(1).Info("IRSA Annotation not found", "err", err)
+		return false, ""
+	}
+	return true, value
 }

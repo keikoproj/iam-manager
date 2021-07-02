@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"gopkg.in/check.v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +48,7 @@ func (s *OIDCTestSuite) TestParseIRSAAnnotationValid(c *check.C) {
 			Name:      "iam-role",
 			Namespace: "k8s-namespace-dev",
 			Annotations: map[string]string{
-				config.IRSAAnnotation: "default",
+				constants.IRSAAnnotation: "default",
 			},
 		},
 	}

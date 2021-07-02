@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/golang/mock/gomock"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
@@ -927,7 +928,7 @@ func (s *IAMAPISuite) TestCreateOIDCProviderSuccess(c *check.C) {
 		OpenIDConnectProviderArn: aws.String("valid_arn"),
 	}, nil)
 
-	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", config.OIDCAudience, "valid_thumbprint")
+	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", constants.OIDCAudience, "valid_thumbprint")
 	c.Assert(err, check.IsNil)
 }
 
@@ -939,7 +940,7 @@ func (s *IAMAPISuite) TestCreateOIDCProviderInvalidInput(c *check.C) {
 	}
 	s.mockI.EXPECT().CreateOpenIDConnectProvider(input).Times(1).Return(nil, awserr.New(iam.ErrCodeInvalidInputException, "", errors.New(iam.ErrCodeInvalidInputException)))
 
-	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", config.OIDCAudience, "invalid_thumbprint")
+	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", constants.OIDCAudience, "invalid_thumbprint")
 	c.Assert(err, check.NotNil)
 }
 
@@ -951,7 +952,7 @@ func (s *IAMAPISuite) TestCreateOIDCProviderAlreadyExists(c *check.C) {
 	}
 	s.mockI.EXPECT().CreateOpenIDConnectProvider(input).Times(1).Return(nil, awserr.New(iam.ErrCodeEntityAlreadyExistsException, "", errors.New(iam.ErrCodeEntityAlreadyExistsException)))
 
-	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", config.OIDCAudience, "already_exists_thumbprint")
+	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", constants.OIDCAudience, "already_exists_thumbprint")
 	c.Assert(err, check.IsNil)
 }
 
@@ -963,7 +964,7 @@ func (s *IAMAPISuite) TestCreateOIDCProviderLimitExceeded(c *check.C) {
 	}
 	s.mockI.EXPECT().CreateOpenIDConnectProvider(input).Times(1).Return(nil, awserr.New(iam.ErrCodeLimitExceededException, "", errors.New(iam.ErrCodeLimitExceededException)))
 
-	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", config.OIDCAudience, "limit_exceeded_thumbprint")
+	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", constants.OIDCAudience, "limit_exceeded_thumbprint")
 	c.Assert(err, check.NotNil)
 }
 
@@ -975,6 +976,6 @@ func (s *IAMAPISuite) TestCreateOIDCProviderServiceFailure(c *check.C) {
 	}
 	s.mockI.EXPECT().CreateOpenIDConnectProvider(input).Times(1).Return(nil, awserr.New(iam.ErrCodeServiceFailureException, "", errors.New(iam.ErrCodeServiceFailureException)))
 
-	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", config.OIDCAudience, "failure_thumbprint")
+	err := s.mockIAM.CreateOIDCProvider(s.ctx, "https://server.example.com", constants.OIDCAudience, "failure_thumbprint")
 	c.Assert(err, check.NotNil)
 }

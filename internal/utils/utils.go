@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"k8s.io/api/core/v1"
@@ -141,7 +142,6 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 	// Lets check if rolename is passed in the CR and validate that this iamRole resource belongs to privileged namespace
 	// Check if spec has a roleName
 	if iamRole.Spec.RoleName != "" {
-
 		//Verify if it is a privileged namespace
 		if ParsePrivilegedAnnotation(ctx, ns) {
 			return iamRole.Spec.RoleName, nil
@@ -154,7 +154,7 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 		log.Error(err, msg)
 		return "", err
 	}
-	log.Info("role name constructed using pattern", "pattern", props.IamRolePattern())
+	log.V(1).Info("role name constructed using pattern", "pattern", props.IamRolePattern())
 
 	// Write the template output into a buffer and then grab that as a string.
 	// There is no way in GoLang natively to do this.
@@ -169,27 +169,23 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 	return buf.String(), nil
 }
 
-//parseAnnotations parses annotations attached to iam role resource and returns the value if found
+//getAnnotation parses annotations attached to iam role resource and returns the value if found
 // input: Name of the annotation, IamRole resource
-func parseAnnotations(ctx context.Context, name string, annotations map[string]string) (bool, string) {
-	log := log.Logger(ctx, "internal.utils.utils", "ParseIRSAAnnotation")
-	flag := false
-	response := ""
+func getAnnotation(ctx context.Context, name string, annotations map[string]string) (string, error) {
 	//Look for the specific annotation in iam role CR
-	if val, ok := annotations[name]; ok {
-		flag = true
-		response = val
-		log.Info("Annotation found", "name", val)
+	val, ok := annotations[name]
+	if !ok {
+		return "", errors.New(fmt.Sprintf("Annotation %s not found", name))
 	}
-	return flag, response
+	return val, nil
 }
 
 //ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
 func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 
-	flag, value := parseAnnotations(ctx, config.IamManagerPrivilegedNamespaceAnnotation, ns.Annotations)
-	if flag && value == "true" {
-		return true
+	value, err := getAnnotation(ctx, constants.IamManagerPrivilegedNamespaceAnnotation, ns.Annotations)
+	if err != nil {
+		return false
 	}
-	return false
+	return value == "true"
 }

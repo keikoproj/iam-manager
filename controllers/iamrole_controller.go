@@ -156,6 +156,13 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	// ServiceAccount and IAM Role (if desired).
 	shouldManageSa, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
 
+	// Get a RBAC object we can use to modify the ServiceAccount if we need to.
+	rbac, err := k8s.NewK8sClient()
+	if err != nil {
+		log.Error(err, "error in creating k8s client to update/check service account")
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+
 	// Create the desired-state of the IAM Role. This is used during create-calls as well as during comparison
 	// and validation calls throughout this handler.
 	input, status, err := r.ConstructCreateIAMRoleInput(ctx, iamRole, roleName)
@@ -170,9 +177,6 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	var requeueTime float64
 	switch iamRole.Status.State {
 	case iammanagerv1alpha1.Ready:
-
-		shouldReconcile := false
-
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
 		// Check with state of the world to figure out if this event is because of status update
 		targetRole, err := r.IAMClient.GetRole(ctx, *input)
@@ -205,27 +209,26 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 				IamRoleARN:         iamRole.Status.RoleARN,
 				ServiceAccountName: saName,
 			}
-			if err := k8s.NewK8sManagerClient(r.Client).EnsureServiceAccount(ctx, saRequest); err != nil {
+			if _, err := rbac.EnsureServiceAccount(ctx, saRequest); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
 				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 			}
 		}
 
-		if !validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
-			shouldReconcile = true
-			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Detected difference between desired IAM policy and existing policy")
-		} else {
+		// Last check - if this succeeds, then we are done and do not continue in the case statement. If this fails,
+		// we fall through to the next case in the case statement...
+		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
 			log.V(1).Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-		}
-
-		if !shouldReconcile {
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
 			return successRequeueIt()
+		} else {
+			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Detected difference between desired IAM policy and existing policy")
 		}
 
 		// If we got here, something is actually wrong and we need to force a full reconciliation with the 'default'
 		// handler below.
+		log.Info("Warning - got to the end of the \"Ready\" status unexpectedly.")
 		fallthrough
 
 	case iammanagerv1alpha1.Error:
@@ -287,7 +290,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 				IamRoleARN:         resp.RoleARN,
 				ServiceAccountName: saName,
 			}
-			if err := k8s.NewK8sManagerClient(r.Client).EnsureServiceAccount(ctx, saRequest); err != nil {
+			if _, err := rbac.EnsureServiceAccount(ctx, saRequest); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
 				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)

@@ -2,21 +2,24 @@ package k8s_test
 
 import (
 	"context"
+	"errors"
 	"github.com/golang/mock/gomock"
+	"github.com/keikoproj/iam-manager/constants"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
-	mock_k8s "github.com/keikoproj/iam-manager/pkg/k8s/mocks"
 	"gopkg.in/check.v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	fakeclient "k8s.io/client-go/kubernetes/fake"
+	k8stesting "k8s.io/client-go/testing"
 	"testing"
 )
 
 type RBACSuite struct {
-	t          *testing.T
-	ctx        context.Context
-	mockCtrl   *gomock.Controller
-	mockClient *mock_k8s.MockClient
-	mockRbac   *k8s.Client
+	t        *testing.T
+	ctx      context.Context
+	mockCtrl *gomock.Controller
+	mockRbac *k8s.Client
 }
 
 func TestRBACTestSuite(t *testing.T) {
@@ -27,43 +30,202 @@ func TestRBACTestSuite(t *testing.T) {
 func (s *RBACSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
-	s.mockClient = mock_k8s.NewMockClient(s.mockCtrl)
-	s.mockRbac = k8s.NewK8sManagerClient(s.mockClient)
 }
 
 func (s *RBACSuite) TearDownTest(c *check.C) {
 	s.mockCtrl.Finish()
 }
 
-func (s *RBACSuite) TestEnsureServiceAccountAlreadyExistsAndIsCorrect(c *check.C) {
+// ########## EnsureServiceAccount() Tests ##########
+
+func (s *RBACSuite) TestEnsureServiceAccount(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset()
+	mockRbac := &k8s.Client{Cl: mockClient}
 	req := k8s.ServiceAccountRequest{
-		Namespace:          "test-ns",
-		IamRoleARN:         "arn:aws:...",
+		IamRoleARN:         "arn:...",
 		ServiceAccountName: "test-sa",
+		Namespace:          "default",
 	}
-	// Returning nil here triggers the behavior where a ServiceAccount object is indeed returned by the
-	// GetServiceAccount function. However that object will be empty (it will have no annotations), so
-	// we'll also be mocking out the
-	s.mockClient.EXPECT().Get(s.ctx, client.ObjectKey{Namespace: "test-ns", Name: "test-sa"}, gomock.Any()).Times(1).Return(nil)
-	err := s.mockRbac.EnsureServiceAccount(s.ctx, req)
+	sa, err := mockRbac.EnsureServiceAccount(s.ctx, req)
 	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+	c.Assert(sa.Namespace, check.Equals, "default")
+	c.Assert(sa.Annotations[constants.ServiceAccountRoleAnnotation], check.Equals, "arn:...")
 }
 
-//############
+func (s *RBACSuite) TestEnsureServiceAccountWithUnexpectedCreateError(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset()
+	mockClient.PrependReactor(
+		"create",
+		"serviceaccounts",
+		func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			return true, &v1.ServiceAccount{}, errors.New("Error creating ServiceAccount")
+		})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	req := k8s.ServiceAccountRequest{
+		IamRoleARN:         "arn:...",
+		ServiceAccountName: "test-sa",
+		Namespace:          "default",
+	}
+	sa, err := mockRbac.EnsureServiceAccount(s.ctx, req)
+	c.Assert(err.Error(), check.Matches, "Error creating ServiceAccount")
+	c.Assert(sa, check.IsNil)
+}
 
-// Failing:
-//
-// /private/var/folders/dm/b5by_qw91nd0ctdjbvggzgr40000gq/T/___RBACSuite_TestPatchServiceAccountAnnotation_in_github_com_keikoproj_iam_manager_pkg_k8s__3_.test -test.v -test.paniconexit0 -check.f ^\QTestPatchServiceAccountAnnotation\E$ -check.vv
-// rbac.go:128: Unexpected call to *mock_k8s.MockClient.Patch([context.Background &ServiceAccount{ObjectMeta:{test-sa  test-ns    0 0001-01-01 00:00:00 +0000 UTC <nil> <nil> map[] map[] [] []  []},Secrets:[]ObjectReference{},ImagePullSecrets:[]LocalObjectReference{},AutomountServiceAccountToken:nil,} 0x1400012b5f0]) at /Users/diranged/go/src/github.com/keikoproj/iam-manager/pkg/k8s/rbac.go:128 because:
-// expected call at /Users/diranged/go/src/github.com/keikoproj/iam-manager/pkg/k8s/rbac_test.go:49 doesn't match the argument at index 2.
-// Got: &{application/strategic-merge-patch+json [123 34 109 101 116 97 100 97 116 97 34 58 123 34 97 110 110 111 116 97 116 105 111 110 115 34 58 123 34 102 97 107 101 45 97 110 110 111 116 97 116 105 111 110 34 58 32 34 118 97 108 117 101 34 125 125 125]} (*client.patch)
-// Want: is equal to &{application/strategic-merge-patch+json [123 34 109 101 116 97 100 97 116 97 34 58 123 34 97 110 110 111 116 97 116 105 111 110 115 34 58 123 34 102 97 107 101 45 97 110 110 111 116 97 116 105 111 110 34 58 34 32 34 118 97 108 117 101 34 125 125 125]} (*client.patch)
-// controller.go:269: missing call(s) to *mock_k8s.MockClient.Patch(is equal to context.Background (*context.emptyCtx), is anything, is equal to &{application/strategic-merge-patch+json [123 34 109 101 116 97 100 97 116 97 34 58 123 34 97 110 110 111 116 97 116 105 111 110 115 34 58 123 34 102 97 107 101 45 97 110 110 111 116 97 116 105 111 110 34 58 34 32 34 118 97 108 117 101 34 125 125 125]} (*client.patch)) /Users/diranged/go/src/github.com/keikoproj/iam-manager/pkg/k8s/rbac_test.go:49
-// controller.go:269: aborting test due to missing call(s)
-func (s *RBACSuite) TestPatchServiceAccountAnnotation(c *check.C) {
-	patch := []byte(`{"metadata":{"annotations":{"fake-annotation":" "value"}}}`)
-	s.mockClient.EXPECT().Patch(s.ctx, gomock.Any(), client.RawPatch(types.StrategicMergePatchType, patch)).Times(1).Return(nil)
-	err := s.mockRbac.PatchServiceAccountAnnotation(s.ctx, "test-sa", "test-ns", "fake-annotation", "value")
+func (s *RBACSuite) TestEnsureServiceAccountAlreadyExists(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-sa",
+			Namespace:   "default",
+			Annotations: map[string]string{},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	req := k8s.ServiceAccountRequest{
+		IamRoleARN:         "arn:...",
+		ServiceAccountName: "test-sa",
+		Namespace:          "default",
+	}
+	sa, err := mockRbac.EnsureServiceAccount(s.ctx, req)
 	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+	c.Assert(sa.Namespace, check.Equals, "default")
+	c.Assert(sa.Annotations[constants.ServiceAccountRoleAnnotation], check.Equals, "arn:...")
+}
 
+func (s *RBACSuite) TestEnsureServiceAccountAlreadyExistsWithMatchingAnnotationButInvalidValue(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-sa",
+			Namespace: "default",
+			Annotations: map[string]string{
+				constants.ServiceAccountRoleAnnotation: "arn:invaliddata",
+			},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	req := k8s.ServiceAccountRequest{
+		IamRoleARN:         "arn:...",
+		ServiceAccountName: "test-sa",
+		Namespace:          "default",
+	}
+	sa, err := mockRbac.EnsureServiceAccount(s.ctx, req)
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+	c.Assert(sa.Namespace, check.Equals, "default")
+	c.Assert(sa.Annotations[constants.ServiceAccountRoleAnnotation], check.Equals, "arn:...")
+}
+
+func (s *RBACSuite) TestEnsureServiceAccountAlreadyExistsWithMatchingAnnotation(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-sa",
+			Namespace: "default",
+			Annotations: map[string]string{
+				constants.ServiceAccountRoleAnnotation: "arn:...",
+			},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	req := k8s.ServiceAccountRequest{
+		IamRoleARN:         "arn:...",
+		ServiceAccountName: "test-sa",
+		Namespace:          "default",
+	}
+	sa, err := mockRbac.EnsureServiceAccount(s.ctx, req)
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+	c.Assert(sa.Namespace, check.Equals, "default")
+	c.Assert(sa.Annotations[constants.ServiceAccountRoleAnnotation], check.Equals, "arn:...")
+}
+
+// ########## GetOrCreateServiceAccount() Tests ##########
+
+func (s *RBACSuite) TestGetOrCreateServiceAccount(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset()
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.GetOrCreateServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+}
+
+func (s *RBACSuite) TestGetOrCreateServiceAccountAlreadyExists(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-sa",
+			Namespace:   "default",
+			Annotations: map[string]string{},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.GetOrCreateServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+}
+
+// ########## GetServiceAccount() Tests #########
+
+func (s *RBACSuite) TestGetServiceAccount(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-sa",
+			Namespace:   "default",
+			Annotations: map[string]string{},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.GetServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+}
+
+func (s *RBACSuite) TestGetServiceAccountMissing(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset()
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.GetServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err, check.NotNil)
+	c.Assert(sa, check.IsNil)
+}
+
+// ########## CreateServiceAccount() Tests ##########
+
+func (s *RBACSuite) TestCreateServiceAccount(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset()
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.CreateServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Name, check.Equals, "test-sa")
+}
+
+func (s *RBACSuite) TestCreateServiceAccountAlreadyExists(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "test-sa",
+			Namespace:   "default",
+			Annotations: map[string]string{},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.CreateServiceAccount(s.ctx, "test-sa", "default")
+	c.Assert(err.Error(), check.Matches, "serviceaccounts \"test-sa\" already exists")
+	c.Assert(sa, check.IsNil)
+}
+
+// ########## PatchServiceAccountAnnotation() Tests ##########
+
+func (s *RBACSuite) TestPatchServiceAccountAnnotation(c *check.C) {
+	mockClient := fakeclient.NewSimpleClientset(&v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-sa",
+			Namespace: "default",
+			Annotations: map[string]string{
+				"some-other": "annotation",
+			},
+		},
+	})
+	mockRbac := &k8s.Client{Cl: mockClient}
+	sa, err := mockRbac.PatchServiceAccountAnnotation(s.ctx, "test-sa", "default", "fake-annotation", "value")
+	c.Assert(err, check.IsNil)
+	c.Assert(sa.Annotations["fake-annotation"], check.Equals, "value")
+	c.Assert(sa.Annotations["some-other"], check.Equals, "annotation")
 }

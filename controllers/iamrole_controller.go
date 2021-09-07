@@ -102,13 +102,14 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if iamRole.Status.State != iammanagerv1alpha1.PolicyNotAllowed {
 			//Get the roleName from status
 			roleName := iamRole.Status.RoleName
-			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
-				log.Error(err, "Unable to delete the role")
-				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
-				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
-
-				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			if roleName != "" {
+				if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
+					log.Error(err, "Unable to delete the role")
+					//i got to fix this
+					r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
+					r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
+					return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+				}
 			}
 		}
 

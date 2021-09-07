@@ -6,6 +6,9 @@ OSNAME           ?= $(shell uname -s | tr A-Z a-z)
 KUBEBUILDER_VER  ?= 2.2.0
 KUBEBUILDER_ARCH ?= amd64
 
+# Set the Go build environment to build for AMD64 no matter what
+DOCKER_ARCH      ?= linux/amd64
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -114,7 +117,7 @@ generate: controller-gen
 
 # Build the docker image
 docker-build:
-	docker build . -t ${IMG}
+	docker build --platform $(DOCKER_ARCH) . -t ${IMG}
 
 # Push the docker image
 docker-push:

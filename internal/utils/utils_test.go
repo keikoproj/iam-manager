@@ -680,7 +680,7 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
 	}
 	_, err = utils.GenerateRoleName(s.ctx, resource, *config.Props, &ns)
 	c.Assert(err, check.NotNil)
-	c.Assert(err.Error(), check.Matches, ".*unexpected bad character.*")
+	c.Assert(err.Error(), check.Matches, ".*bad character.*")
 }
 
 func (s *UtilsTestSuite) TestGenerateNameFunctionBadObjectReference(c *check.C) {

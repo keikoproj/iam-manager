@@ -179,13 +179,16 @@ func CompareTags(ctx context.Context, request map[string]string, target []*iam.T
 	log := log.Logger(ctx, "pkg.validation", "CompareTags")
 	log.Info("start CompareTags")
 
-	targetTags := make(map[string]string)
-	if target != nil {
-		for _, tag := range target {
-			if tag != nil && tag.Key != nil && tag.Value != nil && aws.StringValue(tag.Key) != "" {
-				key := aws.StringValue(tag.Key)
-				value := aws.StringValue(tag.Value)
-				targetTags[key] = value
+	var targetTags map[string]string
+	if len(target) > 0 {
+		targetTags = make(map[string]string)
+		if target != nil {
+			for _, tag := range target {
+				if tag != nil && tag.Key != nil && tag.Value != nil && aws.StringValue(tag.Key) != "" {
+					key := aws.StringValue(tag.Key)
+					value := aws.StringValue(tag.Value)
+					targetTags[key] = value
+				}
 			}
 		}
 	}

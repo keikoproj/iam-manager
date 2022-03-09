@@ -471,7 +471,7 @@ func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
 		},
 		{
 			Key:   aws.String("managedBy"),
-			Value: aws.String("iam-manage"),
+			Value: aws.String("iam-manager"),
 		},
 	}
 

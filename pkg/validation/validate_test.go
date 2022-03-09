@@ -3,6 +3,7 @@ package validation_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/golang/mock/gomock"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
@@ -427,6 +428,54 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
 	}
 
 	flag := validation.CompareAssumeRolePolicy(s.ctx, i1.TrustPolicy, *target.Role.AssumeRolePolicyDocument)
+	c.Assert(flag, check.Equals, false)
+}
+
+func (s *ValidateSuite) TestCompareTagsSuccess(c *check.C) {
+	input1 := map[string]string{
+		"cluster":   "clusterName",
+		"managedBy": "iam-manager",
+		"customTag": "customValue",
+	}
+
+	input2 := []*iam.Tag{
+		{
+			Key:   aws.String("cluster"),
+			Value: aws.String("clusterName"),
+		},
+		{
+			Key:   aws.String("managedBy"),
+			Value: aws.String("iam-manager"),
+		},
+		{
+			Key:   aws.String("customTag"),
+			Value: aws.String("customValue"),
+		},
+	}
+
+	flag := validation.CompareTags(s.ctx, input1, input2)
+	c.Assert(flag, check.Equals, true)
+}
+
+func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
+	input1 := map[string]string{
+		"cluster":   "clusterName",
+		"managedBy": "iam-manager",
+		"customTag": "customValue",
+	}
+
+	input2 := []*iam.Tag{
+		{
+			Key:   aws.String("cluster"),
+			Value: aws.String("clusterName"),
+		},
+		{
+			Key:   aws.String("managedBy"),
+			Value: aws.String("iam-manage"),
+		},
+	}
+
+	flag := validation.CompareTags(s.ctx, input1, input2)
 	c.Assert(flag, check.Equals, false)
 }
 

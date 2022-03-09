@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
@@ -115,6 +116,11 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole 
 		return false
 	}
 
+	//Step 4: Compare Tags
+	if !CompareTags(ctx, request.Tags, targetRole.Role.Tags) {
+		return false
+	}
+
 	return true
 }
 
@@ -162,6 +168,31 @@ func CompareAssumeRolePolicy(ctx context.Context, request string, target string)
 	//compare
 	if !reflect.DeepEqual(reqAssume, destAssume) {
 		log.Info("input assume role policy and target assume role policy are NOT equal", "req", reqAssume, "dest", destAssume)
+		return false
+	}
+
+	return true
+}
+
+//CompareTags compares tags from request and response
+func CompareTags(ctx context.Context, request map[string]string, target []*iam.Tag) bool {
+	log := log.Logger(ctx, "pkg.validation", "CompareTags")
+	log.Info("start CompareTags")
+
+	targetTags := make(map[string]string)
+	if target != nil {
+		for _, tag := range target {
+			if tag != nil && tag.Key != nil && tag.Value != nil && aws.StringValue(tag.Key) != "" {
+				key := aws.StringValue(tag.Key)
+				value := aws.StringValue(tag.Value)
+				targetTags[key] = value
+			}
+		}
+	}
+
+	//compare
+	if !reflect.DeepEqual(request, targetTags) {
+		log.Info("input tags and target tags are NOT equal", "req", request, "dest", targetTags)
 		return false
 	}
 

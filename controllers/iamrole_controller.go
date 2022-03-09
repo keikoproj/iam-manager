@@ -298,6 +298,21 @@ func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iam
 		tags["Cluster"] = config.Props.ClusterName()
 	}
 
+	// Custom tags value should be a string of comma seperated key/value pairs
+	// example annotation: "iamroles.iammanager.keikoproj.io/tags": "key1=value1,key2=value2"
+	if customTagsString, ok := iamRole.GetAnnotations()["iamroles.iammanager.keikoproj.io/tags"]; ok {
+		// Retrieve each key/value pair
+		keyValueList := strings.Split(customTagsString, ",")
+		for _, entry := range keyValueList {
+			// Should get slice of [key,value]
+			keyValuePair := strings.Split(entry, "=")
+			// Make sure tag is formatted correctly as "key=value"
+			if len(keyValuePair) == 2 {
+				tags[keyValuePair[0]] = keyValuePair[1]
+			}
+		}
+	}
+
 	input := &awsapi.IAMRoleRequest{
 		Name:                            roleName,
 		PolicyName:                      config.InlinePolicyName,

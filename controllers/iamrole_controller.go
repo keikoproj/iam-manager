@@ -299,16 +299,19 @@ func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iam
 	}
 
 	// Custom tags value should be a string of comma seperated key/value pairs
-	// example annotation: "iamroles.iammanager.keikoproj.io/tags": "key1=value1,key2=value2"
-	if customTagsString, ok := iamRole.GetAnnotations()["iamroles.iammanager.keikoproj.io/tags"]; ok {
+	// example annotation: "iammanager.keikoproj.io/tags": "key1=value1;;key2=value2"
+	if ok, customTagsString := utils.ParseTagsAnnotation(ctx, iamRole); ok {
 		// Retrieve each key/value pair
-		keyValueList := strings.Split(customTagsString, ",")
+		keyValueList := strings.Split(customTagsString, ";;")
 		for _, entry := range keyValueList {
 			// Should get slice of [key,value]
 			keyValuePair := strings.Split(entry, "=")
 			// Make sure tag is formatted correctly as "key=value"
 			if len(keyValuePair) == 2 {
-				tags[keyValuePair[0]] = keyValuePair[1]
+				// Make sure default tags are not overwritten, for duplicate keys the first will be applied
+				if _, ok = tags[keyValuePair[0]]; !ok {
+					tags[keyValuePair[0]] = keyValuePair[1]
+				}
 			}
 		}
 	}

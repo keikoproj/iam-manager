@@ -193,3 +193,8 @@ func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 	}
 	return false
 }
+
+//ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
+func ParseTagsAnnotation(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) (bool, string) {
+	return parseAnnotations(ctx, config.IamManagerTagsAnnotation, iamRole.Annotations)
+}

@@ -67,4 +67,6 @@ const (
 	IRSAAnnotation = "iam.amazonaws.com/irsa-service-account"
 
 	IamManagerPrivilegedNamespaceAnnotation = "iammanager.keikoproj.io/privileged"
+
+	IamManagerTagsAnnotation = "iammanager.keikoproj.io/tags"
 )

@@ -437,7 +437,6 @@ func (s *ValidateSuite) TestCompareTagsSuccess(c *check.C) {
 		"managedBy": "iam-manager",
 		"customTag": "customValue",
 	}
-
 	input2 := []*iam.Tag{
 		{
 			Key:   aws.String("cluster"),
@@ -463,7 +462,6 @@ func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
 		"managedBy": "iam-manager",
 		"customTag": "customValue",
 	}
-
 	input2 := []*iam.Tag{
 		{
 			Key:   aws.String("cluster"),

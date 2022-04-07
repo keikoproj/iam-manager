@@ -10,9 +10,9 @@ require (
 	github.com/onsi/gomega v1.8.1
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.8.1
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
-	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7 // indirect
-	golang.org/x/tools v0.1.9 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
+	golang.org/x/tools v0.1.10 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2

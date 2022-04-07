@@ -11,6 +11,8 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/validation"
 	"gopkg.in/check.v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
@@ -474,6 +476,33 @@ func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
 	}
 
 	flag := validation.CompareTags(s.ctx, input1, input2)
+	c.Assert(flag, check.Equals, false)
+}
+
+func (s *ValidateSuite) TestCompareRoleIRSASuccess(c *check.C) {
+	sa := v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-sa",
+			Namespace: "test-ns",
+			Annotations: map[string]string{
+				"eks.amazonaws.com/sts-regional-endpoints": "true",
+			},
+		},
+	}
+
+	flag := validation.CompareRoleIRSA(s.ctx, &sa, config.Properties{})
+	c.Assert(flag, check.Equals, true)
+}
+
+func (s *ValidateSuite) TestCompareRoleIRSAFailure(c *check.C) {
+	sa := v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-sa",
+			Namespace: "test-ns",
+		},
+	}
+
+	flag := validation.CompareRoleIRSA(s.ctx, &sa, config.Properties{})
 	c.Assert(flag, check.Equals, false)
 }
 

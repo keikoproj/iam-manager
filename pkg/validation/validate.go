@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/pkg/errors"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"net/url"
 	"reflect"
@@ -118,6 +120,24 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole 
 
 	//Step 4: Compare Tags
 	if !CompareTags(ctx, request.Tags, targetRole.Role.Tags) {
+		return false
+	}
+
+	return true
+}
+
+//CompareRole function compares input role to target role
+func CompareRoleIRSA(ctx context.Context, sa *v1.ServiceAccount, props config.Properties) bool {
+	log := log.Logger(ctx, "pkg.validation", "CompareRoleIRSA")
+
+	// Check if sts-regional-endpoint annotation is set to the expected value
+	exists, val := utils.ParseIRSARegionalEndpointAnnotation(ctx, sa)
+	// If the regional endpoint disabled flag is not set, make sure the annotation exists and is set to true
+	log.Info("IRSADEBUG", "exists", exists, "val", val, "cmFlag", props.IsIRSARegionalEndpointDisabled())
+	if !props.IsIRSARegionalEndpointDisabled() && (!exists || val != "true") {
+		return false
+		// If the regional endpoint disabled flag is set to true, make sure the annotation either doesn't exist or is set to false
+	} else if props.IsIRSARegionalEndpointDisabled() && (exists && val != "false") {
 		return false
 	}
 

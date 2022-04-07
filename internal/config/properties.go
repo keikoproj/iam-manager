@@ -34,6 +34,7 @@ type Properties struct {
 	clusterOIDCIssuerUrl            string
 	defaultTrustPolicy              string
 	iamRolePattern                  string
+	isIRSARegionalEndpointDisabled  string
 }
 
 func init() {
@@ -83,6 +84,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			clusterOIDCIssuerUrl:            os.Getenv("CLUSTER_OIDC_ISSUER_URL"),
 			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
 			iamRolePattern:                  os.Getenv("IAM_ROLE_PATTERN"),
+			isIRSARegionalEndpointDisabled:  os.Getenv("IRSA_REGIONAL_ENDPOINT_DISABLED"),
 		}
 		return nil
 	}
@@ -204,6 +206,13 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	}
 	Props.clusterOIDCIssuerUrl = oidcUrl
 
+	isIRSARegionalEndpointDisabled := cm[0].Data[propertyIRSARegionalEndpointDisabled]
+	if isIRSARegionalEndpointDisabled == "true" {
+		Props.isIRSARegionalEndpointDisabled = "true"
+	} else {
+		Props.isIRSARegionalEndpointDisabled = "false"
+	}
+
 	return nil
 }
 
@@ -258,6 +267,14 @@ func (p *Properties) ControllerDesiredFrequency() int {
 func (p *Properties) IsIRSAEnabled() bool {
 	resp := false
 	if p.isIRSAEnabled == "true" {
+		resp = true
+	}
+	return resp
+}
+
+func (p *Properties) IsIRSARegionalEndpointDisabled() bool {
+	resp := false
+	if p.isIRSARegionalEndpointDisabled == "true" {
 		resp = true
 	}
 	return resp

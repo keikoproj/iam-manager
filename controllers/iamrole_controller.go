@@ -187,7 +187,18 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		}
 
-		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) {
+		// If IRSA is enabled, make sure the service account has the needed annotations
+		saConsistent := false
+		saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
+		if saExists {
+			// Get the service account in kubernetes
+			saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName)
+			// If it exists, check the annotations are correct
+			if saSpec != nil {
+				saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
+			}
+		}
+		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) && saConsistent {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
 
@@ -248,9 +259,9 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
-		flag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if flag {
-			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN); err != nil {
+		saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
+		if saFlag {
+			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN, config.Props.IsIRSARegionalEndpointDisabled()); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
 				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)

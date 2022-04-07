@@ -17,6 +17,7 @@ This document explains configmap variables.
 | k8s.cluster.name                  | Name of the cluster           |                    | Optional | 
 | k8s.cluster.oidc.issuer.url       | OIDC issuer of the cluster    |                    | Optional |
 | iam.irsa.enabled                  | Enable IRSA option?           | `false`            | Optional |
+| [iam.irsa.regional.endpoint.disabled](#iamirsaregionalendpointdisabled)| Disable IRSA regional endpoint?| `false`          | Optional |
 
 
 ## `iam.role.pattern`
@@ -53,3 +54,12 @@ will have left over unused IAM roles in your account.
 
 Get these settings right from the beginning, or be prepared to clean up the left
 over roles.
+
+## `iam.irsa.regional.endpoint.disabled`
+_Default_: `false`
+
+Information about Service Account regional endpoints can be found 
+[here](https://github.com/aws/amazon-eks-pod-identity-webhook#aws_sts_regional_endpoints-injection).
+By default, iam-manager will inject `eks.amazonaws.com/sts-regional-endpoints: "true"` as an annotation on service
+accounts specified in IamRoles. Setting this property to `true` will disable this injection and remove the annotation so endpoint will default
+back to global endpoint in us-east-1.

@@ -12,7 +12,7 @@ import (
 )
 
 //CreateServiceAccount adds the service account
-func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string, roleARN string) error {
+func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string, roleARN string, regionalEndpointDisabled bool) error {
 	log := log.Logger(ctx, "pkg.k8s", "rbac", "CreateOrUpdateServiceAccount")
 
 	sa := &corev1.ServiceAccount{
@@ -24,6 +24,10 @@ func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string
 			},
 		},
 	}
+	if !regionalEndpointDisabled {
+		sa.ObjectMeta.Annotations["eks.amazonaws.com/sts-regional-endpoints"] = "true"
+	}
+
 	//_, err := c.cl.CoreV1().ServiceAccounts(ns).Create(sa)
 	log.V(1).Info("Service Account creation is in progress")
 	err := c.rCl.Create(ctx, sa)

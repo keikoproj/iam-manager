@@ -130,6 +130,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 			"controller.desired.frequency":           "30",
 			"iam.role.max.limit.per.namespace":       "5",
 			"iam.role.pattern":                       "pfx-{{ .ObjectMeta.Name }}",
+			"iam.irsa.regional.endpoint.disabled":    "true",
 		},
 	}
 	err := LoadProperties("", cm)
@@ -137,6 +138,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 	c.Assert(Props.MaxRolesAllowed(), check.Equals, 5)
 	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
 	c.Assert(Props.IamRolePattern(), check.Equals, "pfx-{{ .ObjectMeta.Name }}")
+	c.Assert(Props.IsIRSARegionalEndpointDisabled(), check.Equals, true)
 }
 
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {
@@ -203,4 +205,9 @@ func (s *PropertiesSuite) TestControllerDefaultTrustPolicy(c *check.C) {
 	def := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	value := Props.DefaultTrustPolicy()
 	c.Assert(value, check.Equals, def)
+}
+
+func (s *PropertiesSuite) TestIsIRSARegionalEndpointDisabled(c *check.C) {
+	value := Props.IsIRSARegionalEndpointDisabled()
+	c.Assert(value, check.Equals, false)
 }

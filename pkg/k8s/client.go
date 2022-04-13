@@ -184,3 +184,18 @@ func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
 	log.V(1).Info("Successfully added event broadcaster")
 	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "iam-manager"})
 }
+
+//GetServiceAccount returns the service account with a given name in a given namespace
+func (c *Client) GetServiceAccount(ctx context.Context, ns string, name string) *v1.ServiceAccount {
+	log := log.Logger(ctx, "k8s", "client", "GetServiceAccount")
+	log.WithValues("namespace", ns)
+	log.Info("Retrieving service account")
+	sa := &v1.ServiceAccount{}
+	err := c.rCl.Get(ctx, client.ObjectKey{Name: name, Namespace: ns}, sa)
+	if err != nil {
+		log.Info("unable to get service account", "saName", name, "namespace", ns)
+		return nil
+	}
+
+	return sa
+}

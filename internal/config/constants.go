@@ -57,6 +57,9 @@ const (
 
 	//propertyDefaultTrustPolicy can be used to provide default trust policy
 	propertyDefaultTrustPolicy = "iam.default.trust.policy"
+
+	//propertyIRSAaRegionalEndpointDisabled can be used to disable sts regional endpoints for service accounts, and use global endpoint in us-east-1 instead
+	propertyIRSARegionalEndpointDisabled = "iam.irsa.regional.endpoint.disabled"
 )
 
 const (
@@ -69,4 +72,6 @@ const (
 	IamManagerPrivilegedNamespaceAnnotation = "iammanager.keikoproj.io/privileged"
 
 	IamManagerTagsAnnotation = "iammanager.keikoproj.io/tags"
+
+	IRSARegionalEndpointAnnotation = "eks.amazonaws.com/sts-regional-endpoints"
 )

@@ -128,12 +128,9 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole 
 
 //CompareRole function compares input role to target role
 func CompareRoleIRSA(ctx context.Context, sa *v1.ServiceAccount, props config.Properties) bool {
-	log := log.Logger(ctx, "pkg.validation", "CompareRoleIRSA")
-
 	// Check if sts-regional-endpoint annotation is set to the expected value
 	exists, val := utils.ParseIRSARegionalEndpointAnnotation(ctx, sa)
 	// If the regional endpoint disabled flag is not set, make sure the annotation exists and is set to true
-	log.Info("IRSADEBUG", "exists", exists, "val", val, "cmFlag", props.IsIRSARegionalEndpointDisabled())
 	if !props.IsIRSARegionalEndpointDisabled() && (!exists || val != "true") {
 		return false
 		// If the regional endpoint disabled flag is set to true, make sure the annotation either doesn't exist or is set to false

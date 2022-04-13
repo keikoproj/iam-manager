@@ -8,7 +8,7 @@ This document explains configmap variables.
 | aws.accountId                     | AWS account ID where IAM roles are created|        |Optional            |
 | iam.managed.policies              | User managed IAM policies     |                    |Optional            |
 | iam.managed.permission.boundary.policy| User managed permission boundary policy|k8s-iam-manager-cluster-permission-boundary       |Required            |
-| webhook.enabled                   |  Enable webhook?              | `false             | Required           |
+| webhook.enabled                   |  Enable webhook?              | `false`             | Required           |
 | iam.role.max.limit.per.namespace  | Maximum number of roles per namespace |   1        | Required |
 | aws.region                        | AWS Region                    | `us-west-2`        | Required |
 | iam.default.trust.policy          | Default trust policy role. This must follow v1alpha1.AssumeRolePolicyDocument syntax|           | Optional |
@@ -56,10 +56,10 @@ Get these settings right from the beginning, or be prepared to clean up the left
 over roles.
 
 ## `iam.irsa.regional.endpoint.disabled`
-_Default_: `false`
+_Default_: `"false"`
 
 Information about Service Account regional endpoints can be found 
 [here](https://github.com/aws/amazon-eks-pod-identity-webhook#aws_sts_regional_endpoints-injection).
 By default, iam-manager will inject `eks.amazonaws.com/sts-regional-endpoints: "true"` as an annotation on service
-accounts specified in IamRoles. Setting this property to `true` will disable this injection and remove the annotation so endpoint will default
+accounts specified in IamRoles. Setting this property to `"true"` will disable this injection and remove the annotation so endpoint will default
 back to global endpoint in us-east-1.

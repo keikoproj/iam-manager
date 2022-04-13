@@ -190,13 +190,7 @@ func (c *Client) GetServiceAccount(ctx context.Context, ns string, name string) 
 	log := log.Logger(ctx, "k8s", "client", "GetServiceAccount")
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving service account")
-	sa := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   ns,
-			Annotations: map[string]string{},
-		},
-	}
+	sa := &v1.ServiceAccount{}
 	err := c.rCl.Get(ctx, client.ObjectKey{Name: name, Namespace: ns}, sa)
 	if err != nil {
 		log.Info("unable to get service account", "saName", name, "namespace", ns)

@@ -189,8 +189,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		// If IRSA is enabled, make sure the service account has the needed annotations
 		saConsistent := false
-		saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if saExists {
+		if saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saExists {
 			// Get the service account in kubernetes
 			saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName)
 			// If it exists, check the annotations are correct
@@ -259,8 +258,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
-		saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if saFlag {
+		if saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saFlag {
 			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN, config.Props.IsIRSARegionalEndpointDisabled()); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())

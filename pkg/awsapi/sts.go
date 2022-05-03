@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 type STSIface interface {
@@ -34,7 +34,7 @@ func NewSTS(region string) *STS {
 
 // GetAccountID loads aws accountID from sts caller identity
 func (i *STS) GetAccountID(ctx context.Context) (string, error) {
-	log := log.Logger(context.Background(), "awsapi", "iam", "GetAccountID")
+	log := logging.Logger(context.Background(), "awsapi", "iam", "GetAccountID")
 
 	// get caller identity in order to fetch aws account ID
 	result, err := i.Client.GetCallerIdentity(&sts.GetCallerIdentityInput{})

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/keikoproj/iam-manager/pkg/k8s"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,7 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/k8s"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 const (
@@ -44,7 +44,7 @@ var iamrolelog = logf.Log.WithName("iamrole-resource")
 var wClient *k8s.Client
 
 func NewWClient() {
-	log := log.Logger(context.Background(), "v1alpha1", "NewWClient")
+	log := logging.Logger(context.Background(), "v1alpha1", "NewWClient")
 	log.Info("loading k8s client")
 	k8sClient, err := k8s.NewK8sClient()
 	if err != nil {
@@ -68,7 +68,7 @@ var _ webhook.Defaulter = &Iamrole{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Iamrole) Default() {
-	log := log.Logger(context.Background(), "v1alpha1", "Default")
+	log := logging.Logger(context.Background(), "v1alpha1", "Default")
 	log.Info("setting default version", "name", r.Name)
 
 	//Set the default value for Version
@@ -84,7 +84,7 @@ var _ webhook.Validator = &Iamrole{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateCreate() error {
-	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	log := logging.Logger(context.Background(), "v1alpha1", "ValidateCreate")
 	log.Info("validating create request", "name", r.Name)
 
 	return r.validateIAMPolicy(false)
@@ -92,7 +92,7 @@ func (r *Iamrole) ValidateCreate() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateUpdate(old runtime.Object) error {
-	log := log.Logger(context.Background(), "v1alpha1", "ValidateCreate")
+	log := logging.Logger(context.Background(), "v1alpha1", "ValidateCreate")
 	log.Info("validate update", "name", r.Name)
 
 	return r.validateIAMPolicy(true)
@@ -100,7 +100,7 @@ func (r *Iamrole) ValidateUpdate(old runtime.Object) error {
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Iamrole) ValidateDelete() error {
-	log := log.Logger(context.Background(), "v1alpha1", "ValidateDelete")
+	log := logging.Logger(context.Background(), "v1alpha1", "ValidateDelete")
 	log.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
@@ -108,7 +108,7 @@ func (r *Iamrole) ValidateDelete() error {
 }
 
 func (r *Iamrole) validateIAMPolicy(isItUpdate bool) error {
-	log := log.Logger(context.Background(), "v1alpha1", "validateIAMPolicy")
+	log := logging.Logger(context.Background(), "v1alpha1", "validateIAMPolicy")
 	log.Info("validating IAM policy", "name", r.Name)
 	var allErrs field.ErrorList
 	if err := r.validateCustomResourceName(); err != nil {

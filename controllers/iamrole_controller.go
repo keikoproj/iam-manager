@@ -40,7 +40,7 @@ import (
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 	"github.com/keikoproj/iam-manager/pkg/validation"
 )
 
@@ -71,7 +71,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}()
 
 	ctx := context.WithValue(context.Background(), requestId, uuid.New())
-	log := log.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
+	log := logging.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
 	log.WithValues("iamrole", req.NamespacedName)
 	log.Info("Start of the request")
 
@@ -126,7 +126,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 //HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
-	log := log.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
+	log := logging.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
 	ns := v1.Namespace{}
@@ -276,7 +276,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 //ConstructInput function constructs input for
 func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, roleName string) (*awsapi.IAMRoleRequest, *iammanagerv1alpha1.IamroleStatus, error) {
-	log := log.Logger(ctx, "controllers", "iamrole_controller", "ConstructInput")
+	log := logging.Logger(ctx, "controllers", "iamrole_controller", "ConstructInput")
 	log.WithValues("iamrole", iamRole.Name)
 	role, _ := json.Marshal(iamRole.Spec.PolicyDocument)
 
@@ -346,7 +346,7 @@ type StatusUpdatePredicate struct {
 
 // Update implements default UpdateEvent filter for validating generation change
 func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
-	log := log.Logger(context.Background(), "controllers", "iamrole_controller", "HandleReconcile")
+	log := logging.Logger(context.Background(), "controllers", "iamrole_controller", "HandleReconcile")
 	if e.MetaOld == nil {
 		log.Error(nil, "Update event has no old metadata", "event", e)
 		return false
@@ -382,7 +382,7 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 //UpdateStatus function updates the status based on the process step
 func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, requeueTime ...float64) (ctrl.Result, error) {
-	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
+	log := logging.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
 	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
 	if status.RoleARN == "" {
 		status.RoleARN = iamRole.Status.RoleARN
@@ -417,7 +417,7 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 
 //UpdateMeta function updates the metadata (mostly finalizers in this case)
 func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) {
-	log := log.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
+	log := logging.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
 	log = log.WithValues("iam_role_cr", iamRole.ObjectMeta.Name)
 
 	if err := r.Update(ctx, iamRole); err != nil {

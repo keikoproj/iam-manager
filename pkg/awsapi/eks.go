@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/eks/eksiface"
 
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 type EKSIface interface {
@@ -34,7 +34,7 @@ func NewEKS(region string) *EKS {
 
 //DescribeCluster function provides cluster info
 func (e *EKS) DescribeCluster(ctx context.Context, clusterName string) (*eks.DescribeClusterOutput, error) {
-	log := log.Logger(ctx, "awsapi", "eks", "DescribeCluster")
+	log := logging.Logger(ctx, "awsapi", "eks", "DescribeCluster")
 	log.WithValues("clusterName", clusterName)
 	log.V(1).Info("Initiating api call")
 

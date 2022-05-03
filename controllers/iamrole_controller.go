@@ -191,10 +191,8 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		saConsistent := false
 		saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
 		if saExists {
-			// Get the service account in kubernetes
-			saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName)
 			// If it exists, check the annotations are correct
-			if saSpec != nil {
+			if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName); saSpec != nil {
 				saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
 			}
 		}

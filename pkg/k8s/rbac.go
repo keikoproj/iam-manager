@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/keikoproj/iam-manager/pkg/log"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/keikoproj/iam-manager/pkg/log"
 )
 
 //CreateServiceAccount adds the service account

@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"text/template"
+
+	"k8s.io/api/core/v1"
+
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
-	"k8s.io/api/core/v1"
-	"strings"
-	"text/template"
 )
 
 //GetTrustPolicy constructs trust policy

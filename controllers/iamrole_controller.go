@@ -366,10 +366,7 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 	oldObj := e.ObjectOld.(*iammanagerv1alpha1.Iamrole)
 	newObj := e.ObjectNew.(*iammanagerv1alpha1.Iamrole)
 
-	if oldObj.Status != newObj.Status {
-		return false
-	}
-	return true
+	return oldObj.Status == newObj.Status
 }
 
 //SetupWithManager sets up manager with controller

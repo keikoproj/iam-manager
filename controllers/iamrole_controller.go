@@ -193,7 +193,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			// Get the service account in kubernetes
 			saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName)
 			// If it exists, check the annotations are correct
-			if saSpec != nil {
+			if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName); saSpec != nil {
 				saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
 			}
 		}
@@ -366,10 +366,7 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 	oldObj := e.ObjectOld.(*iammanagerv1alpha1.Iamrole)
 	newObj := e.ObjectNew.(*iammanagerv1alpha1.Iamrole)
 
-	if oldObj.Status != newObj.Status {
-		return false
-	}
-	return true
+	return oldObj.Status == newObj.Status
 }
 
 //SetupWithManager sets up manager with controller

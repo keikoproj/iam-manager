@@ -24,11 +24,8 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 	var statements []iammanagerv1alpha1.TrustPolicyStatement
 
 	// Is it IRSA use case
-	flag, saName := ParseIRSAAnnotation(ctx, role)
-
-	//Construct AssumeRoleWithWebIdentity
-	if flag {
-
+	// Construct AssumeRoleWithWebIdentity
+	if flag, saName := ParseIRSAAnnotation(ctx, role); flag {
 		hostPath := fmt.Sprintf("%s", strings.TrimPrefix(config.Props.OIDCIssuerUrl(), "https://"))
 		statement := iammanagerv1alpha1.TrustPolicyStatement{
 			Effect: "Allow",

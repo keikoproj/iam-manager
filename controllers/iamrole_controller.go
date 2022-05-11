@@ -20,27 +20,28 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/pborman/uuid"
+	v1 "k8s.io/api/core/v1"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/log"
 	"github.com/keikoproj/iam-manager/pkg/validation"
-	"github.com/pborman/uuid"
-	"k8s.io/api/core/v1"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/tools/record"
-	"math"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"strings"
-	"time"
-
-	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -189,8 +190,8 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		// If IRSA is enabled, make sure the service account has the needed annotations
 		saConsistent := false
-		saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if saExists {
+		if saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saExists {
+			// Get the service account in kubernetes
 			// If it exists, check the annotations are correct
 			if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName); saSpec != nil {
 				saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
@@ -257,8 +258,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
-		saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole)
-		if saFlag {
+		if saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saFlag {
 			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN, config.Props.IsIRSARegionalEndpointDisabled()); err != nil {
 				log.Error(err, "error in updating service account for IRSA role")
 				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())

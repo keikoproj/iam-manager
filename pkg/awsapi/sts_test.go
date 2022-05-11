@@ -3,14 +3,16 @@ package awsapi_test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/golang/mock/gomock"
+	"gopkg.in/check.v1"
+
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	mock_awsapi "github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
-	"gopkg.in/check.v1"
-	"testing"
 )
 
 type STSAPISuite struct {

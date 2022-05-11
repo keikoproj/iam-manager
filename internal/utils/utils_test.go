@@ -643,15 +643,6 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithPrivilegedNamespaceButexist
 	c.Assert(err, check.IsNil)
 }
 
-func assertPanic(t *testing.T, f func()) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-	f()
-}
-
 func (s *UtilsTestSuite) TestGenerateNameFunctionBadTemplate(c *check.C) {
 	cm := &v12.ConfigMap{
 		Data: map[string]string{

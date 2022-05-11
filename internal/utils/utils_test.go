@@ -3,14 +3,16 @@ package utils_test
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
 	"github.com/golang/mock/gomock"
-	"github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/internal/utils"
 	"gopkg.in/check.v1"
 	v12 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
+
+	"github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/utils"
 )
 
 type UtilsTestSuite struct {

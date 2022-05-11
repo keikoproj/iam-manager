@@ -7,11 +7,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net/url"
+
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/log"
-
-	"net/url"
 )
 
 //GetIdpServerCertThumbprint gets the Thumbbprint of the certificate which will be used to generate OIDC tokens

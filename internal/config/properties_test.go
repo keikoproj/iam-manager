@@ -2,11 +2,12 @@ package config
 
 import (
 	"context"
+	"strings"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"gopkg.in/check.v1"
 	"k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 type PropertiesSuite struct {

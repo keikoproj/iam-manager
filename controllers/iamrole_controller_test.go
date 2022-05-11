@@ -1,11 +1,12 @@
 package controllers_test
 
 import (
-	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	. "github.com/keikoproj/iam-manager/controllers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+
+		iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
+	. "github.com/keikoproj/iam-manager/controllers"
 )
 
 var _ = Describe("IamroleController", func() {

@@ -18,8 +18,6 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/pkg/log"
 	"strings"
 
 	"github.com/keikoproj/iam-manager/pkg/k8s"
@@ -31,6 +29,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/pkg/log"
 )
 
 const (

@@ -10,20 +10,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
+	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 //ValidateIAMPolicyAction validates policy action
 func ValidateIAMPolicyAction(ctx context.Context, pDoc v1alpha1.PolicyDocument) *field.Error {
-	log := log.Logger(ctx, "pkg.validation", "ValidateIAMPolicyAction")
+	log := logging.Logger(ctx, "pkg.validation", "ValidateIAMPolicyAction")
 
 	//Check the incoming policy actions
 	for _, statement := range pDoc.Statement {
@@ -73,7 +72,7 @@ func ValidateIAMPolicyAction(ctx context.Context, pDoc v1alpha1.PolicyDocument) 
 
 //ValidateIAMPolicyResource validates policy resource
 func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument) *field.Error {
-	log := log.Logger(ctx, "pkg.validation", "ValidateIAMPolicyResource")
+	log := logging.Logger(ctx, "pkg.validation", "ValidateIAMPolicyResource")
 
 	//Check the incoming policy resource
 	for _, statement := range pDoc.Statement {
@@ -103,7 +102,7 @@ func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument
 
 //CompareRole function compares input role to target role
 func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole *iam.GetRoleOutput, targetRolePolicy string) bool {
-	log := log.Logger(ctx, "pkg.validation", "ComparePolicy")
+	log := logging.Logger(ctx, "pkg.validation", "ComparePolicy")
 
 	// Step 1: Compare the permission policy
 	if !ComparePermissionPolicy(ctx, request.PermissionPolicy, targetRolePolicy) {
@@ -145,7 +144,7 @@ func CompareRoleIRSA(ctx context.Context, sa *v1.ServiceAccount, props config.Pr
 
 //ComparePermissionPolicy compares role policy from request and response
 func ComparePermissionPolicy(ctx context.Context, request string, target string) bool {
-	log := log.Logger(ctx, "pkg.validation", "ComparePermissionPolicy")
+	log := logging.Logger(ctx, "pkg.validation", "ComparePermissionPolicy")
 
 	d, _ := url.QueryUnescape(target)
 	dest := v1alpha1.PolicyDocument{}
@@ -170,7 +169,7 @@ func ComparePermissionPolicy(ctx context.Context, request string, target string)
 
 //CompareAssumeRolePolicy compares assume role policy from request and response
 func CompareAssumeRolePolicy(ctx context.Context, request string, target string) bool {
-	log := log.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
+	log := logging.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
 	a, _ := url.QueryUnescape(target)
 	destAssume := v1alpha1.AssumeRolePolicyDocument{}
@@ -195,7 +194,7 @@ func CompareAssumeRolePolicy(ctx context.Context, request string, target string)
 
 //CompareTags compares tags from request and response
 func CompareTags(ctx context.Context, request map[string]string, target []*iam.Tag) bool {
-	log := log.Logger(ctx, "pkg.validation", "CompareTags")
+	log := logging.Logger(ctx, "pkg.validation", "CompareTags")
 	log.Info("start CompareTags")
 
 	var targetTags map[string]string

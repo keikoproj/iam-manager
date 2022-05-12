@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -14,14 +15,13 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/record"
-	"k8s.io/klog"
-
-	"github.com/keikoproj/iam-manager/pkg/log"
-	"k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 type Client struct {
@@ -102,7 +102,7 @@ type Iface interface {
 
 //IamrolesCount function lists the "Iamrole" for a provided namespace
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
-	log := log.Logger(ctx, "k8s", "client", "IamrolesCount")
+	log := logging.Logger(ctx, "k8s", "client", "IamrolesCount")
 	log.WithValues("namespace", ns)
 	log.V(1).Info("list api call")
 	iamCR := schema.GroupVersionResource{
@@ -121,7 +121,7 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 }
 
 func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap {
-	log := log.Logger(ctx, "k8s", "client", "GetConfigMap")
+	log := logging.Logger(ctx, "k8s", "client", "GetConfigMap")
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving config map")
 	res, err := c.cl.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
@@ -135,7 +135,7 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 
 //GetNamespace gets the namespace metadata. This will be used to validate if the namespace is annotated for privileged namespace.
 func (c *Client) GetNamespace(ctx context.Context, ns string) (*v1.Namespace, error) {
-	log := log.Logger(ctx, "k8s", "client", "GetNamespace")
+	log := logging.Logger(ctx, "k8s", "client", "GetNamespace")
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving Namespace")
 	resp := &v1.Namespace{}
@@ -158,7 +158,7 @@ func (c *Client) ClientInterface() kubernetes.Interface {
 
 // GetConfigMapInformer returns shared informer for given config map
 func GetConfigMapInformer(ctx context.Context, nsName string, cmName string) cache.SharedIndexInformer {
-	log := log.Logger(context.Background(), "pkg.k8s.client", "GetConfigMapInformer")
+	log := logging.Logger(context.Background(), "pkg.k8s.client", "GetConfigMapInformer")
 	clientset, err := NewK8sClient()
 	if err != nil {
 		log.Error(err, "failed to get clientset")
@@ -176,7 +176,7 @@ func GetConfigMapInformer(ctx context.Context, nsName string, cmName string) cac
 
 //SetUpEventHandler sets up event handler with client-go recorder instead of creating events directly
 func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
-	log := log.Logger(ctx, "k8s", "client", "SetUpEventHandler")
+	log := logging.Logger(ctx, "k8s", "client", "SetUpEventHandler")
 	//This was re-written based on job-controller in kuberentest repo
 	//For more info refer: https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/job/job_controller.go
 	eventBroadcaster := record.NewBroadcaster()
@@ -188,7 +188,7 @@ func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
 
 //GetServiceAccount returns the service account with a given name in a given namespace
 func (c *Client) GetServiceAccount(ctx context.Context, ns string, name string) *v1.ServiceAccount {
-	log := log.Logger(ctx, "k8s", "client", "GetServiceAccount")
+	log := logging.Logger(ctx, "k8s", "client", "GetServiceAccount")
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving service account")
 	sa := &v1.ServiceAccount{}

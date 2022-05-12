@@ -26,13 +26,14 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	// +kubebuilder:scaffold:imports
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 var (
@@ -56,8 +57,8 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Enable Debug?")
 	flag.Parse()
 
-	log.New()
-	log := log.Logger(context.Background(), "main", "setup")
+	logging.New()
+	log := logging.Logger(context.Background(), "main", "setup")
 
 	go config.RunConfigMapInformer(context.Background())
 
@@ -112,7 +113,7 @@ func main() {
 
 //handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
 func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
-	log := log.Logger(ctx, "main", "handleOIDCSetupForIRSA")
+	log := logging.Logger(ctx, "main", "handleOIDCSetupForIRSA")
 
 	//Creating OIDC provider if config map has an entry
 

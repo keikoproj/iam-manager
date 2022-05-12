@@ -11,14 +11,14 @@ import (
 
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 //GetIdpServerCertThumbprint gets the Thumbbprint of the certificate which will be used to generate OIDC tokens
 //This was taken from AWS repo https://github.com/aws/containers-roadmap/issues/23#issuecomment-530887531 comment
 // https://play.golang.org/p/iSobu11ahUi
 func GetIdpServerCertThumbprint(ctx context.Context, url string) (string, error) {
-	log := log.Logger(ctx, "internal.utils.oidc", "GetIdpServerCertThumbprint")
+	log := logging.Logger(ctx, "internal.utils.oidc", "GetIdpServerCertThumbprint")
 	log.Info("Calculating Idp Server cert Thumbprint")
 
 	thumbprint := ""
@@ -55,7 +55,7 @@ func GetIdpServerCertThumbprint(ctx context.Context, url string) (string, error)
 
 //parseURL verifies the url and returns hostname and port
 func parseURL(ctx context.Context, idpUrl string) (string, error) {
-	log := log.Logger(ctx, "internal.utils.oidc", "parseURL")
+	log := logging.Logger(ctx, "internal.utils.oidc", "parseURL")
 	resp, err := url.Parse(idpUrl)
 	if err != nil {
 		log.Error(err, "unable to parse the idp url")

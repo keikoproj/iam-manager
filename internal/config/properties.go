@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 var (
@@ -40,7 +40,7 @@ type Properties struct {
 }
 
 func init() {
-	log := log.Logger(context.Background(), "internal.config.properties", "init")
+	log := logging.Logger(context.Background(), "internal.config.properties", "init")
 
 	if os.Getenv("LOCAL") != "" {
 		err := LoadProperties("LOCAL")
@@ -69,7 +69,7 @@ func init() {
 }
 
 func LoadProperties(env string, cm ...*v1.ConfigMap) error {
-	log := log.Logger(context.Background(), "internal.config.properties", "LoadProperties")
+	log := logging.Logger(context.Background(), "internal.config.properties", "LoadProperties")
 
 	// for local testing
 	if env != "" {
@@ -295,7 +295,7 @@ func (p *Properties) DefaultTrustPolicy() string {
 }
 
 func RunConfigMapInformer(ctx context.Context) {
-	log := log.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
+	log := logging.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
 	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
 	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: updateProperties,
@@ -307,7 +307,7 @@ func RunConfigMapInformer(ctx context.Context) {
 }
 
 func updateProperties(old, new interface{}) {
-	log := log.Logger(context.Background(), "internal.config.properties", "updateProperties")
+	log := logging.Logger(context.Background(), "internal.config.properties", "updateProperties")
 	oldCM := old.(*v1.ConfigMap)
 	newCM := new.(*v1.ConfigMap)
 	if oldCM.ResourceVersion == newCM.ResourceVersion {

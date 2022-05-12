@@ -9,12 +9,12 @@ import (
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/keikoproj/iam-manager/pkg/log"
+	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
 //CreateServiceAccount adds the service account
 func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string, roleARN string, regionalEndpointDisabled bool) error {
-	log := log.Logger(ctx, "pkg.k8s", "rbac", "CreateOrUpdateServiceAccount")
+	log := logging.Logger(ctx, "pkg.k8s", "rbac", "CreateOrUpdateServiceAccount")
 
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: v1.ObjectMeta{

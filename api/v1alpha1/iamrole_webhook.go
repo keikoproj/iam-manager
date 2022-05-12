@@ -26,7 +26,6 @@ import (
 	validationutils "k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/keikoproj/iam-manager/internal/config"
@@ -37,9 +36,6 @@ import (
 const (
 	version = "2012-10-17"
 )
-
-// log is for logging in this package.
-var iamrolelog = logf.Log.WithName("iamrole-resource")
 
 var wClient *k8s.Client
 

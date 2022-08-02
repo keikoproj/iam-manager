@@ -196,7 +196,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 				// If it exists, check the annotations are correct
 				if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saNames[i]); saSpec != nil {
 					saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
-					if saConsistent {
+					if !saConsistent {
 						break
 					}
 				}

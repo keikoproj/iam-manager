@@ -25,21 +25,24 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 
 	// Is it IRSA use case
 	// Construct AssumeRoleWithWebIdentity
-	if flag, saName := ParseIRSAAnnotation(ctx, role); flag {
-		hostPath := fmt.Sprintf("%s", strings.TrimPrefix(config.Props.OIDCIssuerUrl(), "https://"))
-		statement := iammanagerv1alpha1.TrustPolicyStatement{
-			Effect: "Allow",
-			Action: "sts:AssumeRoleWithWebIdentity",
-			Principal: iammanagerv1alpha1.Principal{
-				Federated: fmt.Sprintf("arn:aws:iam::%s:oidc-provider/%s", config.Props.AWSAccountID(), hostPath),
-			},
-			Condition: &iammanagerv1alpha1.Condition{
-				StringEquals: map[string]string{
-					fmt.Sprintf("%s:sub", hostPath): fmt.Sprintf("system:serviceaccount:%s:%s", role.ObjectMeta.Namespace, saName),
+	if flag, saNames := ParseIRSAAnnotation(ctx, role); flag {
+		for i := 0; i < len(saNames); i++ {
+			saName := saNames[i]
+			hostPath := fmt.Sprintf("%s", strings.TrimPrefix(config.Props.OIDCIssuerUrl(), "https://"))
+			statement := iammanagerv1alpha1.TrustPolicyStatement{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: iammanagerv1alpha1.Principal{
+					Federated: fmt.Sprintf("arn:aws:iam::%s:oidc-provider/%s", config.Props.AWSAccountID(), hostPath),
 				},
-			},
+				Condition: &iammanagerv1alpha1.Condition{
+					StringEquals: map[string]string{
+						fmt.Sprintf("%s:sub", hostPath): fmt.Sprintf("system:serviceaccount:%s:%s", role.ObjectMeta.Namespace, saName),
+					},
+				},
+			}
+			statements = append(statements, statement)
 		}
-		statements = append(statements, statement)
 
 	} else {
 		// NON - IRSA which should cover AssumeRole usecase

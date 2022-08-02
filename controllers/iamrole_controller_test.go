@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
-		iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
+	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	. "github.com/keikoproj/iam-manager/controllers"
 )
 

@@ -190,11 +190,16 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		// If IRSA is enabled, make sure the service account has the needed annotations
 		saConsistent := false
-		if saExists, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saExists {
-			// Get the service account in kubernetes
-			// If it exists, check the annotations are correct
-			if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saName); saSpec != nil {
-				saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
+		if saExists, saNames := utils.ParseIRSAAnnotation(ctx, iamRole); saExists {
+			for i := 0; i < len(saNames); i++ {
+				// Get the service account in kubernetes
+				// If it exists, check the annotations are correct
+				if saSpec := k8s.NewK8sManagerClient(r.Client).GetServiceAccount(ctx, iamRole.Namespace, saNames[i]); saSpec != nil {
+					saConsistent = validation.CompareRoleIRSA(ctx, saSpec, *config.Props)
+					if !saConsistent {
+						break
+					}
+				}
 			}
 		}
 		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) && saConsistent {
@@ -258,11 +263,13 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 
 		//OK. Successful!!
 		// Is this IRSA role? If yes, Create/update Service Account with required annotation
-		if saFlag, saName := utils.ParseIRSAAnnotation(ctx, iamRole); saFlag {
-			if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saName, iamRole.Namespace, resp.RoleARN, config.Props.IsIRSARegionalEndpointDisabled()); err != nil {
-				log.Error(err, "error in updating service account for IRSA role")
-				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
-				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+		if saFlag, saNames := utils.ParseIRSAAnnotation(ctx, iamRole); saFlag {
+			for i := 0; i < len(saNames); i++ {
+				if err := k8s.NewK8sManagerClient(r.Client).CreateOrUpdateServiceAccount(ctx, saNames[i], iamRole.Namespace, resp.RoleARN, config.Props.IsIRSARegionalEndpointDisabled()); err != nil {
+					log.Error(err, "error in updating service account for IRSA role")
+					r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update service account for IRSA role due to error "+err.Error())
+					return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+				}
 			}
 		}
 

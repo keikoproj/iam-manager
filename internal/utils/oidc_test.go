@@ -87,7 +87,7 @@ func (s *OIDCTestSuite) TestParseIRSAAnnotationOtherAnnotations(c *check.C) {
 	}
 	flag, saNames := utils.ParseIRSAAnnotation(s.ctx, input)
 	c.Assert(flag, check.Equals, false)
-	c.Assert(saNames[0], check.Equals, "default")
+	c.Assert(len(saNames), check.Equals, 0)
 }
 
 func (s *OIDCTestSuite) TestGetIdpServerCertThumbprintSuccess(c *check.C) {

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
@@ -78,6 +79,14 @@ func parseURL(ctx context.Context, idpUrl string) (string, error) {
 }
 
 //ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
-func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, string) {
-	return parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
+func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, []string) {
+	var exists, annoStr = parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
+	if exists {
+		array := strings.Split(annoStr, ",")
+		for i := 0; i < len(array); i++ {
+			array[i] = strings.Trim(array[i], " ")
+		}
+		return exists, array
+	}
+	return false, []string{}
 }

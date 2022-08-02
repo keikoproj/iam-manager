@@ -54,9 +54,26 @@ func (s *OIDCTestSuite) TestParseIRSAAnnotationValid(c *check.C) {
 			},
 		},
 	}
-	flag, saName := utils.ParseIRSAAnnotation(s.ctx, input)
+	flag, saNames := utils.ParseIRSAAnnotation(s.ctx, input)
 	c.Assert(flag, check.Equals, true)
-	c.Assert(saName, check.Equals, "default")
+	c.Assert(saNames[0], check.Equals, "default")
+}
+
+func (s *OIDCTestSuite) TestParseIRSAAnnotationValidArray(c *check.C) {
+	input := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "iam-role",
+			Namespace: "k8s-namespace-dev",
+			Annotations: map[string]string{
+				config.IRSAAnnotation: "default, my-sa",
+			},
+		},
+	}
+	flag, saNames := utils.ParseIRSAAnnotation(s.ctx, input)
+	c.Assert(flag, check.Equals, true)
+	c.Assert(saNames[0], check.Equals, "default")
+	c.Assert(saNames[1], check.Equals, "my-sa")
+
 }
 
 func (s *OIDCTestSuite) TestParseIRSAAnnotationOtherAnnotations(c *check.C) {
@@ -68,9 +85,9 @@ func (s *OIDCTestSuite) TestParseIRSAAnnotationOtherAnnotations(c *check.C) {
 			},
 		},
 	}
-	flag, saName := utils.ParseIRSAAnnotation(s.ctx, input)
+	flag, saNames := utils.ParseIRSAAnnotation(s.ctx, input)
 	c.Assert(flag, check.Equals, false)
-	c.Assert(saName, check.HasLen, 0)
+	c.Assert(saNames[0], check.HasLen, 1)
 }
 
 func (s *OIDCTestSuite) TestGetIdpServerCertThumbprintSuccess(c *check.C) {

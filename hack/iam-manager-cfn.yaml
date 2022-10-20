@@ -15,10 +15,11 @@ Parameters:
   ParamK8sTrustRole:
     Description: Role to be assumed in case of kiam
     Type: String
+    Default: ""
   ParamK8sClusterName:
     Description: Cluster Name to be included in the names
     Type: String
-    Deafult: "cluster"
+    Default: "cluster"
   AllowedPolicyList:
     Description: Allowed IAM policy list
     Type: CommaDelimitedList

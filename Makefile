@@ -7,7 +7,7 @@ KUBEBUILDER_VER  ?= 2.2.0
 KUBEBUILDER_ARCH ?= amd64
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false,crdVersions=v1"
 
 KUBECONFIG                  ?= $(HOME)/.kube/config
 LOCAL                       ?= true

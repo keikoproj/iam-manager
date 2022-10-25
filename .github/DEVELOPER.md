@@ -2,7 +2,7 @@
 
 
 ### Requirements
-* Go1.13
+* Go1.17
 * Docker
 * Your favorite IDE
 * kubebuilder

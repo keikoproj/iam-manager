@@ -42,6 +42,7 @@ func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string
 		}
 		log.Info("Service account already exists. Trying to update", "serviceAccount", sa.Name, "namespace", ns)
 		annotationByte, _ := json.Marshal(sa.Annotations)
+		// Use patch to avoid creating new token
 		err = c.rCl.Patch(ctx, sa, client.RawPatch(types.MergePatchType, annotationByte))
 		if err != nil {
 			msg := fmt.Sprintf("Failed to update service account %s due to %v", sa.Name, err)

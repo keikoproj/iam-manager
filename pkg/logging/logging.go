@@ -12,7 +12,7 @@ import (
 
 //Get the request id
 
-//New function sets the logging level based on the flag and also sets it with controller
+// New function sets the logging level based on the flag and also sets it with controller
 func New(debug ...bool) {
 	enabled := false
 	if len(debug) == 0 {
@@ -25,7 +25,7 @@ func New(debug ...bool) {
 	}))
 }
 
-//Logger with
+// Logger with
 func Logger(ctx context.Context, names ...string) logr.Logger {
 	logk := ctrl.Log.Logger
 	for _, name := range names {

@@ -124,7 +124,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return successRequeueIt()
 }
 
-//HandleReconcile function handles all the reconcile
+// HandleReconcile function handles all the reconcile
 func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Request, iamRole *iammanagerv1alpha1.Iamrole) (ctrl.Result, error) {
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
 	log = log.WithValues("iam_role_cr", iamRole.Name)
@@ -281,7 +281,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	return successRequeueIt()
 }
 
-//ConstructInput function constructs input for
+// ConstructInput function constructs input for
 func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, roleName string) (*awsapi.IAMRoleRequest, *iammanagerv1alpha1.IamroleStatus, error) {
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "ConstructInput")
 	log.WithValues("iamrole", iamRole.Name)
@@ -376,8 +376,8 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 	return oldObj.Status == newObj.Status
 }
 
-//SetupWithManager sets up manager with controller
-//GenerationChangedPredicate will take care of not allowing to trigger reconcile for every time status update happens
+// SetupWithManager sets up manager with controller
+// GenerationChangedPredicate will take care of not allowing to trigger reconcile for every time status update happens
 func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	//Lets try to predicate based on Status retry count
@@ -387,7 +387,7 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-//UpdateStatus function updates the status based on the process step
+// UpdateStatus function updates the status based on the process step
 func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, requeueTime ...float64) (ctrl.Result, error) {
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
 	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
@@ -422,7 +422,7 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 	return ctrl.Result{RequeueAfter: time.Duration(requeueTime[0]) * time.Millisecond}, nil
 }
 
-//UpdateMeta function updates the metadata (mostly finalizers in this case)
+// UpdateMeta function updates the metadata (mostly finalizers in this case)
 func (r *IamroleReconciler) UpdateMeta(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) {
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "UpdateMeta")
 	log = log.WithValues("iam_role_cr", iamRole.ObjectMeta.Name)
@@ -445,7 +445,7 @@ func ignoreNotFound(err error) error {
 	return err
 }
 
-//successRequeueIt function requeues it after defined time
+// successRequeueIt function requeues it after defined time
 func successRequeueIt() (ctrl.Result, error) {
 
 	return ctrl.Result{RequeueAfter: time.Duration(config.Props.ControllerDesiredFrequency()) * time.Second}, nil

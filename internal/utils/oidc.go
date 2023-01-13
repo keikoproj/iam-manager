@@ -15,8 +15,8 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
-//GetIdpServerCertThumbprint gets the Thumbbprint of the certificate which will be used to generate OIDC tokens
-//This was taken from AWS repo https://github.com/aws/containers-roadmap/issues/23#issuecomment-530887531 comment
+// GetIdpServerCertThumbprint gets the Thumbbprint of the certificate which will be used to generate OIDC tokens
+// This was taken from AWS repo https://github.com/aws/containers-roadmap/issues/23#issuecomment-530887531 comment
 // https://play.golang.org/p/iSobu11ahUi
 func GetIdpServerCertThumbprint(ctx context.Context, url string) (string, error) {
 	log := logging.Logger(ctx, "internal.utils.oidc", "GetIdpServerCertThumbprint")
@@ -54,7 +54,7 @@ func GetIdpServerCertThumbprint(ctx context.Context, url string) (string, error)
 	return thumbprint, nil
 }
 
-//parseURL verifies the url and returns hostname and port
+// parseURL verifies the url and returns hostname and port
 func parseURL(ctx context.Context, idpUrl string) (string, error) {
 	log := logging.Logger(ctx, "internal.utils.oidc", "parseURL")
 	resp, err := url.Parse(idpUrl)
@@ -78,7 +78,7 @@ func parseURL(ctx context.Context, idpUrl string) (string, error) {
 	return hostName, nil
 }
 
-//ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
+// ParseIRSAAnnotation parses IAM role to see if the role to be used in IRSA method
 func ParseIRSAAnnotation(ctx context.Context, iamRole *v1alpha1.Iamrole) (bool, []string) {
 	var exists, annoStr = parseAnnotations(ctx, config.IRSAAnnotation, iamRole.Annotations)
 	if exists {

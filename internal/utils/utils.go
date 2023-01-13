@@ -16,7 +16,7 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
-//GetTrustPolicy constructs trust policy
+// GetTrustPolicy constructs trust policy
 func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (string, error) {
 	log := logging.Logger(ctx, "internal.utils.utils", "GetTrustPolicy")
 	tPolicy := role.Spec.AssumeRolePolicyDocument
@@ -80,7 +80,7 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 	return string(output), nil
 }
 
-//Fields Template fields
+// Fields Template fields
 type Fields struct {
 	AccountID     string
 	ClusterName   string
@@ -88,7 +88,7 @@ type Fields struct {
 	Region        string
 }
 
-//DefaultTrustPolicy converts the config map variable string to v1alpha1.AssumeRolePolicyDocument and executes Go Template if any
+// DefaultTrustPolicy converts the config map variable string to v1alpha1.AssumeRolePolicyDocument and executes Go Template if any
 func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (*iammanagerv1alpha1.AssumeRolePolicyDocument, error) {
 	log := logging.Logger(ctx, "internal.utils.utils", "defaultTrustPolicy")
 	if trustPolicyDoc == "" {
@@ -171,22 +171,22 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 	return buf.String(), nil
 }
 
-//parseAnnotations parses annotations attached to iam role resource and returns the value if found
+// parseAnnotations parses annotations attached to iam role resource and returns the value if found
 // input: Name of the annotation, IamRole resource
 func parseAnnotations(ctx context.Context, name string, annotations map[string]string) (bool, string) {
-	log := logging.Logger(ctx, "internal.utils.utils", "ParseIRSAAnnotation")
+	log := logging.Logger(ctx, "internal.utils.utils", "parseAnnotations")
 	flag := false
 	response := ""
 	//Look for the specific annotation in iam role CR
 	if val, ok := annotations[name]; ok {
 		flag = true
 		response = val
-		log.Info("Annotation found", "name", val)
+		log.Info("Annotation found", "name", name, "value", val)
 	}
 	return flag, response
 }
 
-//ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
+// ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
 func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 
 	flag, value := parseAnnotations(ctx, config.IamManagerPrivilegedNamespaceAnnotation, ns.Annotations)
@@ -196,12 +196,12 @@ func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 	return false
 }
 
-//ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
+// ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
 func ParseTagsAnnotation(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) (bool, string) {
 	return parseAnnotations(ctx, config.IamManagerTagsAnnotation, iamRole.Annotations)
 }
 
-//ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
+// ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
 func ParseIRSARegionalEndpointAnnotation(ctx context.Context, sa *v1.ServiceAccount) (bool, string) {
 	return parseAnnotations(ctx, config.IRSARegionalEndpointAnnotation, sa.Annotations)
 }

@@ -111,7 +111,7 @@ func main() {
 	}
 }
 
-//handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
+// handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
 func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
 	log := logging.Logger(ctx, "main", "handleOIDCSetupForIRSA")
 

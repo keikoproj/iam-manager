@@ -30,7 +30,7 @@ type Client struct {
 	rCl client.Client
 }
 
-//NewK8sClient gets the new k8s go client
+// NewK8sClient gets the new k8s go client
 func NewK8sClient() (*Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -56,7 +56,7 @@ func NewK8sClient() (*Client, error) {
 	return cl, nil
 }
 
-//NewK8sClient gets the new k8s go client
+// NewK8sClient gets the new k8s go client
 func NewK8sClientDoOrDie() *Client {
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -82,7 +82,7 @@ func NewK8sClientDoOrDie() *Client {
 	return cl
 }
 
-//NewK8sManagerClient func will be used in future and all others should migrate to this
+// NewK8sManagerClient func will be used in future and all others should migrate to this
 func NewK8sManagerClient(client client.Client) *Client {
 	cl := &Client{
 		rCl: client,
@@ -91,7 +91,7 @@ func NewK8sManagerClient(client client.Client) *Client {
 
 }
 
-//Iface defines required functions to be implemented by receivers
+// Iface defines required functions to be implemented by receivers
 type Iface interface {
 	IamrolesCount(ctx context.Context, ns string)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
@@ -100,7 +100,7 @@ type Iface interface {
 	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
 }
 
-//IamrolesCount function lists the "Iamrole" for a provided namespace
+// IamrolesCount function lists the "Iamrole" for a provided namespace
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 	log := logging.Logger(ctx, "k8s", "client", "IamrolesCount")
 	log.WithValues("namespace", ns)
@@ -133,7 +133,7 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	return res
 }
 
-//GetNamespace gets the namespace metadata. This will be used to validate if the namespace is annotated for privileged namespace.
+// GetNamespace gets the namespace metadata. This will be used to validate if the namespace is annotated for privileged namespace.
 func (c *Client) GetNamespace(ctx context.Context, ns string) (*v1.Namespace, error) {
 	log := logging.Logger(ctx, "k8s", "client", "GetNamespace")
 	log.WithValues("namespace", ns)
@@ -174,7 +174,7 @@ func GetConfigMapInformer(ctx context.Context, nsName string, cmName string) cac
 	return cmInformer
 }
 
-//SetUpEventHandler sets up event handler with client-go recorder instead of creating events directly
+// SetUpEventHandler sets up event handler with client-go recorder instead of creating events directly
 func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
 	log := logging.Logger(ctx, "k8s", "client", "SetUpEventHandler")
 	//This was re-written based on job-controller in kuberentest repo
@@ -186,7 +186,7 @@ func (c *Client) SetUpEventHandler(ctx context.Context) record.EventRecorder {
 	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "iam-manager"})
 }
 
-//GetServiceAccount returns the service account with a given name in a given namespace
+// GetServiceAccount returns the service account with a given name in a given namespace
 func (c *Client) GetServiceAccount(ctx context.Context, ns string, name string) *v1.ServiceAccount {
 	log := logging.Logger(ctx, "k8s", "client", "GetServiceAccount")
 	log.WithValues("namespace", ns)

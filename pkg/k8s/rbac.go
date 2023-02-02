@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	corev1 "k8s.io/api/core/v1"
 	apierr "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
@@ -41,10 +40,12 @@ func (c *Client) CreateOrUpdateServiceAccount(ctx context.Context, saName string
 			log.Error(err, msg)
 			return errors.New(msg)
 		}
-		log.Info("Service account already exists. Trying to update", "serviceAccount", sa.Name, "namespace", ns)
 		annotationByte, _ := json.Marshal(sa.Annotations)
+		patchStr := fmt.Sprintf(`{"metadata":{"annotations":%s}}`, string(annotationByte))
+		log.Info("Service account already exists. Trying to update", "serviceAccount",
+			sa.Name, "namespace", ns, "annotation", patchStr)
 		// Use patch to avoid creating new token each reconcile
-		err = c.rCl.Patch(ctx, sa, client.RawPatch(types.MergePatchType, annotationByte))
+		err = c.rCl.Patch(ctx, sa, client.RawPatch(types.MergePatchType, []byte(patchStr)))
 		if err != nil {
 			msg := fmt.Sprintf("Failed to update service account %s due to %v", sa.Name, err)
 			log.Error(err, msg)

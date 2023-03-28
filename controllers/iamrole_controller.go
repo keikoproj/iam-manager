@@ -45,10 +45,10 @@ import (
 )
 
 const (
-	finalizerName = "iamrole.finalizers.iammanager.keikoproj.io"
-	requestId     = "request_id"
-	//2 minutes
-	maxWaitTime = 120000
+	finalizerName      = "iamrole.finalizers.iammanager.keikoproj.io"
+	requestId          = "request_id"
+	maxWaitTime        = 300000 // 5 minutes
+	defaultRequeueTime = 3000   // 30s
 )
 
 // IamroleReconciler reconciles a Iamrole object
@@ -106,7 +106,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error})
+				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, defaultRequeueTime)
 				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
 
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
@@ -157,11 +157,28 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to construct iam role due to error "+err.Error())
 			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 		}
-		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: status.RoleName, ErrorDescription: status.ErrorDescription, State: status.State, LastUpdatedTimestamp: metav1.Now()})
+		return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: status.RoleName, ErrorDescription: status.ErrorDescription, State: status.State, LastUpdatedTimestamp: metav1.Now()}, defaultRequeueTime)
 	}
 
-	var requeueTime float64
+	requeueTime := float64(defaultRequeueTime) // default requeue time would be 3000ms
+
 	switch iamRole.Status.State {
+	case iammanagerv1alpha1.Error:
+		// Needs to check if it is just error retrial or user changed anything
+		// if user modified the input we shouldn't wait and directly fallthrough
+
+		if iamRole.Status.RetryCount != 0 {
+			//Lets do exponential back off
+			// 2^x
+			waitTime := math.Pow(2, float64(iamRole.Status.RetryCount+1)) * 100
+			requeueTime = waitTime
+			if waitTime > maxWaitTime {
+				requeueTime = maxWaitTime
+			}
+			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", requeueTime)
+		}
+		fallthrough
+
 	case iammanagerv1alpha1.Ready:
 
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
@@ -173,7 +190,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 
 		}
 
@@ -184,7 +201,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			log.Error(err, "error in verifying the status of the iam role with state of the world")
 			log.Info("retry count error", "count", iamRole.Status.RetryCount)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "Unable to create/update iam role due to error "+err.Error())
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, 3000)
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, RoleName: roleName, ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, requeueTime)
 
 		}
 
@@ -204,27 +221,12 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		}
 		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) && saConsistent {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready})
+			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready}, requeueTime)
 
 			return successRequeueIt()
 		}
 		fallthrough
 
-	case iammanagerv1alpha1.Error:
-		// Needs to check if it is just error retrial or user changed anything
-		// if user modified the input we shouldn't wait and directly fallthrough
-
-		if iamRole.Status.RetryCount != 0 {
-			//Lets do exponential back off
-			// 2^x
-			waitTime := math.Pow(2, float64(iamRole.Status.RetryCount+1)) * 100
-			requeueTime = waitTime
-			if waitTime > maxWaitTime {
-				requeueTime = maxWaitTime
-			}
-			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", requeueTime)
-		}
-		fallthrough
 	case "", iammanagerv1alpha1.PolicyNotAllowed, iammanagerv1alpha1.RolesMaxLimitReached:
 		//Validate Number of successful IAM roles
 
@@ -239,7 +241,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
 			log.Error(errors.New(errMsg), errMsg)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()})
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
 		}
 		fallthrough
 	default:
@@ -274,7 +276,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
-		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready})
+		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready}, requeueTime)
 	}
 	log.Info("Successfully reconciled")
 
@@ -388,9 +390,14 @@ func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // UpdateStatus function updates the status based on the process step
-func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, requeueTime ...float64) (ctrl.Result, error) {
+func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, status iammanagerv1alpha1.IamroleStatus, requeueTime float64) (ctrl.Result, error) {
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "UpdateStatus")
 	log.WithValues("iamrole", fmt.Sprintf("k8s-%s", iamRole.ObjectMeta.Namespace))
+
+	// if wait time is not specified, requeue for defaultTime it after provided time
+	if requeueTime == 0 {
+		requeueTime = defaultRequeueTime
+	}
 	if status.RoleARN == "" {
 		status.RoleARN = iamRole.Status.RoleARN
 	}
@@ -413,13 +420,8 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 		return successRequeueIt()
 	}
 
-	//if wait time is specified, requeue it after provided time
-	if len(requeueTime) == 0 {
-		requeueTime[0] = 0
-	}
-
-	log.Info("Requeue time", "time", requeueTime[0])
-	return ctrl.Result{RequeueAfter: time.Duration(requeueTime[0]) * time.Millisecond}, nil
+	log.Info("Requeue time", "time", requeueTime)
+	return ctrl.Result{RequeueAfter: time.Duration(requeueTime) * time.Millisecond}, nil
 }
 
 // UpdateMeta function updates the metadata (mostly finalizers in this case)

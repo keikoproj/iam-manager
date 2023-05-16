@@ -111,7 +111,7 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 		Resource: "iamroles",
 	}
 
-	roleList, err := c.dCl.Resource(iamCR).Namespace(ns).List(metav1.ListOptions{})
+	roleList, err := c.dCl.Resource(iamCR).Namespace(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Error(err, "unable to list iamroles resources")
 		return 0, err
@@ -124,7 +124,7 @@ func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.C
 	log := logging.Logger(ctx, "k8s", "client", "GetConfigMap")
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving config map")
-	res, err := c.cl.CoreV1().ConfigMaps(ns).Get(name, metav1.GetOptions{})
+	res, err := c.cl.CoreV1().ConfigMaps(ns).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		log.Error(err, "unable to get config map")
 		panic(err)
@@ -139,7 +139,7 @@ func (c *Client) GetNamespace(ctx context.Context, ns string) (*v1.Namespace, er
 	log.WithValues("namespace", ns)
 	log.Info("Retrieving Namespace")
 	resp := &v1.Namespace{}
-	resp, err := c.cl.CoreV1().Namespaces().Get(ns, metav1.GetOptions{})
+	resp, err := c.cl.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
 	if err != nil {
 		log.Error(err, "unable to get the namespace details")
 		return nil, err

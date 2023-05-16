@@ -25,8 +25,10 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	// +kubebuilder:scaffold:imports
+
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
@@ -83,12 +85,22 @@ func main() {
 		log.Error(err, "unable to complete/verify oidc setup for IRSA")
 	}
 
-	if err = (&controllers.IamroleReconciler{
+	controller := &controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
 		IAMClient: iamClient,
 		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
-	}).SetupWithManager(mgr); err != nil {
+	}
+
+	if err = controller.SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")
+		os.Exit(1)
+	}
+
+	// Add another runnable to the manager, it will run concurrently with the main controller thread
+	if err = mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		return controller.StartControllerReconcileCronJob(ctx)
+	})); err != nil {
+		log.Error(err, "unable to add StartControllerReconcileCronJob runnable to manager")
 		os.Exit(1)
 	}
 

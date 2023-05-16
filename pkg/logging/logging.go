@@ -27,13 +27,13 @@ func New(debug ...bool) {
 
 // Logger with
 func Logger(ctx context.Context, names ...string) logr.Logger {
-	logk := ctrl.Log.Logger
+	logk := ctrl.Log
 	for _, name := range names {
-		logk = logk.WithName(name)
+		logk.WithName(name)
 	}
 	rId := ctx.Value("request_id")
 	if rId != nil {
-		logk = logk.WithValues("request_id", rId)
+		logk.WithValues("request_id", rId)
 	}
 
 	return logk

@@ -75,3 +75,7 @@ const (
 
 	IRSARegionalEndpointAnnotation = "eks.amazonaws.com/sts-regional-endpoints"
 )
+
+const (
+	ControllerMinimumDesiredFrequency = 1800
+)

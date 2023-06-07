@@ -63,14 +63,14 @@ type IamroleReconciler struct {
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=iammanager.keikoproj.io,resources=iamroles/status,verbs=get;update;patch
 
-func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *IamroleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Printf("panic occured %v", err)
 		}
 	}()
 
-	ctx := context.WithValue(context.Background(), requestId, uuid.New())
+	ctx = context.WithValue(ctx, requestId, uuid.New())
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "Reconcile")
 	log.WithValues("iamrole", req.NamespacedName)
 	log.Info("Start of the request")
@@ -106,7 +106,7 @@ func (r *IamroleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, defaultRequeueTime)
+				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, defaultRequeueTime)
 				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
 
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
@@ -163,22 +163,6 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	requeueTime := float64(defaultRequeueTime) // default requeue time would be 3000ms
 
 	switch iamRole.Status.State {
-	case iammanagerv1alpha1.Error:
-		// Needs to check if it is just error retrial or user changed anything
-		// if user modified the input we shouldn't wait and directly fallthrough
-
-		if iamRole.Status.RetryCount != 0 {
-			//Lets do exponential back off
-			// 2^x
-			waitTime := math.Pow(2, float64(iamRole.Status.RetryCount+1)) * 100
-			requeueTime = waitTime
-			if waitTime > maxWaitTime {
-				requeueTime = maxWaitTime
-			}
-			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", requeueTime)
-		}
-		fallthrough
-
 	case iammanagerv1alpha1.Ready:
 
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
@@ -224,6 +208,25 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready}, requeueTime)
 
 			return successRequeueIt()
+		}
+		fallthrough
+
+	case iammanagerv1alpha1.Error:
+		// Iam role is in error state, we should not get the iam-role anymore since it could not be present.
+		// Directly ensure the iam-role.
+		//
+		// Needs to check if it is just error retrial or user changed anything
+		// if user modified the input we shouldn't wait and directly fallthrough
+
+		if iamRole.Status.RetryCount != 0 {
+			//Lets do exponential back off
+			// 2^x
+			waitTime := math.Pow(2, float64(iamRole.Status.RetryCount+1)) * 100
+			requeueTime = waitTime
+			if waitTime > maxWaitTime {
+				requeueTime = maxWaitTime
+			}
+			log.V(1).Info("Going to requeue it as part of exponential back off after this try", "count", iamRole.Status.RetryCount+1, "time in ms", requeueTime)
 		}
 		fallthrough
 
@@ -356,10 +359,7 @@ type StatusUpdatePredicate struct {
 // Update implements default UpdateEvent filter for validating generation change
 func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 	log := logging.Logger(context.Background(), "controllers", "iamrole_controller", "HandleReconcile")
-	if e.MetaOld == nil {
-		log.Error(nil, "Update event has no old metadata", "event", e)
-		return false
-	}
+
 	if e.ObjectOld == nil {
 		log.Error(nil, "Update event has no old runtime object to update", "event", e)
 		return false
@@ -368,10 +368,7 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 		log.Error(nil, "Update event has no new runtime object for update", "event", e)
 		return false
 	}
-	if e.MetaNew == nil {
-		log.Error(nil, "Update event has no new metadata", "event", e)
-		return false
-	}
+
 	oldObj := e.ObjectOld.(*iammanagerv1alpha1.Iamrole)
 	newObj := e.ObjectNew.(*iammanagerv1alpha1.Iamrole)
 
@@ -449,6 +446,10 @@ func ignoreNotFound(err error) error {
 
 // successRequeueIt function requeues it after defined time
 func successRequeueIt() (ctrl.Result, error) {
+	// Change requeue mechanism from reconcile result to cronjob.
+	// See: controllers/iamrole_reconcile_manager.go
+	//
+	// return ctrl.Result{RequeueAfter: time.Duration(config.Props.ControllerDesiredFrequency()) * time.Second}, nil
 
-	return ctrl.Result{RequeueAfter: time.Duration(config.Props.ControllerDesiredFrequency()) * time.Second}, nil
+	return ctrl.Result{}, nil
 }

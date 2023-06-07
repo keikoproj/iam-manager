@@ -7,9 +7,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -70,8 +73,20 @@ type IAM struct {
 }
 
 func NewIAM(region string) *IAM {
+	config := aws.NewConfig().
+		WithRegion(region).
+		WithCredentialsChainVerboseErrors(true)
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	// Setup retryer
+	request.WithRetryer(config, client.DefaultRetryer{
+		NumMaxRetries:    12,
+		MinThrottleDelay: time.Second * 5,
+		MaxThrottleDelay: time.Second * 60,
+		MinRetryDelay:    time.Second * 1,
+		MaxRetryDelay:    time.Second * 5,
+	})
+
+	sess, err := session.NewSession(config)
 	if err != nil {
 		panic(err)
 	}

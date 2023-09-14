@@ -8,7 +8,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0
-	github.com/pborman/uuid v1.2.0
+	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
 	k8s.io/api v0.21.4

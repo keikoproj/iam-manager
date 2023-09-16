@@ -35,7 +35,7 @@ type IamroleSpec struct {
 
 // +kubebuilder:validation:Required
 
-//PolicyDocument type defines IAM policy struct
+// PolicyDocument type defines IAM policy struct
 type PolicyDocument struct {
 
 	// Version specifies IAM policy version
@@ -82,7 +82,7 @@ type AssumeRolePolicyDocument struct {
 	Statement []TrustPolicyStatement `json:"Statement,omitempty"`
 }
 
-//TrustPolicy struct holds Trust policy
+// TrustPolicy struct holds Trust policy
 // +optional
 type TrustPolicyStatement struct {
 	//Effect allowed/denied
@@ -95,7 +95,7 @@ type TrustPolicyStatement struct {
 	Condition *Condition `json:"Condition,omitempty"`
 }
 
-//Principal struct holds AWS principal
+// Principal struct holds AWS principal
 // +optional
 type Principal struct {
 	// +optional
@@ -106,7 +106,7 @@ type Principal struct {
 	Federated string `json:"Federated,omitempty"`
 }
 
-//Condition struct holds Condition
+// Condition struct holds Condition
 // +optional
 type Condition struct {
 	//StringEquals can be used to define Equal condition

@@ -7,9 +7,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
@@ -17,7 +20,7 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
-//IAMIface defines interface methods
+// IAMIface defines interface methods
 type IAMIface interface {
 	CreateRole(ctx context.Context, req IAMRoleRequest)
 	EnsureRole(ctx context.Context, req IAMRoleRequest)
@@ -33,7 +36,7 @@ const (
 	RoleExistsAlreadyForOtherNamespace = "Please choose a different name"
 )
 
-//IAMRoleRequest struct
+// IAMRoleRequest struct
 type IAMRoleRequest struct {
 	Name                            string
 	PolicyName                      string
@@ -70,8 +73,20 @@ type IAM struct {
 }
 
 func NewIAM(region string) *IAM {
+	config := aws.NewConfig().
+		WithRegion(region).
+		WithCredentialsChainVerboseErrors(true)
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+	// Setup retryer
+	request.WithRetryer(config, client.DefaultRetryer{
+		NumMaxRetries:    12,
+		MinThrottleDelay: time.Second * 5,
+		MaxThrottleDelay: time.Second * 60,
+		MinRetryDelay:    time.Second * 1,
+		MaxRetryDelay:    time.Second * 5,
+	})
+
+	sess, err := session.NewSession(config)
 	if err != nil {
 		panic(err)
 	}
@@ -174,7 +189,7 @@ func (i *IAM) GetOrCreateRole(ctx context.Context, req IAMRoleRequest) (*IAMRole
 	return nil, nil
 }
 
-//VerifyTags function verifies the tags attached to the role
+// VerifyTags function verifies the tags attached to the role
 func (i *IAM) VerifyTags(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "VerifyTags")
 	log = log.WithValues("roleName", req.Name)
@@ -212,7 +227,7 @@ func (i *IAM) VerifyTags(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	return &IAMRoleResponse{}, nil
 }
 
-//TagRole tags role with appropriate tags
+// TagRole tags role with appropriate tags
 func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "TagRole")
 	log = log.WithValues("roleName", req.Name)
@@ -260,7 +275,7 @@ func (i *IAM) TagRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse
 	return &IAMRoleResponse{}, nil
 }
 
-//AddPermissionBoundary adds permission boundary to the existing roles
+// AddPermissionBoundary adds permission boundary to the existing roles
 func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) error {
 	log := logging.Logger(ctx, "awsapi", "iam", "AddPermissionBoundary")
 	log = log.WithValues("roleName", req.Name)
@@ -306,7 +321,7 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 	return nil
 }
 
-//UpdateRole updates role
+// UpdateRole updates role
 func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "UpdateRole")
 	log = log.WithValues("roleName", req.Name)
@@ -381,7 +396,7 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	return i.AttachInlineRolePolicy(ctx, req)
 }
 
-//AttachInlineRolePolicy function attaches inline policy to the role
+// AttachInlineRolePolicy function attaches inline policy to the role
 func (i *IAM) AttachInlineRolePolicy(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "AttachInlineRolePolicy")
 	log = log.WithValues("roleName", req.Name)
@@ -466,7 +481,7 @@ func (i *IAM) CreateRole(ctx context.Context, req IAMRoleRequest) (*iam.CreateRo
 	return resp, nil
 }
 
-//GetRole gets the role from aws iam
+// GetRole gets the role from aws iam
 func (i *IAM) GetRole(ctx context.Context, req IAMRoleRequest) (*iam.GetRoleOutput, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "GetRole")
 	log = log.WithValues("roleName", req.Name)
@@ -491,7 +506,7 @@ func (i *IAM) GetRole(ctx context.Context, req IAMRoleRequest) (*iam.GetRoleOutp
 	return resp, nil
 }
 
-//GetRolePolicy gets the role from aws iam
+// GetRolePolicy gets the role from aws iam
 func (i *IAM) GetRolePolicy(ctx context.Context, req IAMRoleRequest) (*string, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "GetRolePolicy")
 	log = log.WithValues("roleName", req.Name)
@@ -565,7 +580,7 @@ func (i *IAM) AttachManagedRolePolicy(ctx context.Context, policyArn string, rol
 	return nil
 }
 
-//DeleteRole function deletes the role in the account
+// DeleteRole function deletes the role in the account
 func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 	log := logging.Logger(ctx, "awsapi", "iam", "DeleteRole")
 	log = log.WithValues("roleName", roleName)
@@ -638,7 +653,7 @@ func (i *IAM) DeleteRole(ctx context.Context, roleName string) error {
 	return nil
 }
 
-//DeleteInlinePolicy function deletes inline policy
+// DeleteInlinePolicy function deletes inline policy
 func (i *IAM) DeleteInlinePolicy(ctx context.Context, policyName string, roleName string) error {
 	log := logging.Logger(ctx, "awsapi", "iam", "DeleteInlinePolicy")
 	log = log.WithValues("roleName", roleName, "policyName", policyName)
@@ -716,7 +731,7 @@ func (i *IAM) DetachRolePolicy(ctx context.Context, policyArn string, roleName s
 	return nil
 }
 
-//CreateOIDCProvider creates OIDC IDP provider with AWS IAM
+// CreateOIDCProvider creates OIDC IDP provider with AWS IAM
 func (i *IAM) CreateOIDCProvider(ctx context.Context, url string, aud string, certThumpPrint string) error {
 	log := logging.Logger(ctx, "awsapi.iam", "CreateOIDCProvider")
 	log = log.WithValues("url", url, "aud", aud)

@@ -144,7 +144,7 @@ func (s *IAMAPISuite) TestEnsureRoleWithRoleOwnedByOtherNamespace(c *check.C) {
 	c.Assert(err.Error(), check.Matches, "*"+awsapi.RoleExistsAlreadyForOtherNamespace)
 }
 
-//###########
+// ###########
 func (s *IAMAPISuite) TestVerifyTagsSuccess(c *check.C) {
 	s.mockI.EXPECT().ListRoleTags(&iam.ListRoleTagsInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.ListRoleTagsOutput{
 		Tags: []*iam.Tag{

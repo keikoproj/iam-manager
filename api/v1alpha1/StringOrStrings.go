@@ -2,11 +2,11 @@ package v1alpha1
 
 import "encoding/json"
 
-//StringOrStrings type accepts one string or multiple strings
+// StringOrStrings type accepts one string or multiple strings
 // +kubebuilder:object:generate=false
 type StringOrStrings []string
 
-//MarshalJSON function is a custom implementation of json.Marshal for StringOrStrings
+// MarshalJSON function is a custom implementation of json.Marshal for StringOrStrings
 func (s StringOrStrings) MarshalJSON() ([]byte, error) {
 	//This is going to be tricky
 	//if len(s) == 1 {
@@ -22,7 +22,7 @@ func (s StringOrStrings) MarshalJSON() ([]byte, error) {
 	return json.Marshal(k)
 }
 
-//UnmarshalJson function is a custom implementation of json to unmarshal StringOrStrings
+// UnmarshalJson function is a custom implementation of json to unmarshal StringOrStrings
 func (s *StringOrStrings) UnmarshalJSON(b []byte) error {
 	//Try to convert to array
 	var strings []string

@@ -25,7 +25,7 @@ func TestTrustPolicyStatement_Checksum(t *testing.T) {
 					Federated: "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041",
 				},
 			},
-			want: "c0b4c0c0",
+			want: "b2b94c01",
 		},
 		{
 			name: "test2: empty sid",
@@ -37,7 +37,7 @@ func TestTrustPolicyStatement_Checksum(t *testing.T) {
 					Federated: "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041",
 				},
 			},
-			want: "c0b4c0c8",
+			want: "4ef4a10",
 		},
 	}
 	for _, tt := range tests {

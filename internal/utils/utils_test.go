@@ -755,3 +755,51 @@ func (s *UtilsTestSuite) TestParsePrivilegedAnnotationSuccess(c *check.C) {
 	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
 	c.Assert(resp, check.Equals, true)
 }
+
+func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
+	input := []v1alpha1.TrustPolicyStatement{
+		{
+			Sid:    "allow-oidc-test",
+			Effect: "Allow",
+			Action: "sts:AssumeRoleWithWebIdentity",
+			Principal: v1alpha1.Principal{
+				Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+			},
+			Condition: &v1alpha1.Condition{
+				StringEquals: map[string]string{
+					"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+				},
+			},
+		},
+		{
+			// no sid
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				Service: "ec2.amazonaws.com",
+			},
+		},
+	}
+
+	newStatement1 := v1alpha1.TrustPolicyStatement{
+		// no sid
+		Effect: "Allow",
+		Action: "sts:AssumeRole",
+		Principal: v1alpha1.Principal{
+			AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+		},
+	}
+
+	newStatement2 := v1alpha1.TrustPolicyStatement{
+		Sid:    "allow-custom-role-test",
+		Effect: "Allow",
+		Action: "sts:AssumeRole",
+		Principal: v1alpha1.Principal{
+			AWS: []string{"arn:aws:iam::123456789012:role/custom_role"},
+		},
+	}
+
+	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2)
+
+	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{})
+}

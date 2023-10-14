@@ -20,3 +20,4 @@ kubebuilder*
 #IDE files
 .idea/
 bin/
+.tool-versions

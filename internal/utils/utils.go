@@ -42,7 +42,6 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 			saName := saNames[i]
 			hostPath := fmt.Sprintf("%s", strings.TrimPrefix(config.Props.OIDCIssuerUrl(), "https://"))
 			statement := iammanagerv1alpha1.TrustPolicyStatement{
-				Sid:    "iam-manager-allow-irsa",
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: iammanagerv1alpha1.Principal{
@@ -82,19 +81,11 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 func AppendOrReplaceTrustPolicyStatement(statements []iammanagerv1alpha1.TrustPolicyStatement, newStatements ...iammanagerv1alpha1.TrustPolicyStatement) []iammanagerv1alpha1.TrustPolicyStatement {
 	statementMap := make(map[string]iammanagerv1alpha1.TrustPolicyStatement)
 	for _, st := range statements {
-		if st.Sid == "" {
-			// generate a unique sid when sid is not provided
-			st.Sid = strings.ToLower(fmt.Sprintf("%s-%s-%s", st.Effect, st.Action, st.Checksum()))
-		}
-		statementMap[st.Sid] = st
+		statementMap[st.Checksum()] = st
 	}
 
 	for _, st := range newStatements {
-		if st.Sid == "" {
-			// generate a unique sid when sid is not provided
-			st.Sid = strings.ToLower(fmt.Sprintf("%s-%s-%s", st.Effect, st.Action, st.Checksum()))
-		}
-		statementMap[st.Sid] = st
+		statementMap[st.Checksum()] = st
 	}
 
 	var result []iammanagerv1alpha1.TrustPolicyStatement

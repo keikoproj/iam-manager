@@ -88,7 +88,6 @@ type AssumeRolePolicyDocument struct {
 // TrustPolicy struct holds Trust policy
 // +optional
 type TrustPolicyStatement struct {
-	Sid string `json:"Sid,omitempty"`
 	//Effect allowed/denied
 	Effect Effect `json:"Effect,omitempty"`
 	//Action can be performed

@@ -282,7 +282,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRoleSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
-				Sid:    "allow-sts:assumerole-89c43371",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -320,7 +319,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRolesSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
-				Sid:    "allow-sts:assumerole-29b84462",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -359,7 +357,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyServiceRoleSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
-				Sid:    "allow-sts:assumerole-33b72969",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -399,7 +396,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRolesAndServiceRoleSuccess(c *chec
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
-				Sid:    "allow-sts:assumerole-f1904ac8",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -470,7 +466,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-
 }
 
 func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInRequest(c *check.C) {
@@ -478,7 +473,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
-				Sid:    "iam-manager-allow-irsa",
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: v1alpha1.Principal{
@@ -491,7 +485,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 				},
 			},
 			{
-				Sid:    "allow-sts:assumerole-33b72969",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -764,7 +757,6 @@ func (s *UtilsTestSuite) TestParsePrivilegedAnnotationSuccess(c *check.C) {
 func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 	input := []v1alpha1.TrustPolicyStatement{
 		{
-			Sid:    "allow-oidc-test",
 			Effect: "Allow",
 			Action: "sts:AssumeRoleWithWebIdentity",
 			Principal: v1alpha1.Principal{
@@ -796,7 +788,6 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 	}
 
 	newStatement2 := v1alpha1.TrustPolicyStatement{
-		Sid:    "allow-custom-role-test",
 		Effect: "Allow",
 		Action: "sts:AssumeRole",
 		Principal: v1alpha1.Principal{
@@ -804,20 +795,10 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 		},
 	}
 
-	newStatement3 := v1alpha1.TrustPolicyStatement{
-		Sid:    "allow-custom-role-test", // duplicate sid
-		Effect: "Allow",
-		Action: "sts:AssumeRole",
-		Principal: v1alpha1.Principal{
-			AWS: []string{"arn:aws:iam::123456789012:role/custom_role2"},
-		},
-	}
-
-	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2, newStatement3)
+	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2)
 
 	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{
 		{
-			Sid:    "allow-oidc-test",
 			Effect: "Allow",
 			Action: "sts:AssumeRoleWithWebIdentity",
 			Principal: v1alpha1.Principal{
@@ -830,7 +811,6 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 			},
 		},
 		{
-			Sid:    "allow-sts:assumerole-33b72969",
 			Effect: "Allow",
 			Action: "sts:AssumeRole",
 			Principal: v1alpha1.Principal{
@@ -838,7 +818,6 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 			},
 		},
 		{
-			Sid:    "allow-sts:assumerole-1cfa308c",
 			Effect: "Allow",
 			Action: "sts:AssumeRole",
 			Principal: v1alpha1.Principal{
@@ -846,11 +825,10 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 			},
 		},
 		{
-			Sid:    "allow-custom-role-test",
 			Effect: "Allow",
 			Action: "sts:AssumeRole",
 			Principal: v1alpha1.Principal{
-				AWS: []string{"arn:aws:iam::123456789012:role/custom_role2"},
+				AWS: []string{"arn:aws:iam::123456789012:role/custom_role"},
 			},
 		},
 	})

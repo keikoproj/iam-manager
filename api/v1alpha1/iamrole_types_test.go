@@ -4,7 +4,6 @@ import "testing"
 
 func TestTrustPolicyStatement_Checksum(t *testing.T) {
 	type fields struct {
-		Sid       string
 		Effect    Effect
 		Action    string
 		Principal Principal
@@ -18,7 +17,6 @@ func TestTrustPolicyStatement_Checksum(t *testing.T) {
 		{
 			name: "test1",
 			fields: fields{
-				Sid:    "test1",
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: Principal{
@@ -30,7 +28,6 @@ func TestTrustPolicyStatement_Checksum(t *testing.T) {
 		{
 			name: "test2: empty sid",
 			fields: fields{
-				Sid:    "",
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: Principal{
@@ -43,7 +40,6 @@ func TestTrustPolicyStatement_Checksum(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tps := &TrustPolicyStatement{
-				Sid:       tt.fields.Sid,
 				Effect:    tt.fields.Effect,
 				Action:    tt.fields.Action,
 				Principal: tt.fields.Principal,

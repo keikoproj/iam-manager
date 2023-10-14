@@ -100,8 +100,8 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
 	c.Assert(err, check.IsNil)
 	c.Assert(resp, check.NotNil)
 	c.Assert(*resp, check.DeepEquals, expect)
-
 }
+
 func (s *UtilsTestSuite) TestDefaultTrustPolicyMultipleNoGoTemplate(c *check.C) {
 	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:SERVICE_ACCOUNT_NAME"}}}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{
@@ -466,7 +466,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-
 }
 
 func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInRequest(c *check.C) {
@@ -524,7 +523,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-
 }
 
 func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
@@ -754,4 +752,84 @@ func (s *UtilsTestSuite) TestParsePrivilegedAnnotationSuccess(c *check.C) {
 	}
 	resp := utils.ParsePrivilegedAnnotation(s.ctx, &ns)
 	c.Assert(resp, check.Equals, true)
+}
+
+func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
+	input := []v1alpha1.TrustPolicyStatement{
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRoleWithWebIdentity",
+			Principal: v1alpha1.Principal{
+				Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+			},
+			Condition: &v1alpha1.Condition{
+				StringEquals: map[string]string{
+					"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+				},
+			},
+		},
+		{
+			// no sid
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				Service: "ec2.amazonaws.com",
+			},
+		},
+	}
+
+	newStatement1 := v1alpha1.TrustPolicyStatement{
+		// no sid
+		Effect: "Allow",
+		Action: "sts:AssumeRole",
+		Principal: v1alpha1.Principal{
+			AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+		},
+	}
+
+	newStatement2 := v1alpha1.TrustPolicyStatement{
+		Effect: "Allow",
+		Action: "sts:AssumeRole",
+		Principal: v1alpha1.Principal{
+			AWS: []string{"arn:aws:iam::123456789012:role/custom_role"},
+		},
+	}
+
+	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2)
+
+	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRoleWithWebIdentity",
+			Principal: v1alpha1.Principal{
+				Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+			},
+			Condition: &v1alpha1.Condition{
+				StringEquals: map[string]string{
+					"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+				},
+			},
+		},
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				Service: "ec2.amazonaws.com",
+			},
+		},
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+			},
+		},
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				AWS: []string{"arn:aws:iam::123456789012:role/custom_role"},
+			},
+		},
+	})
 }

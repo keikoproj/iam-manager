@@ -16,6 +16,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+	"hash/adler32"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -93,6 +96,10 @@ type TrustPolicyStatement struct {
 	Principal Principal `json:"Principal,omitempty"`
 	// +optional
 	Condition *Condition `json:"Condition,omitempty"`
+}
+
+func (tps *TrustPolicyStatement) Checksum() string {
+	return fmt.Sprintf("%x", adler32.Checksum([]byte(fmt.Sprintf("%+v", tps))))
 }
 
 // Principal struct holds AWS principal

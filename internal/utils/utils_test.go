@@ -438,6 +438,18 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
 				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:k8s-namespace-dev:SERVICE_ACCOUNT_NAME",
+					},
+				},
+			},
+			{
+				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
 					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},

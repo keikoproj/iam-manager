@@ -100,8 +100,8 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
 	c.Assert(err, check.IsNil)
 	c.Assert(resp, check.NotNil)
 	c.Assert(*resp, check.DeepEquals, expect)
-
 }
+
 func (s *UtilsTestSuite) TestDefaultTrustPolicyMultipleNoGoTemplate(c *check.C) {
 	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}, {"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:SERVICE_ACCOUNT_NAMESPACE:SERVICE_ACCOUNT_NAME"}}}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{
@@ -282,6 +282,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRoleSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
+				Sid:    "allow-sts:assumerole-89c43371",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -319,6 +320,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRolesSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
+				Sid:    "allow-sts:assumerole-29b84462",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -357,6 +359,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyServiceRoleSuccess(c *check.C) {
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
+				Sid:    "allow-sts:assumerole-33b72969",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -396,6 +399,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyAWSRolesAndServiceRoleSuccess(c *chec
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
+				Sid:    "allow-sts:assumerole-f1904ac8",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
@@ -474,6 +478,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
+				Sid:    "iam-manager-allow-irsa",
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: v1alpha1.Principal{
@@ -524,7 +529,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-
 }
 
 func (s *UtilsTestSuite) TestGenerateNameFunction(c *check.C) {
@@ -799,7 +803,54 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 		},
 	}
 
-	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2)
+	newStatement3 := v1alpha1.TrustPolicyStatement{
+		Sid:    "allow-custom-role-test", // duplicate sid
+		Effect: "Allow",
+		Action: "sts:AssumeRole",
+		Principal: v1alpha1.Principal{
+			AWS: []string{"arn:aws:iam::123456789012:role/custom_role2"},
+		},
+	}
 
-	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{})
+	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2, newStatement3)
+
+	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{
+		{
+			Sid:    "allow-oidc-test",
+			Effect: "Allow",
+			Action: "sts:AssumeRoleWithWebIdentity",
+			Principal: v1alpha1.Principal{
+				Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+			},
+			Condition: &v1alpha1.Condition{
+				StringEquals: map[string]string{
+					"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+				},
+			},
+		},
+		{
+			Sid:    "allow-sts:assumerole-33b72969",
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				Service: "ec2.amazonaws.com",
+			},
+		},
+		{
+			Sid:    "allow-sts:assumerole-1cfa308c",
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+			},
+		},
+		{
+			Sid:    "allow-custom-role-test",
+			Effect: "Allow",
+			Action: "sts:AssumeRole",
+			Principal: v1alpha1.Principal{
+				AWS: []string{"arn:aws:iam::123456789012:role/custom_role2"},
+			},
+		},
+	})
 }

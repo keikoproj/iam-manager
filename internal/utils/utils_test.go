@@ -491,6 +491,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 				},
 			},
 			{
+				Sid:    "allow-sts:assumerole-33b72969",
 				Effect: "Allow",
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{

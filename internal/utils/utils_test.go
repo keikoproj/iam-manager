@@ -439,6 +439,18 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 				Effect: "Allow",
 				Action: "sts:AssumeRoleWithWebIdentity",
 				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+					},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
 					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
 				},
 				Condition: &v1alpha1.Condition{
@@ -452,18 +464,6 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 				Action: "sts:AssumeRole",
 				Principal: v1alpha1.Principal{
 					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
-				},
-			},
-			{
-				Effect: "Allow",
-				Action: "sts:AssumeRoleWithWebIdentity",
-				Principal: v1alpha1.Principal{
-					Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
-				},
-				Condition: &v1alpha1.Condition{
-					StringEquals: map[string]string{
-						"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
-					},
 				},
 			},
 		},

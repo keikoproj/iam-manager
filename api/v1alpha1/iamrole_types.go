@@ -99,15 +99,10 @@ type TrustPolicyStatement struct {
 	Condition *Condition `json:"Condition,omitempty"`
 }
 
-// Checksum returns the calculated checksum of the trust policy statement.
-func (tps *TrustPolicyStatement) Checksum() string {
-	return fmt.Sprintf("%x", adler32.Checksum([]byte(fmt.Sprintf("%+v", tps))))
-}
-
 // Id returns the sid of the trust policy statement, ignoring conditions.
 func (tps *TrustPolicyStatement) Id() string {
 	return strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
-		strings.ReplaceAll(strings.ToTitle(tps.Action), ":", ""),
+		strings.ReplaceAll(strings.Title(tps.Action), ":", ""),
 		adler32.Checksum([]byte(fmt.Sprintf("%+v", tps.Principal)))))
 }
 

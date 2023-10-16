@@ -32,7 +32,7 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 			return "", err
 		}
 
-		statements = append(statements, trustPolicy.Statement...)
+		statements = AppendOrReplaceTrustPolicyStatement(statements, trustPolicy.Statement...)
 	}
 
 	// Is it IRSA use case

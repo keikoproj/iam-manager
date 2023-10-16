@@ -166,7 +166,6 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyMultipleWithGoTemplate(c *check.C
 	c.Assert(err, check.IsNil)
 	c.Assert(resp, check.NotNil)
 	c.Assert(*resp, check.DeepEquals, expect)
-
 }
 
 func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultiple(c *check.C) {

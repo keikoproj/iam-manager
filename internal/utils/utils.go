@@ -81,11 +81,11 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 func AppendOrReplaceTrustPolicyStatement(statements []iammanagerv1alpha1.TrustPolicyStatement, newStatements ...iammanagerv1alpha1.TrustPolicyStatement) []iammanagerv1alpha1.TrustPolicyStatement {
 	statementMap := make(map[string]iammanagerv1alpha1.TrustPolicyStatement)
 	for _, st := range statements {
-		statementMap[st.Checksum()] = st
+		statementMap[st.Id()] = st
 	}
 
 	for _, st := range newStatements {
-		statementMap[st.Checksum()] = st
+		statementMap[st.Id()] = st
 	}
 
 	var result []iammanagerv1alpha1.TrustPolicyStatement

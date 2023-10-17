@@ -79,20 +79,23 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 }
 
 func AppendOrReplaceTrustPolicyStatement(statements []iammanagerv1alpha1.TrustPolicyStatement, newStatements ...iammanagerv1alpha1.TrustPolicyStatement) []iammanagerv1alpha1.TrustPolicyStatement {
-	statementMap := make(map[string]iammanagerv1alpha1.TrustPolicyStatement)
-	for _, st := range statements {
-		statementMap[st.Id()] = st
+	statementMap := make(map[string]int)
+	for i, st := range statements {
+		statementMap[st.Id()] = i
 	}
 
 	for _, st := range newStatements {
-		statementMap[st.Id()] = st
-	}
+		if i, ok := statementMap[st.Id()]; ok {
+			// replace the statement with new one if matches the id
+			statements[i] = st
+			continue
+		}
 
-	var result []iammanagerv1alpha1.TrustPolicyStatement
-	for _, st := range statementMap {
-		result = append(result, st)
+		// otherwise append the statement
+		statementMap[st.Id()] = len(statements)
+		statements = append(statements, st)
 	}
-	return result
+	return statements
 }
 
 // Fields Template fields

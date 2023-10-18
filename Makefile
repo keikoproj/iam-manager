@@ -41,10 +41,12 @@ kubebuilder:
 
 mock:
 	go get github.com/golang/mock/mockgen@v1.6.0
+	sleep 10
 	@echo "mockgen is in progess"
 	@for pkg in $(shell go list ./...) ; do \
 		go generate ./... ;\
 	done
+	@echo "mockgen completed"
 
 # Run tests
 test: mock generate fmt manifests

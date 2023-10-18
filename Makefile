@@ -5,6 +5,7 @@ IMG         ?= keikoproj/iam-manager:latest
 OSNAME           ?= $(shell uname -s | tr A-Z a-z)
 KUBEBUILDER_VER  ?= 2.2.0
 KUBEBUILDER_ARCH ?= amd64
+PKGS := $(shell go list ./...|grep -v test-)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -43,13 +44,13 @@ mock:
 	go get github.com/golang/mock/mockgen@v1.6.0
 	sleep 10
 	@echo "mockgen is in progess"
-	@for pkg in $(shell go list ./...) ; do \
+	for pkg in $(shell go list ./...) ; do \
 		go generate ./... ;\
 	done
 	@echo "mockgen completed"
 
 # Run tests
-test: mock generate fmt manifests
+test: generate fmt manifests
 	KUBECONFIG=$(KUBECONFIG) \
 	LOCAL=$(LOCAL) \
 	ALLOWED_POLICY_ACTION=$(ALLOWED_POLICY_ACTION) \

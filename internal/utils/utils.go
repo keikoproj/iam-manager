@@ -23,6 +23,18 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 
 	var statements []iammanagerv1alpha1.TrustPolicyStatement
 
+	// Always apply default trust policy when it is not provided in the spec
+	if tPolicy == nil || len(tPolicy.Statement) == 0 {
+		trustPolicy, err := DefaultTrustPolicy(ctx, config.Props.DefaultTrustPolicy(), role.Namespace)
+		if err != nil {
+			msg := "unable to get the trust policy. It must follow v1alpha1.AssumeRolePolicyDocument syntax"
+			log.Error(err, msg)
+			return "", err
+		}
+
+		statements = AppendOrReplaceTrustPolicyStatement(statements, trustPolicy.Statement...)
+	}
+
 	// Is it IRSA use case
 	// Construct AssumeRoleWithWebIdentity
 	if flag, saNames := ParseIRSAAnnotation(ctx, role); flag {
@@ -41,27 +53,13 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 					},
 				},
 			}
-			statements = append(statements, statement)
-		}
-
-	} else {
-		// NON - IRSA which should cover AssumeRole usecase
-		//For default use cases
-		if tPolicy == nil || len(tPolicy.Statement) == 0 {
-			trustPolicy, err := DefaultTrustPolicy(ctx, config.Props.DefaultTrustPolicy(), role.Namespace)
-			if err != nil {
-				msg := "unable to get the trust policy. It must follow v1alpha1.AssumeRolePolicyDocument syntax"
-				log.Error(err, msg)
-				return "", err
-			}
-
-			statements = append(statements, trustPolicy.Statement...)
+			statements = AppendOrReplaceTrustPolicyStatement(statements, statement)
 		}
 	}
 
 	// If anything included in the request
 	if tPolicy != nil && len(tPolicy.Statement) > 0 {
-		statements = append(statements, role.Spec.AssumeRolePolicyDocument.Statement...)
+		statements = AppendOrReplaceTrustPolicyStatement(statements, role.Spec.AssumeRolePolicyDocument.Statement...)
 	}
 	tDoc := iammanagerv1alpha1.AssumeRolePolicyDocument{
 		Version:   "2012-10-17",
@@ -78,6 +76,26 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 	}
 	log.V(1).Info("trust policy generated successfully", "trust_policy", string(output))
 	return string(output), nil
+}
+
+func AppendOrReplaceTrustPolicyStatement(statements []iammanagerv1alpha1.TrustPolicyStatement, newStatements ...iammanagerv1alpha1.TrustPolicyStatement) []iammanagerv1alpha1.TrustPolicyStatement {
+	statementMap := make(map[string]int)
+	for i, st := range statements {
+		statementMap[st.Id()] = i
+	}
+
+	for _, st := range newStatements {
+		if i, ok := statementMap[st.Id()]; ok {
+			// replace the statement with new one if matches the id
+			statements[i] = st
+			continue
+		}
+
+		// otherwise append the statement
+		statementMap[st.Id()] = len(statements)
+		statements = append(statements, st)
+	}
+	return statements
 }
 
 // Fields Template fields

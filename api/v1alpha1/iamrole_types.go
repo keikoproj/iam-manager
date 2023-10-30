@@ -99,17 +99,48 @@ type TrustPolicyStatement struct {
 	Condition *Condition `json:"Condition,omitempty"`
 }
 
-// Id returns the sid of the trust policy statement, ignoring conditions.
+// Id returns the sid of the trust policy statement
 func (tps *TrustPolicyStatement) Id() string {
-	checksum := strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
+	sid := strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
 		strings.ReplaceAll(strings.Title(tps.Action), ":", ""),
 		adler32.Checksum([]byte(fmt.Sprintf("%+v", tps.Principal)))))
 
-	if tps.Condition != nil {
-		checksum = fmt.Sprintf("%s%x", checksum, adler32.Checksum([]byte(fmt.Sprintf("%+v", *tps.Condition))))
+	if tps.HasCondition() {
+		if tps.IsConditionAnyServiceAccount() {
+			sid = fmt.Sprintf("%s%s", sid, "Any")
+		} else {
+			sid = fmt.Sprintf("%s%s", sid, tps.ConditionChecksum())
+		}
+	}
+	return sid
+}
+
+func (tps *TrustPolicyStatement) HasCondition() bool {
+	return tps.Condition != nil
+}
+
+func (tps *TrustPolicyStatement) ConditionChecksum() string {
+	if !tps.HasCondition() {
+		return ""
+	}
+	return fmt.Sprintf("%x", adler32.Checksum([]byte(fmt.Sprintf("%+v", *tps.Condition))))
+}
+
+func (tps *TrustPolicyStatement) IsConditionAnyServiceAccount() bool {
+	if !tps.HasCondition() || len(tps.Condition.StringLike) == 0 {
+		return false
 	}
 
-	return checksum
+	for k, v := range tps.Condition.StringLike {
+		if strings.HasSuffix(k, ":sub") {
+			parts := strings.Split(v, ":")
+			if parts[len(parts)-1] == "*" {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // Principal struct holds AWS principal

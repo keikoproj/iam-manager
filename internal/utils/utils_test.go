@@ -486,6 +486,73 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 	c.Assert(roleString, check.Equals, string(expected))
 }
 
+func (s *UtilsTestSuite) TestGetTrustPolicyWithMultipleIRSAAnnotations(c *check.C) {
+	expect := v1alpha1.AssumeRolePolicyDocument{
+		Version: "2012-10-17",
+		Statement: []v1alpha1.TrustPolicyStatement{
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"OIDC_PROVIDER:sub": "system:serviceaccount:k8s-namespace-dev:SERVICE_ACCOUNT_NAME",
+					},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRole",
+				Principal: v1alpha1.Principal{
+					AWS: []string{"arn:aws:iam::123456789012:role/trust_role"},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:default",
+					},
+				},
+			},
+			{
+				Effect: "Allow",
+				Action: "sts:AssumeRoleWithWebIdentity",
+				Principal: v1alpha1.Principal{
+					Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+				},
+				Condition: &v1alpha1.Condition{
+					StringEquals: map[string]string{
+						"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:my-sa-1",
+					},
+				},
+			},
+		},
+	}
+
+	expected, _ := json.Marshal(expect)
+
+	input := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "iam-role",
+			Namespace: "k8s-namespace-dev",
+			Annotations: map[string]string{
+				config.IRSAAnnotation: "default,my-sa-1",
+			},
+		},
+	}
+
+	roleString, err := utils.GetTrustPolicy(s.ctx, input)
+	c.Assert(err, check.IsNil)
+	c.Assert(roleString, check.Equals, string(expected))
+}
+
 func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInRequest(c *check.C) {
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",

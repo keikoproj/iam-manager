@@ -33,8 +33,13 @@ func TestTrustPolicyStatement_Id(t *testing.T) {
 				Principal: Principal{
 					Federated: "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041",
 				},
+				Condition: &Condition{
+					StringEquals: map[string]string{
+						"oidc.eks.us-east-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B716D3041:sub": "system:serviceaccount:my-namespace:my-serviceaccount",
+					},
+				},
 			},
-			want: "AllowStsAssumeRoleWithWebIdentityef522ae8", // same as test1
+			want: "AllowStsAssumeRoleWithWebIdentityef522ae8d16a3945",
 		},
 		{
 			name: "test3",

@@ -813,7 +813,20 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 		},
 	}
 
-	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2)
+	newStatement3 := v1alpha1.TrustPolicyStatement{
+		Effect: "Allow",
+		Action: "sts:AssumeRoleWithWebIdentity",
+		Principal: v1alpha1.Principal{
+			Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+		},
+		Condition: &v1alpha1.Condition{
+			StringEquals: map[string]string{
+				"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:my-sa",
+			},
+		},
+	}
+
+	actual := utils.AppendOrReplaceTrustPolicyStatement(input, newStatement1, newStatement2, newStatement3)
 
 	c.Assert(actual, check.DeepEquals, []v1alpha1.TrustPolicyStatement{
 		{
@@ -847,6 +860,18 @@ func (s *UtilsTestSuite) TestAppendOrReplaceTrustPolicyStatement(c *check.C) {
 			Action: "sts:AssumeRole",
 			Principal: v1alpha1.Principal{
 				AWS: []string{"arn:aws:iam::123456789012:role/custom_role"},
+			},
+		},
+		{
+			Effect: "Allow",
+			Action: "sts:AssumeRoleWithWebIdentity",
+			Principal: v1alpha1.Principal{
+				Federated: "arn:aws:iam::123456789012:oidc-provider/google.com/OIDC",
+			},
+			Condition: &v1alpha1.Condition{
+				StringEquals: map[string]string{
+					"google.com/OIDC:sub": "system:serviceaccount:k8s-namespace-dev:my-sa",
+				},
 			},
 		},
 	})

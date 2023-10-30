@@ -101,9 +101,15 @@ type TrustPolicyStatement struct {
 
 // Id returns the sid of the trust policy statement, ignoring conditions.
 func (tps *TrustPolicyStatement) Id() string {
-	return strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
+	checksum := strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
 		strings.ReplaceAll(strings.Title(tps.Action), ":", ""),
 		adler32.Checksum([]byte(fmt.Sprintf("%+v", tps.Principal)))))
+
+	if tps.Condition != nil {
+		checksum = fmt.Sprintf("%s%x", checksum, adler32.Checksum([]byte(fmt.Sprintf("%+v", *tps.Condition))))
+	}
+
+	return checksum
 }
 
 // Principal struct holds AWS principal

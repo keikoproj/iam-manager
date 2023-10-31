@@ -7,6 +7,7 @@ import (
 	api "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/logging"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -71,7 +72,8 @@ func (r *IamroleReconciler) ReconcileAllReadyStateIamRoles(ctx context.Context) 
 			continue
 		}
 
-		res, err = r.HandleReconcile(ctx, ctrl.Request{}, iamrole)
+		req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: iamrole.Namespace, Name: iamrole.Name}}
+		res, err = r.HandleReconcile(ctx, req, iamrole)
 		log.Info("Reconcile result", "result", res, "error", err)
 
 		// sleep for 2 seconds for politeness

@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 domain: keikoproj.io
 repo: github.com/keikoproj/iam-manager
 resources:

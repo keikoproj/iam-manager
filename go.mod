@@ -3,7 +3,7 @@ module github.com/keikoproj/iam-manager
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.46.2
+	github.com/aws/aws-sdk-go v1.49.17
 	github.com/go-logr/logr v0.4.0
 	github.com/golang/mock v1.6.0
 	github.com/onsi/ginkgo v1.16.5

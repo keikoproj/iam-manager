@@ -27,11 +27,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
 	// +kubebuilder:scaffold:imports
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/controllers"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
@@ -65,11 +68,11 @@ func main() {
 	go config.RunConfigMapInformer(context.Background())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		LeaderElection:     enableLeaderElection,
-		Port:               9443,
-		LeaderElectionID:   "controller-leader-election-helper",
+		Scheme:           scheme,
+		Metrics:          metricsserver.Options{BindAddress: metricsAddr},
+		LeaderElection:   enableLeaderElection,
+		WebhookServer:    webhook.NewServer(webhook.Options{Port: 9443}),
+		LeaderElectionID: "controller-leader-election-helper",
 	})
 
 	if err != nil {

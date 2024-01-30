@@ -21,3 +21,6 @@ kubebuilder*
 .idea/
 bin/
 .tool-versions
+.DS_Store
+
+manager

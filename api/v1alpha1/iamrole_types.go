@@ -16,6 +16,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+	"hash/adler32"
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +39,7 @@ type IamroleSpec struct {
 
 // +kubebuilder:validation:Required
 
-//PolicyDocument type defines IAM policy struct
+// PolicyDocument type defines IAM policy struct
 type PolicyDocument struct {
 
 	// Version specifies IAM policy version
@@ -82,7 +86,7 @@ type AssumeRolePolicyDocument struct {
 	Statement []TrustPolicyStatement `json:"Statement,omitempty"`
 }
 
-//TrustPolicy struct holds Trust policy
+// TrustPolicy struct holds Trust policy
 // +optional
 type TrustPolicyStatement struct {
 	//Effect allowed/denied
@@ -95,7 +99,51 @@ type TrustPolicyStatement struct {
 	Condition *Condition `json:"Condition,omitempty"`
 }
 
-//Principal struct holds AWS principal
+// Id returns the sid of the trust policy statement
+func (tps *TrustPolicyStatement) Id() string {
+	sid := strings.Title(fmt.Sprintf("%s%s%x", tps.Effect,
+		strings.ReplaceAll(strings.Title(tps.Action), ":", ""),
+		adler32.Checksum([]byte(fmt.Sprintf("%+v", tps.Principal)))))
+
+	if tps.HasCondition() {
+		if tps.IsConditionAnyServiceAccount() {
+			sid = fmt.Sprintf("%s%s", sid, "Any")
+		} else {
+			sid = fmt.Sprintf("%s%s", sid, tps.ConditionChecksum())
+		}
+	}
+	return sid
+}
+
+func (tps *TrustPolicyStatement) HasCondition() bool {
+	return tps.Condition != nil
+}
+
+func (tps *TrustPolicyStatement) ConditionChecksum() string {
+	if !tps.HasCondition() {
+		return ""
+	}
+	return fmt.Sprintf("%x", adler32.Checksum([]byte(fmt.Sprintf("%+v", *tps.Condition))))
+}
+
+func (tps *TrustPolicyStatement) IsConditionAnyServiceAccount() bool {
+	if !tps.HasCondition() || len(tps.Condition.StringLike) == 0 {
+		return false
+	}
+
+	for k, v := range tps.Condition.StringLike {
+		if strings.HasSuffix(k, ":sub") {
+			parts := strings.Split(v, ":")
+			if parts[len(parts)-1] == "*" {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// Principal struct holds AWS principal
 // +optional
 type Principal struct {
 	// +optional
@@ -106,7 +154,7 @@ type Principal struct {
 	Federated string `json:"Federated,omitempty"`
 }
 
-//Condition struct holds Condition
+// Condition struct holds Condition
 // +optional
 type Condition struct {
 	//StringEquals can be used to define Equal condition

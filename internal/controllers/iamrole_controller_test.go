@@ -1,12 +1,12 @@
 package controllers_test
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	. "github.com/keikoproj/iam-manager/controllers"
+	. "github.com/keikoproj/iam-manager/internal/controllers"
 )
 
 var _ = Describe("IamroleController", func() {
@@ -30,16 +30,13 @@ var _ = Describe("IamroleController", func() {
 						State:      iammanagerv1alpha1.Error,
 					},
 				}
-				failEvt1 := event.UpdateEvent{MetaOld: old.GetObjectMeta(), ObjectOld: old, MetaNew: new.GetObjectMeta(), ObjectNew: new}
-				failEvt2 := event.UpdateEvent{MetaOld: nil, ObjectOld: old, MetaNew: new.GetObjectMeta(), ObjectNew: new}
-				failEvt3 := event.UpdateEvent{MetaOld: old.GetObjectMeta(), ObjectOld: nil, MetaNew: new.GetObjectMeta(), ObjectNew: new}
-				failEvt4 := event.UpdateEvent{MetaOld: old.GetObjectMeta(), ObjectOld: old, MetaNew: nil, ObjectNew: new}
-				failEvt5 := event.UpdateEvent{MetaOld: old.GetObjectMeta(), ObjectOld: old, MetaNew: new.GetObjectMeta(), ObjectNew: nil}
+				//
+				failEvt1 := event.UpdateEvent{ObjectOld: old, ObjectNew: new}
+				failEvt3 := event.UpdateEvent{ObjectOld: nil, ObjectNew: new}
+				failEvt5 := event.UpdateEvent{ObjectOld: old, ObjectNew: nil}
 
 				Expect(instance.Update(failEvt1)).To(BeFalse())
-				Expect(instance.Update(failEvt2)).To(BeFalse())
 				Expect(instance.Update(failEvt3)).To(BeFalse())
-				Expect(instance.Update(failEvt4)).To(BeFalse())
 				Expect(instance.Update(failEvt5)).To(BeFalse())
 
 			})

@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-//ValidateIAMPolicyAction validates policy action
+// ValidateIAMPolicyAction validates policy action
 func ValidateIAMPolicyAction(ctx context.Context, pDoc v1alpha1.PolicyDocument) *field.Error {
 	log := logging.Logger(ctx, "pkg.validation", "ValidateIAMPolicyAction")
 
@@ -70,7 +70,7 @@ func ValidateIAMPolicyAction(ctx context.Context, pDoc v1alpha1.PolicyDocument) 
 	return nil
 }
 
-//ValidateIAMPolicyResource validates policy resource
+// ValidateIAMPolicyResource validates policy resource
 func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument) *field.Error {
 	log := logging.Logger(ctx, "pkg.validation", "ValidateIAMPolicyResource")
 
@@ -100,7 +100,7 @@ func ValidateIAMPolicyResource(ctx context.Context, pDoc v1alpha1.PolicyDocument
 	return nil
 }
 
-//CompareRole function compares input role to target role
+// CompareRole function compares input role to target role
 func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole *iam.GetRoleOutput, targetRolePolicy string) bool {
 	log := logging.Logger(ctx, "pkg.validation", "ComparePolicy")
 
@@ -127,7 +127,7 @@ func CompareRole(ctx context.Context, request awsapi.IAMRoleRequest, targetRole 
 	return true
 }
 
-//CompareRole function compares input role to target role
+// CompareRole function compares input role to target role
 func CompareRoleIRSA(ctx context.Context, sa *v1.ServiceAccount, props config.Properties) bool {
 	// Check if sts-regional-endpoint annotation is set to the expected value
 	exists, val := utils.ParseIRSARegionalEndpointAnnotation(ctx, sa)
@@ -142,7 +142,7 @@ func CompareRoleIRSA(ctx context.Context, sa *v1.ServiceAccount, props config.Pr
 	return true
 }
 
-//ComparePermissionPolicy compares role policy from request and response
+// ComparePermissionPolicy compares role policy from request and response
 func ComparePermissionPolicy(ctx context.Context, request string, target string) bool {
 	log := logging.Logger(ctx, "pkg.validation", "ComparePermissionPolicy")
 
@@ -167,7 +167,7 @@ func ComparePermissionPolicy(ctx context.Context, request string, target string)
 	return true
 }
 
-//CompareAssumeRolePolicy compares assume role policy from request and response
+// CompareAssumeRolePolicy compares assume role policy from request and response
 func CompareAssumeRolePolicy(ctx context.Context, request string, target string) bool {
 	log := logging.Logger(ctx, "pkg.validation", "CompareAssumeRolePolicy")
 
@@ -192,7 +192,7 @@ func CompareAssumeRolePolicy(ctx context.Context, request string, target string)
 	return true
 }
 
-//CompareTags compares tags from request and response
+// CompareTags compares tags from request and response
 func CompareTags(ctx context.Context, request map[string]string, target []*iam.Tag) bool {
 	log := logging.Logger(ctx, "pkg.validation", "CompareTags")
 	log.Info("start CompareTags")
@@ -220,7 +220,7 @@ func CompareTags(ctx context.Context, request map[string]string, target []*iam.T
 	return true
 }
 
-//ContainsString  Helper functions to check from a slice of strings.
+// ContainsString  Helper functions to check from a slice of strings.
 func ContainsString(slice []string, s string) bool {
 	for _, item := range slice {
 		if item == s {
@@ -230,7 +230,7 @@ func ContainsString(slice []string, s string) bool {
 	return false
 }
 
-//RemoveString Helper function to check remove string
+// RemoveString Helper function to check remove string
 func RemoveString(slice []string, s string) (result []string) {
 	for _, item := range slice {
 		if item == s {

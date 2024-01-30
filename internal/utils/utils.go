@@ -16,12 +16,24 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
-//GetTrustPolicy constructs trust policy
+// GetTrustPolicy constructs trust policy
 func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (string, error) {
 	log := logging.Logger(ctx, "internal.utils.utils", "GetTrustPolicy")
 	tPolicy := role.Spec.AssumeRolePolicyDocument
 
 	var statements []iammanagerv1alpha1.TrustPolicyStatement
+
+	// Always apply default trust policy when it is not provided in the spec
+	if tPolicy == nil || len(tPolicy.Statement) == 0 {
+		trustPolicy, err := DefaultTrustPolicy(ctx, config.Props.DefaultTrustPolicy(), role.Namespace)
+		if err != nil {
+			msg := "unable to get the trust policy. It must follow v1alpha1.AssumeRolePolicyDocument syntax"
+			log.Error(err, msg)
+			return "", err
+		}
+
+		statements = AppendOrReplaceTrustPolicyStatement(statements, trustPolicy.Statement...)
+	}
 
 	// Is it IRSA use case
 	// Construct AssumeRoleWithWebIdentity
@@ -41,27 +53,13 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 					},
 				},
 			}
-			statements = append(statements, statement)
-		}
-
-	} else {
-		// NON - IRSA which should cover AssumeRole usecase
-		//For default use cases
-		if tPolicy == nil || len(tPolicy.Statement) == 0 {
-			trustPolicy, err := DefaultTrustPolicy(ctx, config.Props.DefaultTrustPolicy(), role.Namespace)
-			if err != nil {
-				msg := "unable to get the trust policy. It must follow v1alpha1.AssumeRolePolicyDocument syntax"
-				log.Error(err, msg)
-				return "", err
-			}
-
-			statements = append(statements, trustPolicy.Statement...)
+			statements = AppendOrReplaceTrustPolicyStatement(statements, statement)
 		}
 	}
 
 	// If anything included in the request
 	if tPolicy != nil && len(tPolicy.Statement) > 0 {
-		statements = append(statements, role.Spec.AssumeRolePolicyDocument.Statement...)
+		statements = AppendOrReplaceTrustPolicyStatement(statements, role.Spec.AssumeRolePolicyDocument.Statement...)
 	}
 	tDoc := iammanagerv1alpha1.AssumeRolePolicyDocument{
 		Version:   "2012-10-17",
@@ -80,7 +78,27 @@ func GetTrustPolicy(ctx context.Context, role *iammanagerv1alpha1.Iamrole) (stri
 	return string(output), nil
 }
 
-//Fields Template fields
+func AppendOrReplaceTrustPolicyStatement(statements []iammanagerv1alpha1.TrustPolicyStatement, newStatements ...iammanagerv1alpha1.TrustPolicyStatement) []iammanagerv1alpha1.TrustPolicyStatement {
+	statementMap := make(map[string]int)
+	for i, st := range statements {
+		statementMap[st.Id()] = i
+	}
+
+	for _, st := range newStatements {
+		if i, ok := statementMap[st.Id()]; ok {
+			// replace the statement with new one if matches the id
+			statements[i] = st
+			continue
+		}
+
+		// otherwise append the statement
+		statementMap[st.Id()] = len(statements)
+		statements = append(statements, st)
+	}
+	return statements
+}
+
+// Fields Template fields
 type Fields struct {
 	AccountID     string
 	ClusterName   string
@@ -88,7 +106,7 @@ type Fields struct {
 	Region        string
 }
 
-//DefaultTrustPolicy converts the config map variable string to v1alpha1.AssumeRolePolicyDocument and executes Go Template if any
+// DefaultTrustPolicy converts the config map variable string to v1alpha1.AssumeRolePolicyDocument and executes Go Template if any
 func DefaultTrustPolicy(ctx context.Context, trustPolicyDoc string, ns string) (*iammanagerv1alpha1.AssumeRolePolicyDocument, error) {
 	log := logging.Logger(ctx, "internal.utils.utils", "defaultTrustPolicy")
 	if trustPolicyDoc == "" {
@@ -171,22 +189,22 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 	return buf.String(), nil
 }
 
-//parseAnnotations parses annotations attached to iam role resource and returns the value if found
+// parseAnnotations parses annotations attached to iam role resource and returns the value if found
 // input: Name of the annotation, IamRole resource
 func parseAnnotations(ctx context.Context, name string, annotations map[string]string) (bool, string) {
-	log := logging.Logger(ctx, "internal.utils.utils", "ParseIRSAAnnotation")
+	log := logging.Logger(ctx, "internal.utils.utils", "parseAnnotations")
 	flag := false
 	response := ""
 	//Look for the specific annotation in iam role CR
 	if val, ok := annotations[name]; ok {
 		flag = true
 		response = val
-		log.Info("Annotation found", "name", val)
+		log.Info("Annotation found", "name", name, "value", val)
 	}
 	return flag, response
 }
 
-//ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
+// ParsePrivilegedAnnotation parses IamRole resource annotation and responds if annotation exists
 func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 
 	flag, value := parseAnnotations(ctx, config.IamManagerPrivilegedNamespaceAnnotation, ns.Annotations)
@@ -196,12 +214,12 @@ func ParsePrivilegedAnnotation(ctx context.Context, ns *v1.Namespace) bool {
 	return false
 }
 
-//ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
+// ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
 func ParseTagsAnnotation(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole) (bool, string) {
 	return parseAnnotations(ctx, config.IamManagerTagsAnnotation, iamRole.Annotations)
 }
 
-//ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
+// ParseTagsAnnotation parses IamRole tags annotation and responds if annotation exists
 func ParseIRSARegionalEndpointAnnotation(ctx context.Context, sa *v1.ServiceAccount) (bool, string) {
 	return parseAnnotations(ctx, config.IRSARegionalEndpointAnnotation, sa.Annotations)
 }

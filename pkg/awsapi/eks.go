@@ -32,7 +32,7 @@ func NewEKS(region string) *EKS {
 	}
 }
 
-//DescribeCluster function provides cluster info
+// DescribeCluster function provides cluster info
 func (e *EKS) DescribeCluster(ctx context.Context, clusterName string) (*eks.DescribeClusterOutput, error) {
 	log := logging.Logger(ctx, "awsapi", "eks", "DescribeCluster")
 	log.WithValues("clusterName", clusterName)

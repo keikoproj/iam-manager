@@ -25,11 +25,16 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	// +kubebuilder:scaffold:imports
+
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
-	"github.com/keikoproj/iam-manager/controllers"
 	"github.com/keikoproj/iam-manager/internal/config"
+	"github.com/keikoproj/iam-manager/internal/controllers"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
@@ -63,11 +68,11 @@ func main() {
 	go config.RunConfigMapInformer(context.Background())
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		LeaderElection:     enableLeaderElection,
-		Port:               9443,
-		LeaderElectionID:   "controller-leader-election-helper",
+		Scheme:           scheme,
+		Metrics:          metricsserver.Options{BindAddress: metricsAddr},
+		LeaderElection:   enableLeaderElection,
+		WebhookServer:    webhook.NewServer(webhook.Options{Port: 9443}),
+		LeaderElectionID: "controller-leader-election-helper",
 	})
 
 	if err != nil {
@@ -83,12 +88,22 @@ func main() {
 		log.Error(err, "unable to complete/verify oidc setup for IRSA")
 	}
 
-	if err = (&controllers.IamroleReconciler{
+	controller := &controllers.IamroleReconciler{
 		Client:    mgr.GetClient(),
 		IAMClient: iamClient,
 		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
-	}).SetupWithManager(mgr); err != nil {
+	}
+
+	if err = controller.SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Iamrole")
+		os.Exit(1)
+	}
+
+	// Add another runnable to the manager, it will run concurrently with the main controller thread
+	if err = mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		return controller.StartControllerReconcileCronJob(ctx)
+	})); err != nil {
+		log.Error(err, "unable to add StartControllerReconcileCronJob runnable to manager")
 		os.Exit(1)
 	}
 
@@ -111,7 +126,7 @@ func main() {
 	}
 }
 
-//handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
+// handleOIDCSetupForIRSA will be used to setup the OIDC in AWS IAM
 func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
 	log := logging.Logger(ctx, "main", "handleOIDCSetupForIRSA")
 

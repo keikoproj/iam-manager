@@ -3,8 +3,12 @@ IMG         ?= keikoproj/iam-manager:latest
 
 # Tools required to run the full suite of tests properly
 OSNAME           ?= $(shell uname -s | tr A-Z a-z)
-KUBEBUILDER_VER  ?= 2.2.0
 KUBEBUILDER_ARCH ?= amd64
+ENVTEST_K8S_VERSION = 1.28.0
+
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -22,6 +26,8 @@ CLUSTER_NAME                ?= k8s_test_keiko
 CLUSTER_OIDC_ISSUER_URL     ?= https://google.com/OIDC
 DEFAULT_TRUST_POLICY        ?= '{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}'
 
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 	GOBIN := $(shell go env GOPATH)/bin
@@ -31,23 +37,15 @@ endif
 
 all: manager
 
-.PHONY: kubebuilder
-kubebuilder:
-	@echo "Downloading and installing Kubebuilder - this requires sudo privileges"
-	curl -fsSL -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VER)/kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz"
-	rm -rf kubebuilder && mkdir -p kubebuilder
-	tar -zxvf kubebuilder_$(KUBEBUILDER_VER)_$(OSNAME)_$(KUBEBUILDER_ARCH).tar.gz --strip-components 1 -C kubebuilder
-	sudo cp -rf kubebuilder /usr/local
-
 mock:
-	go get -u github.com/golang/mock/mockgen
+	go install github.com/golang/mock/mockgen@v1.6.0
 	@echo "mockgen is in progess"
 	@for pkg in $(shell go list ./...) ; do \
 		go generate ./... ;\
 	done
 
 # Run tests
-test: mock generate fmt manifests
+test: mock generate fmt manifests envtest
 	KUBECONFIG=$(KUBECONFIG) \
 	LOCAL=$(LOCAL) \
 	ALLOWED_POLICY_ACTION=$(ALLOWED_POLICY_ACTION) \
@@ -60,15 +58,15 @@ test: mock generate fmt manifests
 	CLUSTER_NAME=$(CLUSTER_NAME) \
 	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
 	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
-	go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet update
-	go build -o bin/manager main.go
+	go build -o bin/manager cmd/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
-	go run ./main.go
+	go run ./cmd/main.go
 
 # Install CRDs into a cluster
 install: manifests
@@ -96,8 +94,8 @@ update: manifests
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
 
 
 # Run go fmt against code
@@ -124,8 +122,13 @@ docker-push:
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.13.0
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+.PHONY: envtest
+envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
+$(ENVTEST): $(LOCALBIN)
+	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest

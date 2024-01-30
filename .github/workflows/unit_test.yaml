@@ -12,16 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.15
+          go-version: 1.21
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - name: Setup kubebuilder
-        run: |
-          make kubebuilder
+        uses: actions/checkout@v4
 
       - name: Build
         run: |
@@ -32,6 +28,6 @@ jobs:
           make test
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           file: ./coverage.txt

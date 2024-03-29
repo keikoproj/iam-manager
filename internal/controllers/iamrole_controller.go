@@ -101,7 +101,10 @@ func (r *IamroleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			iamRole.Status.RetryCount = iamRole.Status.RetryCount + 1
 		}
 		log.Info("Iamrole delete request")
-		if iamRole.Status.State != iammanagerv1alpha1.PolicyNotAllowed {
+
+		// If PolicyNotAllowed, we should not have any role created.
+		// If RoleNameNotAvailable, the role should be deleted.
+		if iamRole.Status.State != iammanagerv1alpha1.PolicyNotAllowed && iamRole.Status.RoleName != "" {
 			//Get the roleName from status
 			roleName := iamRole.Status.RoleName
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {

@@ -6,8 +6,8 @@ require (
 	github.com/aws/aws-sdk-go v1.51.24
 	github.com/go-logr/logr v1.4.1
 	github.com/golang/mock v1.6.0
-	github.com/onsi/ginkgo/v2 v2.15.0
-	github.com/onsi/gomega v1.31.1
+	github.com/onsi/ginkgo/v2 v2.17.1
+	github.com/onsi/gomega v1.33.0
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -64,7 +64,7 @@ require (
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.16.1 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

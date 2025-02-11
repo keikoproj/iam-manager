@@ -1,11 +1,12 @@
 package awsapi
 
 //go:generate mockgen -destination=mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
-////go:generate mockgen -destination=mocks/mock_iam.go -package=mock_awsapi github.com/keikoproj/iam-manager/pkg/awsapi IAMIface
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
-
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
@@ -317,7 +317,7 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 		return err
 	}
 
-	log.V(1).Info("Successfuly added permission boundary")
+	log.V(1).Info("successfully added permission boundary")
 	return nil
 }
 
@@ -325,7 +325,8 @@ func (i *IAM) AddPermissionBoundary(ctx context.Context, req IAMRoleRequest) err
 func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleResponse, error) {
 	log := logging.Logger(ctx, "awsapi", "iam", "UpdateRole")
 	log = log.WithValues("roleName", req.Name)
-	log.V(1).Info("Initiating api call")
+	log.V(1).Info("initiating api call")
+
 	input := &iam.UpdateRoleInput{
 		RoleName:           aws.String(req.Name),
 		MaxSessionDuration: aws.Int64(req.SessionDuration),
@@ -390,10 +391,147 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 		}
 		return nil, err
 	}
-
-	//Attach the Inline policy
+	// Attach the Inline policy
 	log.V(1).Info("AssumeRole Policy is successfully updated")
+
+	if err = i.ValidateAllowedDynamoDBAccess(ctx, req); err != nil {
+		log.V(1).Error(err, "validation error")
+		return nil, err
+	}
+
 	return i.AttachInlineRolePolicy(ctx, req)
+}
+
+// getActions extracts actions from the statement entry
+func getActions(action interface{}) []string {
+	switch v := action.(type) {
+	case string:
+		return []string{v}
+	case []interface{}:
+		var actions []string
+		for _, a := range v {
+			if actionStr, ok := a.(string); ok {
+				actions = append(actions, actionStr)
+			}
+		}
+		return actions
+	default:
+		return []string{}
+	}
+}
+
+// Helper function to validate if the policy has DynamoDB access
+//
+//  1. If existing policy has DynamoDB access to the IKS AWS account DynamoDB table, return nil
+//
+//  2. If new policy has DynamoDB access to the IKS AWS account DynamoDB table, but existing policy doesn't
+//     have DynamoDB access to the IKS AWS account DynamoDB table, return error
+func (i *IAM) ValidateAllowedDynamoDBAccess(ctx context.Context, req IAMRoleRequest) error {
+	log := logging.Logger(ctx, "awsapi", "iam", "validateAllowedDynamoDBAccess")
+
+	role, err := i.Client.GetRole(&iam.GetRoleInput{
+		RoleName: aws.String(req.Name),
+	})
+	if err != nil {
+		log.V(1).Error(err, "get role failed")
+		return fmt.Errorf("get role failed: %v", req.Name)
+	}
+
+	awsAccount, err := ExtractRoleAwsAccount(ctx, role)
+	if err != nil {
+		log.V(1).Error(err, "ExtractRoleAwsAccount failed")
+		return err
+	}
+
+	existingPolicy, err := i.Client.GetRolePolicy(&iam.GetRolePolicyInput{
+		PolicyName: aws.String(req.PolicyName),
+		RoleName:   aws.String(req.Name),
+	})
+	if err != nil {
+		log.V(1).Info("Failed to get the role policy. proceeding to create inline policy", "error", err)
+		return nil
+	}
+
+	existingPolicyDoc, err := url.QueryUnescape(aws.StringValue(existingPolicy.PolicyDocument))
+	if err != nil {
+		log.Error(err, "Failed to decode policy document")
+		return err
+	}
+	log.V(1).Info("existing policy document", "policy", existingPolicyDoc)
+	log.V(1).Info("requested policy document", "policy", req.PermissionPolicy)
+
+	// Check if the existing inline policy 'custom' has DynamoDB access
+	if HasDynamoDBAccessByAccount(existingPolicyDoc, awsAccount) {
+		// Proceed to create inline policy
+		log.V(1).Info("Existing policy has DynamoDB access to Cluster AWS account, allowing new policy", "existingPolicy", existingPolicyDoc)
+		return nil
+	}
+
+	if HasDynamoDBAccessByAccount(req.PermissionPolicy, awsAccount) {
+		// Validate new input of custom inline policy
+		log.V(1).Error(fmt.Errorf("validation error"), "existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account",
+			"existingPolicy", existingPolicyDoc, "newPolicy", req.PermissionPolicy)
+
+		return fmt.Errorf("existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account")
+	}
+
+	return nil
+}
+
+// Helper function to check if the policy has DynamoDB access to a given AWS account DynamoDB table
+func HasDynamoDBAccessByAccount(policy string, accountID string) bool {
+	var policyDoc PolicyDocument
+	err := json.Unmarshal([]byte(policy), &policyDoc)
+	if err != nil {
+		return false
+	}
+
+	for _, statement := range policyDoc.Statement {
+		if statement.Effect == "Allow" {
+			actions := getActions(statement.Action)
+			for _, action := range actions {
+				if strings.HasPrefix(action, "dynamodb:") {
+					// Check if the resource is a DynamoDB table in the given AWS account
+					switch resources := statement.Resource.(type) {
+					case string:
+						if resourceHasDynamoDBAccessByAccount(resources, accountID) {
+							return true
+						}
+					case []interface{}:
+						for _, resource := range resources {
+							if resourceStr, ok := resource.(string); ok {
+								if resourceHasDynamoDBAccessByAccount(resourceStr, accountID) {
+									return true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func resourceHasDynamoDBAccessByAccount(resourceStr, accountID string) bool {
+	return strings.Contains(resourceStr, fmt.Sprintf(":%s:table/", accountID)) || strings.Contains(resourceStr, "*:table/") || resourceStr == "*"
+}
+
+func ExtractRoleAwsAccount(ctx context.Context, role *iam.GetRoleOutput) (string, error) {
+	log := logging.Logger(ctx, "awsapi", "iam", "UpdateRole")
+
+	arn := role.Role.Arn
+	// Extract AWS account ID from ARN
+	arnParts := strings.Split(aws.StringValue(arn), ":")
+	if len(arnParts) < 5 {
+		log.Error(fmt.Errorf("invalid ARN format"), "ARN", arn)
+		return "", fmt.Errorf("invalid ARN format")
+	}
+	accountID := arnParts[4]
+	log.V(1).Info("Extracted AWS account ID from ARN", "accountID", accountID)
+
+	return accountID, nil
 }
 
 // AttachInlineRolePolicy function attaches inline policy to the role

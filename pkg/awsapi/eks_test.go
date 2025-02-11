@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gopkg.in/check.v1"
 
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
+	mock_awsapi "github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
 )
 
 type EKSAPISuite struct {

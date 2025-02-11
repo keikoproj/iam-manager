@@ -38,11 +38,9 @@ endif
 all: manager
 
 mock:
-	go install github.com/golang/mock/mockgen@v1.6.0
+	go install go.uber.org/mock/mockgen@v0.5.0
 	@echo "mockgen is in progess"
-	@for pkg in $(shell go list ./...) ; do \
-		go generate ./... ;\
-	done
+	go generate -v ./...
 
 # Run tests
 test: mock generate fmt manifests envtest
@@ -59,6 +57,7 @@ test: mock generate fmt manifests envtest
 	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
 	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	@grep -v "/mocks/" cover.out > cover_filtered.out && mv cover_filtered.out cover.out
 
 # Build manager binary
 manager: generate fmt vet update

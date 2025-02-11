@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gopkg.in/check.v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"

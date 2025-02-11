@@ -5,11 +5,11 @@ go 1.24
 require (
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/go-logr/logr v1.4.2
-	github.com/golang/mock v1.6.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
+	go.uber.org/mock v0.5.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	k8s.io/api v0.32.5
 	k8s.io/apimachinery v0.32.5

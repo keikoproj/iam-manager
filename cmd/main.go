@@ -40,6 +40,7 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
+	_ "go.uber.org/mock/mockgen/model"
 )
 
 var (

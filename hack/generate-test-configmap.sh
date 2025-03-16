@@ -10,11 +10,12 @@ metadata:
   name: iamroles-v1alpha1-configmap
   namespace: dev
 data:
-  iam.policy.action.prefix.whitelist: "s3:,sts:,ec2:Describe"
-  iam.policy.resource.blacklist: "kops"
-  iam.policy.s3.restricted.resource: "*"
+  iam.policy.action.prefix.whitelist: "s3:ListBucket,sts:,ec2:Describe,acm:Describe,acm:List,acm:Get,route53:Get,route53:List,route53:Create,route53:Delete,route53:Change,kms:Decrypt,kms:Encrypt,kms:ReEncrypt,kms:GenerateDataKey,kms:DescribeKey,dynamodb:,secretsmanager:GetSecretValue,es:,sqs:SendMessage,sqs:ReceiveMessage,sqs:DeleteMessage,SNS:Publish,sqs:GetQueueAttributes,sqs:GetQueueUrl"
+  iam.policy.resource.blacklist: "policy-resource,kops"
+  iam.policy.s3.restricted.resource: "s3-resource"
   aws.accountId: "123456789012"
   aws.region: "us-west-2"
+  aws.MasterRole: "masters.cluster.k8s.local"
   iam.managed.policies: "shared.policy"
   iam.managed.permission.boundary.policy: "iam-manager-permission-boundary"
   webhook.enabled: "true"

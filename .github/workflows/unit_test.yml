@@ -34,9 +34,9 @@ jobs:
         run: |
           make mock
 
-      - name: Build
+      - name: Build manager binary
         run: |
-          make build
+          make manager
 
       - name: Run tests
         env:

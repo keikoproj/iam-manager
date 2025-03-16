@@ -284,7 +284,7 @@ mocks: ## Generate mock files using mockgen
 generate-test-configmap: ## Generate a test ConfigMap for testing
 	@mkdir -p hack/test
 	@echo "Creating test ConfigMap..."
-	@cat > hack/test/test-configmap.yaml <<EOF
+	@cat > hack/test/test-configmap.yaml << 'EOF'
 apiVersion: v1
 kind: ConfigMap
 metadata:

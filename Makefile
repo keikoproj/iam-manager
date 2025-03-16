@@ -3,15 +3,20 @@ IMG         ?= keikoproj/iam-manager:latest
 
 # Tools required to run the full suite of tests properly
 OSNAME           ?= $(shell uname -s | tr A-Z a-z)
-KUBEBUILDER_ARCH ?= amd64
+ARCH             ?= $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/' | sed 's/arm64/arm64/')
+KUBEBUILDER_ARCH ?= $(ARCH)
 ENVTEST_K8S_VERSION = 1.28.0
 
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+# Tool versions
+CONTROLLER_GEN_VERSION ?= v0.14.0
+ENVTEST_VERSION ?= latest
+
+# Produce CRDs that work across Kubernetes versions
+CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 KUBECONFIG                  ?= $(HOME)/.kube/config
 LOCAL                       ?= true
@@ -37,28 +42,40 @@ endif
 
 all: manager
 
+# Generate mocks with mockgen
+.PHONY: mock
 mock:
-	go install github.com/golang/mock/mockgen@v1.6.0
-	@echo "mockgen is in progess"
-	@for pkg in $(shell go list ./...) ; do \
-		go generate ./... ;\
-	done
+	@echo "Generating mocks with architecture $(ARCH)"
+	@echo "Installing mockgen..."
+	@go install github.com/golang/mock/mockgen@v1.6.0
+	@echo "Generating awsapi mocks..."
+	
+	@if [ ! -d pkg/awsapi/mocks ]; then mkdir -p pkg/awsapi/mocks; fi
+	
+	# Use source mode for more reliable mock generation (especially on ARM64)
+	@echo "Generating IAM API mock..."
+	@mockgen -source=pkg/awsapi/iam.go -destination=pkg/awsapi/mocks/mock_iamapi.go -package=mock_awsapi
+	
+	@echo "Generating STS API mock..."
+	@mockgen -source=pkg/awsapi/sts.go -destination=pkg/awsapi/mocks/mock_stsapi.go -package=mock_awsapi
+	
+	@echo "Generating EKS API mock..."
+	@mockgen -source=pkg/awsapi/eks.go -destination=pkg/awsapi/mocks/mock_eksapi.go -package=mock_awsapi
+	
+	@echo "Mock generation complete"
 
 # Run tests
-test: mock generate fmt manifests envtest
-	KUBECONFIG=$(KUBECONFIG) \
-	LOCAL=$(LOCAL) \
-	ALLOWED_POLICY_ACTION=$(ALLOWED_POLICY_ACTION) \
-	RESTRICTED_POLICY_RESOURCES=$(RESTRICTED_POLICY_RESOURCES) \
-	RESTRICTED_S3_RESOURCES=$(RESTRICTED_S3_RESOURCES) \
-	AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
-	AWS_REGION=$(AWS_REGION) \
-	MANAGED_POLICIES=$(MANAGED_POLICIES) \
-	MANAGED_PERMISSION_BOUNDARY_POLICY=$(MANAGED_PERMISSION_BOUNDARY_POLICY) \
-	CLUSTER_NAME=$(CLUSTER_NAME) \
-	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
-	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+.PHONY: test
+test: manifests generate fmt vet envtest ## Run tests
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path --arch=$(ARCH))" \
+	GO_TEST_MODE=true \
+	go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+# Run CI tests
+.PHONY: ci-test
+ci-test: manifests generate fmt vet ## Run CI tests
+	GO_TEST_MODE=true \
+	go test -coverprofile=coverage.out -covermode=atomic ./...
 
 # Build manager binary
 manager: generate fmt vet update
@@ -93,10 +110,12 @@ update: manifests
 	kustomize build config/default > hack/iam-manager_with_webhook.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
-
+# Add support for cross-platform architecture detection
+.PHONY: manifests
+manifests: controller-gen ## Generate manifests e.g. CRD, RBAC etc.
+	@echo "Generating manifests with architecture $(ARCH)"
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=iam-manager webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=iam-manager webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
 
 # Run go fmt against code
 fmt:
@@ -107,7 +126,9 @@ vet:
 	go vet ./...
 
 # Generate code
-generate: controller-gen
+.PHONY: generate
+generate: controller-gen ## Generate code
+	@echo "Generating code with architecture $(ARCH)"
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Build the docker image
@@ -122,7 +143,7 @@ docker-push:
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.13.0
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
@@ -131,4 +152,4 @@ endif
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_VERSION)

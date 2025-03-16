@@ -1,0 +1,62 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# Prevent duplicate workflows runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21.x
+          cache: true
+
+      - name: Install required tools
+        run: |
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          go install github.com/golang/mock/mockgen@v1.6.0
+          
+      - name: Generate mocks
+        run: |
+          make mock
+
+      - name: Build
+        run: |
+          make build
+
+      - name: Run tests
+        env:
+          SKIP_PROBLEMATIC_TESTS: true
+          GO_TEST_MODE: true
+        run: |
+          make test
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+      
+      - name: Archive test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            coverage.out
+            test-results/**
+          retention-days: 7

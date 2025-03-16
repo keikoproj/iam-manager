@@ -38,7 +38,7 @@ func (s *PropertiesSuite) TestLoadPropertiesLocalEnvSuccess(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	Props = nil
 	err := LoadProperties("LOCAL")
 	c.Assert(err, check.IsNil)
@@ -54,7 +54,7 @@ func (s *PropertiesSuite) TestLoadPropertiesFailedNoCM(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	Props = nil
 	err := LoadProperties("")
 	c.Assert(err, check.NotNil)
@@ -67,7 +67,7 @@ func (s *PropertiesSuite) TestLoadPropertiesFailedNilCM(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	Props = nil
 	err := LoadProperties("", nil)
 	c.Assert(err, check.NotNil)
@@ -202,7 +202,7 @@ func (s *PropertiesSuite) TestIsWebhookEnabled(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	value := Props.IsWebHookEnabled()
 	c.Assert(value, check.Equals, false)
 }
@@ -212,12 +212,12 @@ func (s *PropertiesSuite) TestControllerDesiredFrequency(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	SetupTestProperties()
-	
+
 	value := Props.ControllerDesiredFrequency()
 	c.Assert(value, check.Equals, 0)
-	
+
 	CleanupTestProperties()
 }
 
@@ -226,12 +226,12 @@ func (s *PropertiesSuite) TestControllerClusterName(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	SetupTestProperties()
-	
+
 	value := Props.ClusterName()
 	c.Assert(value, check.Equals, "k8s_test_keiko")
-	
+
 	CleanupTestProperties()
 }
 
@@ -240,13 +240,13 @@ func (s *PropertiesSuite) TestControllerDefaultTrustPolicy(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	SetupTestProperties()
-	
+
 	value := Props.DefaultTrustPolicy()
 	def := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	c.Assert(value, check.Equals, def)
-	
+
 	CleanupTestProperties()
 }
 
@@ -261,7 +261,7 @@ func (s *PropertiesSuite) TestControllerOIDCIssuerUrl(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	value := Props.OIDCIssuerUrl()
 	c.Assert(value, check.Equals, "https://google.com/OIDC")
 }

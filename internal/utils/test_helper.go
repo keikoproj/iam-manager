@@ -18,7 +18,7 @@ package utils
 
 import (
 	"os"
-	
+
 	"github.com/keikoproj/iam-manager/internal/config"
 )
 
@@ -30,7 +30,7 @@ func SetupIRSATestEnvironment() {
 	os.Setenv("DEFAULT_TRUST_POLICY", `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"Federated": "arn:aws:iam::AWS_ACCOUNT_ID:oidc-provider/OIDC_PROVIDER"},"Action": "sts:AssumeRoleWithWebIdentity","Condition": {"StringEquals": {"OIDC_PROVIDER:sub": "system:serviceaccount:{{.NamespaceName}}:SERVICE_ACCOUNT_NAME"}}}, {"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`)
 	os.Setenv("LOCAL", "true")
 	os.Setenv("IRSA_ENABLED", "true")
-	
+
 	// Load properties with the test configuration
 	_ = config.LoadProperties("LOCAL")
 }

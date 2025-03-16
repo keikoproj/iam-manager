@@ -33,14 +33,14 @@ func TestValidateSuite(t *testing.T) {
 func (s *ValidateSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
-	
+
 	// Set up test environment for validation tests
 	validation.SetupValidationTestEnv()
 }
 
 func (s *ValidateSuite) TearDownTest(c *check.C) {
 	s.mockCtrl.Finish()
-	
+
 	// Clean up test environment
 	validation.CleanupValidationTestEnv()
 }

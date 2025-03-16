@@ -89,10 +89,10 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	//Add Env variable
 	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::{{.AccountID}}:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{
@@ -114,7 +114,7 @@ func (s *UtilsTestSuite) TestDefaultTrustPolicyWithGoTemplate(c *check.C) {
 	c.Assert(err, check.IsNil)
 	c.Assert(resp, check.NotNil)
 	c.Assert(*resp, check.DeepEquals, expect)
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }
@@ -191,10 +191,10 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultiple(c *check.C) {
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -234,7 +234,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultiple(c *check.C) {
 	trustPolicyObj, err := utils.DefaultTrustPolicy(s.ctx, resp, "kube-system")
 	c.Assert(err, check.IsNil)
 	c.Assert(*trustPolicyObj, check.DeepEquals, expect)
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }
@@ -245,10 +245,10 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultipleAndStringLikeW
 		c.Skip("Skipping environment-sensitive test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -288,7 +288,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyDefaultRoleWithMultipleAndStringLikeW
 	trustPolicyObj, err := utils.DefaultTrustPolicy(s.ctx, resp, "kube-system-dev")
 	c.Assert(err, check.IsNil)
 	c.Assert(*trustPolicyObj, check.DeepEquals, expect)
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }
@@ -455,10 +455,10 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 		c.Skip("Skipping IRSA test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -511,7 +511,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotation(c *check.C) {
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }
@@ -522,10 +522,10 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithMultipleIRSAAnnotations(c *check.
 		c.Skip("Skipping IRSA test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -590,7 +590,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithMultipleIRSAAnnotations(c *check.
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }
@@ -601,10 +601,10 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 		c.Skip("Skipping IRSA test on this architecture")
 		return
 	}
-	
+
 	// Set up the IRSA test environment
 	utils.SetupIRSATestEnvironment()
-	
+
 	expect := v1alpha1.AssumeRolePolicyDocument{
 		Version: "2012-10-17",
 		Statement: []v1alpha1.TrustPolicyStatement{
@@ -659,7 +659,7 @@ func (s *UtilsTestSuite) TestGetTrustPolicyWithIRSAAnnotationAndServiceRoleInReq
 	roleString, err := utils.GetTrustPolicy(s.ctx, input)
 	c.Assert(err, check.IsNil)
 	c.Assert(roleString, check.Equals, string(expected))
-	
+
 	// Clean up the test environment
 	utils.CleanupIRSATestEnvironment()
 }

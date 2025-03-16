@@ -48,7 +48,7 @@ func TestAPIs(t *testing.T) {
 		t.Skip("Skipping controller tests on ARM64 architecture or when SKIP_PROBLEMATIC_TESTS is set")
 		return
 	}
-	
+
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,

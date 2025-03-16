@@ -1,4 +1,3 @@
-
 This document explains the security measurements in place with iam-manager solution in AWS use case.
 
 
@@ -14,7 +13,32 @@ To have more confidence in terms of security, any good design should consider im
       i. Allow IAM Role creation only with "pre-defined IAM whitelisted policies"  
      ii. Allow only ONE role per namespace  
      
-###### IAM Permission Boundaries
+###### AWS IAM Permission Boundary
+
+AWS IAM Permission Boundary is the core security concept used in the iam-manager. Permission boundaries are AWS IAM policy objects that establish the maximum permissions an IAM entity can have, regardless of what permissions are granted by the attached policies.
+
+In the context of iam-manager, permission boundaries provide a critical security control by limiting what permissions can be delegated, even if the IAM role policy appears to grant broader access.
+
+### How Permission Boundaries Work
+
+The permission boundary acts as a guard rail for all roles created by iam-manager. The actual permissions granted to a role are the **intersection** of:
+
+1. Permissions specified in the role's policy
+2. Permissions allowed by the permission boundary
+
+For example, if an IAM role is created with "AdministratorAccess" policy but has a permission boundary that only allows "s3:Get*" operations, the effective permissions would be limited to just "s3:Get*" operations, even though the role policy technically grants much broader access.
+
+This ensures that even if a user specifies overly permissive policies in their IAMRole resource, the permission boundary will restrict the actual capabilities to only those explicitly allowed by the cluster administrator.
+
+### Real-World Example
+
+Consider this scenario:
+
+- An IAMRole resource includes "ec2:*" permissions in its policy
+- The permission boundary only allows "ec2:Describe*" actions
+- The effective permissions for the role will be limited to only "ec2:Describe*"
+
+This prevents escalation of privileges and ensures that roles created through iam-manager cannot be used to gain unauthorized access to AWS resources, protecting both the cluster and the broader AWS environment.
 
 Another important security concern is having an aws iam write access to the controller itself. This is important for many reasons where an developer/hacker gets an access to controller pod (which is very unlikely, if we say this is possible than we have a bigger thing to worry about where developers having an access to resources in a different namespace. We are not talking about cluster admins here. well, cluster admin can delete the entire cluster) and start creating/deleting the roles which are not part of the Kubernetes environment (For ex: Administrator). This is where IAM Permission Boundaries, Controlling Access Using Tags comes into picture. 
 

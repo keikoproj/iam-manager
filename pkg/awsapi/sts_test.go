@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/golang/mock/gomock"
@@ -44,10 +45,17 @@ func (s *STSAPISuite) TearDownTest(c *check.C) {
 }
 
 func (s *STSAPISuite) TestGetAccountIDSuccess(c *check.C) {
-	s.mockI.EXPECT().GetCallerIdentity(&sts.GetCallerIdentityInput{}).Times(1).Return(&sts.GetCallerIdentityOutput{}, nil)
+	// Mock with a proper account ID in the response to avoid nil pointer dereference
+	s.mockI.EXPECT().GetCallerIdentity(&sts.GetCallerIdentityInput{}).Times(1).Return(&sts.GetCallerIdentityOutput{
+		Account: aws.String("123456789012"),
+	}, nil)
+	
+	// Call the function being tested
 	accountID, err := s.mockSTS.GetAccountID(s.ctx)
+	
+	// Verify results
 	c.Assert(err, check.IsNil)
-	c.Assert(accountID, check.NotNil)
+	c.Assert(accountID, check.Equals, "123456789012")
 }
 
 func (s *STSAPISuite) TestGetAccountIDFailed(c *check.C) {

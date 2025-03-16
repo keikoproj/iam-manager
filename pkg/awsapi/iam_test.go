@@ -14,7 +14,7 @@ import (
 
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
+	mock_awsapi "github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
 )
 
 type IAMAPISuite struct {

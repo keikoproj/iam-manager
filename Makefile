@@ -12,9 +12,9 @@ $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 # Tool versions
-CONTROLLER_GEN_VERSION ?= v0.14.0
+CONTROLLER_GEN_VERSION ?= v0.4.1
 ENVTEST_VERSION ?= latest
-KUSTOMIZE_VERSION ?= v5.1.1
+KUSTOMIZE_VERSION ?= v5.6.0
 
 # Produce CRDs that work across Kubernetes versions
 CRD_OPTIONS ?= "crd:crdVersions=v1"
@@ -180,5 +180,4 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: manifests
 manifests: controller-gen kustomize ## Generate manifests e.g. CRD, RBAC etc.
 	@echo "Generating manifests with architecture $(ARCH)"
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=iam-manager webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=iam-manager webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
+	$(CONTROLLER_GEN) rbac:roleName=iam-manager crd webhook paths="./..." paths="./api/..." output:crd:artifacts:config=config/crd/bases

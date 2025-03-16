@@ -25,6 +25,37 @@ jobs:
           docker --version
           docker info
 
+      - name: Generate mocks
+        run: |
+          # Install mockgen
+          go install github.com/golang/mock/mockgen@v1.6.0
+          # Ensure mocks are properly included in go module
+          go mod tidy
+          # Create test ConfigMap for properties
+          mkdir -p hack/test
+          cat > hack/test/test-configmap.yaml <<EOF
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: iamroles-v1alpha1-configmap
+            namespace: dev
+          data:
+            iam.policy.action.prefix.whitelist: "s3:,sts:,ec2:Describe"
+            iam.policy.resource.blacklist: "kops"
+            iam.policy.s3.restricted.resource: "*"
+            aws.accountId: "123456789012"
+            aws.region: "us-west-2"
+            iam.managed.policies: "shared.policy"
+            iam.managed.permission.boundary.policy: "iam-manager-permission-boundary"
+            webhook.enabled: "true"
+            iam.role.max.limit.per.namespace: "10"
+            controller.desired.frequency: "30"
+            k8s.cluster.name: "test-cluster"
+            irsaEnabled: "true"
+            k8s.cluster.oidc.issuer.url: "https://oidc.eks.us-west-2.amazonaws.com/test"
+            iam.default.trust.policy: "default-policy"
+          EOF
+
       - name: Build
         run: |
           make docker-build
@@ -54,13 +85,16 @@ jobs:
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig create namespace iam-manager-system
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get namespaces
 
-      - name: Deploy CRDs
+      - name: Deploy CRDs and test ConfigMap
         run: |
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f config/crd/bases/
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f hack/test/test-configmap.yaml
 
       - name: Run Tests
         run: |
-          KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig make test
+          GO_TEST_MODE=true \
+          KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig \
+          make test
 
       - name: Cleanup KIND resources
         if: always()

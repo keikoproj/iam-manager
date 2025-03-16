@@ -104,7 +104,7 @@ vet: ## Run go vet against code.
 	go vet ./cmd/... ./api/... ./internal/controllers/... ./internal/config/... ./internal/utils/... ./pkg/k8s/... ./pkg/logging/...
 
 .PHONY: test
-test: manifests generate fmt vet kind-setup envtest gotestsum ## Run tests.
+test: manifests generate fmt vet kind-setup envtest gotestsum generate-test-configmap ## Run tests.
 	KUBECONFIG=$(KIND_KUBECONFIG) \
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	$(GOTESTSUM) -- -v ./... -coverprofile cover.out
@@ -246,12 +246,14 @@ kind-delete: kind-install ## Delete the KIND cluster.
 	@echo "KIND cluster '$(KIND_CLUSTER_NAME)' deleted"
 
 .PHONY: kind-deploy
-kind-deploy: manifests kind-setup ## Deploy the controller to the KIND cluster.
+kind-deploy: manifests kind-setup generate-test-configmap ## Deploy the controller to the KIND cluster.
 	@echo "Creating required namespaces..."
 	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl create namespace dev --dry-run=client -o yaml | kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f -
 	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl create namespace iam-manager-system --dry-run=client -o yaml | kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f -
 	@echo "Deploying CRDs to KIND cluster..."
-	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl apply -f config/crd/bases
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl apply -f config/crd/bases/
+	@echo "Deploying test ConfigMap..."
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl apply -f hack/test/test-configmap.yaml
 
 .PHONY: kind-clean
 kind-clean: kind-delete ## Clean up KIND resources and binaries.
@@ -266,3 +268,38 @@ $(GOTESTSUM): $(LOCALBIN)
 ##@ KIND targets
 .PHONY: kind
 kind: kind-install kind-setup kind-deploy ## Run KIND targets.
+
+##@ Mocks
+.PHONY: mocks
+mocks: ## Generate mock files using mockgen
+	go install github.com/golang/mock/mockgen@v1.6.0
+	go generate ./...
+	go mod tidy
+
+##@ Test ConfigMap
+.PHONY: generate-test-configmap
+generate-test-configmap: ## Generate a test ConfigMap for testing
+	@mkdir -p hack/test
+	@echo "Creating test ConfigMap..."
+	@cat > hack/test/test-configmap.yaml <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iamroles-v1alpha1-configmap
+  namespace: dev
+data:
+  iam.policy.action.prefix.whitelist: "s3:,sts:,ec2:Describe"
+  iam.policy.resource.blacklist: "kops"
+  iam.policy.s3.restricted.resource: "*"
+  aws.accountId: "123456789012"
+  aws.region: "us-west-2"
+  iam.managed.policies: "shared.policy"
+  iam.managed.permission.boundary.policy: "iam-manager-permission-boundary"
+  webhook.enabled: "true"
+  iam.role.max.limit.per.namespace: "10"
+  controller.desired.frequency: "30"
+  k8s.cluster.name: "test-cluster"
+  irsaEnabled: "true" 
+  k8s.cluster.oidc.issuer.url: "https://oidc.eks.us-west-2.amazonaws.com/test"
+  iam.default.trust.policy: "default-policy"
+EOF

@@ -16,6 +16,7 @@ package validation
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,6 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/keikoproj/iam-manager/api/v1alpha1"
+	"github.com/keikoproj/iam-manager/internal/config"
 )
 
 // These additional tests use the testify framework for simpler assertions
@@ -207,14 +209,24 @@ func TestValidateIAMPolicyAction_EdgeCases(t *testing.T) {
 		},
 	}
 
-	// Set up test environment using existing helper functions
-	SetupTestEnvironment()
-	// For the policy validation test, we need to configure valid allowed actions
-	SetupValidationTestEnv() 
+	// Directly setup test environment
+	os.Setenv("AWS_REGION", "us-west-2")
+	os.Setenv("AWS_ACCOUNT_ID", "123456789012")
+	os.Setenv("LOCAL", "true")
+	os.Setenv("GO_TEST_MODE", "true")
+	os.Setenv("ALLOWED_POLICY_ACTION", "ec2:*,elasticloadbalancing:*,cloudwatch:*,logs:*")
+	
+	// Reset global config and force reload
+	config.Props = nil
+	_ = config.LoadProperties("LOCAL")
 	
 	defer func() {
-		CleanupValidationTestEnv()
-		CleanupTestEnvironment()
+		// Clean up environment variables
+		os.Unsetenv("ALLOWED_POLICY_ACTION")
+		os.Unsetenv("AWS_REGION")
+		os.Unsetenv("AWS_ACCOUNT_ID")
+		os.Unsetenv("LOCAL")
+		os.Unsetenv("GO_TEST_MODE")
 	}()
 	
 	for _, tc := range testCases {

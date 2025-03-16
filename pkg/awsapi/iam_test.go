@@ -47,9 +47,32 @@ func (s *IAMAPISuite) TearDownTest(c *check.C) {
 //############
 
 func (s *IAMAPISuite) TestEnsureRoleSuccess(c *check.C) {
-	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
-	s.mockI.EXPECT().CreateRole(&iam.CreateRoleInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy()), MaxSessionDuration: aws.Int64(3600), AssumeRolePolicyDocument: aws.String("SOMETHING"), Description: aws.String("")}).Times(1).Return(&iam.CreateRoleOutput{Role: &iam.Role{RoleId: aws.String("ABCDE1234"), Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE")}}, nil)
-	s.mockI.EXPECT().ListRoleTags(&iam.ListRoleTagsInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.ListRoleTagsOutput{
+	// Use a properly formatted ARN with sufficient length for AWS SDK validation
+	validPolicyArn := "arn:aws:iam::123456789012:policy/iam-manager-permission-boundary"
+	
+	// First, it will try to get the role and fail with NoSuchEntity
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{
+		RoleName: aws.String("VALID_ROLE"),
+	}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
+	
+	// Then it will try to create the role
+	s.mockI.EXPECT().CreateRole(&iam.CreateRoleInput{
+		RoleName:               aws.String("VALID_ROLE"),
+		PermissionsBoundary:    aws.String(validPolicyArn),
+		MaxSessionDuration:     aws.Int64(3600),
+		AssumeRolePolicyDocument: aws.String("SOMETHING"),
+		Description:            aws.String(""),
+	}).Times(1).Return(&iam.CreateRoleOutput{
+		Role: &iam.Role{
+			RoleId: aws.String("ABCDE1234"),
+			Arn:    aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
+		},
+	}, nil)
+	
+	// Then list role tags
+	s.mockI.EXPECT().ListRoleTags(&iam.ListRoleTagsInput{
+		RoleName: aws.String("VALID_ROLE"),
+	}).Times(1).Return(&iam.ListRoleTagsOutput{
 		Tags: []*iam.Tag{
 			{
 				Key:   aws.String("managedBy"),
@@ -57,25 +80,72 @@ func (s *IAMAPISuite) TestEnsureRoleSuccess(c *check.C) {
 			},
 		},
 	}, nil)
-	s.mockI.EXPECT().TagRole(&iam.TagRoleInput{RoleName: aws.String("VALID_ROLE"), Tags: []*iam.Tag{
-		{
-			Key:   aws.String("managedBy"),
-			Value: aws.String("iam-manager"),
+	
+	// Then tag the role
+	s.mockI.EXPECT().TagRole(&iam.TagRoleInput{
+		RoleName: aws.String("VALID_ROLE"),
+		Tags: []*iam.Tag{
+			{
+				Key:   aws.String("managedBy"),
+				Value: aws.String("iam-manager"),
+			},
 		},
-	}}).Times(1).Return(&iam.TagRoleOutput{}, nil)
-	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy())}).Times(1).Return(nil, nil)
-	s.mockI.EXPECT().PutRolePolicy(&iam.PutRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(&iam.PutRolePolicyOutput{}, nil)
-	s.mockI.EXPECT().AttachRolePolicy(&iam.AttachRolePolicyInput{PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.AttachRolePolicyOutput{}, nil)
-	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(&iam.UpdateRoleOutput{}, nil)
-	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{RoleName: aws.String("VALID_ROLE"), PolicyDocument: aws.String("SOMETHING")}).Times(1).Return(&iam.UpdateAssumeRolePolicyOutput{}, nil)
-	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(), ManagedPolicies: config.Props.ManagedPolicies(), Tags: map[string]string{
-		"managedBy": "iam-manager",
-	}}
+	}).Times(1).Return(&iam.TagRoleOutput{}, nil)
+	
+	// Add permission boundary
+	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{
+		RoleName:            aws.String("VALID_ROLE"),
+		PermissionsBoundary: aws.String(validPolicyArn),
+	}).Times(1).Return(&iam.PutRolePermissionsBoundaryOutput{}, nil)
+	
+	// Put role policy
+	s.mockI.EXPECT().PutRolePolicy(&iam.PutRolePolicyInput{
+		PolicyDocument: aws.String("SOMETHING"),
+		RoleName:       aws.String("VALID_ROLE"),
+		PolicyName:     aws.String("VALID_POLICY"),
+	}).Times(1).Return(&iam.PutRolePolicyOutput{}, nil)
+	
+	// Attach role policy
+	s.mockI.EXPECT().AttachRolePolicy(&iam.AttachRolePolicyInput{
+		PolicyArn: aws.String("arn:aws:iam::123456789012:policy/SOMETHING"),
+		RoleName:  aws.String("VALID_ROLE"),
+	}).Times(1).Return(&iam.AttachRolePolicyOutput{}, nil)
+	
+	// Update role
+	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{
+		RoleName:           aws.String("VALID_ROLE"),
+		MaxSessionDuration: aws.Int64(3600),
+		Description:        aws.String(""),
+	}).Times(1).Return(&iam.UpdateRoleOutput{}, nil)
+	
+	// Update assume role policy
+	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
+		RoleName:       aws.String("VALID_ROLE"),
+		PolicyDocument: aws.String("SOMETHING"),
+	}).Times(1).Return(&iam.UpdateAssumeRolePolicyOutput{}, nil)
+	
+	// Create request
+	req := awsapi.IAMRoleRequest{
+		Name:                          "VALID_ROLE",
+		PolicyName:                    "VALID_POLICY",
+		PermissionPolicy:              "SOMETHING",
+		SessionDuration:               3600,
+		TrustPolicy:                   "SOMETHING",
+		ManagedPermissionBoundaryPolicy: validPolicyArn,
+		ManagedPolicies:               []string{"arn:aws:iam::123456789012:policy/SOMETHING"},
+		Tags: map[string]string{
+			"managedBy": "iam-manager",
+		},
+	}
+	
+	// Call the function being tested
 	resp, err := s.mockIAM.EnsureRole(s.ctx, req)
+	
+	// Verify the results
+	c.Assert(err, check.IsNil)
+	c.Assert(resp, check.NotNil)
 	c.Assert(resp.RoleARN, check.Equals, "arn:aws:iam::123456789012:role/VALID_ROLE")
 	c.Assert(resp.RoleID, check.Equals, "ABCDE1234")
-	c.Assert(resp, check.NotNil)
-	c.Assert(err, check.IsNil)
 }
 
 func (s *IAMAPISuite) TestEnsureRoleSuccessWithNoManagedPolicies(c *check.C) {

@@ -1,3 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 # Adds namespace to all resources.
 namespace: iam-manager-system
 
@@ -9,56 +12,42 @@ namespace: iam-manager-system
 namePrefix: iam-manager-
 
 # Labels to add to all resources and selectors.
-commonLabels:
-  app: iam-manager
+labels:
+- includeSelectors: true
+  pairs:
+    app: iam-manager
 
-bases:
+# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in crd/kustomization.yaml
+# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'. 'WEBHOOK' components are required.
+resources:
 - ../crd
 - ../rbac
 - ../manager
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in crd/kustomization.yaml
 - ../webhook
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'. 'WEBHOOK' components are required.
 - ../certmanager
 
-patchesStrategicMerge:
-  # Protect the /metrics endpoint by putting it behind auth.
-  # Only one of manager_auth_proxy_patch.yaml and
-  # manager_prometheus_metrics_patch.yaml should be enabled.
-#- manager_auth_proxy_patch.yaml
-  # If you want your controller-manager to expose the /metrics
-  # endpoint w/o any authn/z, uncomment the following line and
-  # comment manager_auth_proxy_patch.yaml.
-  # Only one of manager_auth_proxy_patch.yaml and
-  # manager_prometheus_metrics_patch.yaml should be enabled.
-#- manager_prometheus_metrics_patch.yaml
+patches:
+- path: manager_prometheus_metrics_patch.yaml
+- path: manager_webhook_patch.yaml
+- path: webhookcainjection_patch.yaml
 
-# [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in crd/kustomization.yaml
-- manager_webhook_patch.yaml
-
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER'.
-# Uncomment 'CERTMANAGER' sections in crd/kustomization.yaml to enable the CA injection in the admission webhooks.
-# 'CERTMANAGER' needs to be enabled to use ca injection
-- webhookcainjection_patch.yaml
-
-# the following config is for teaching kustomize how to do var substitution
+# Variable substitution for webhooks
 vars:
-# [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
-- name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
+- name: CERTIFICATE_NAMESPACE
   objref:
     kind: Certificate
     group: cert-manager.io
-    version: v1alpha2
-    name: serving-cert # this name should match the one in certificate.yaml
+    version: v1
+    name: serving-cert
   fieldref:
     fieldpath: metadata.namespace
 - name: CERTIFICATE_NAME
   objref:
     kind: Certificate
     group: cert-manager.io
-    version: v1alpha2
-    name: serving-cert # this name should match the one in certificate.yaml
-- name: SERVICE_NAMESPACE # namespace of the service
+    version: v1
+    name: serving-cert
+- name: SERVICE_NAMESPACE
   objref:
     kind: Service
     version: v1

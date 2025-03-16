@@ -1,3 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 # Adds namespace to all resources.
 namespace: iam-manager-system
 
@@ -9,26 +12,24 @@ namespace: iam-manager-system
 namePrefix: iam-manager-
 
 # Labels to add to all resources and selectors.
-commonLabels:
-  app: iam-manager
+labels:
+- includeSelectors: true
+  pairs:
+    app: iam-manager
 
-bases:
+resources:
 - ../crd_no_webhook
 - ../rbac
 - ../manager
 
-patchesStrategicMerge:
+patches:
   # Protect the /metrics endpoint by putting it behind auth.
   # Only one of manager_auth_proxy_patch.yaml and
   # manager_prometheus_metrics_patch.yaml should be enabled.
-#- manager_auth_proxy_patch.yaml
+#- path: manager_auth_proxy_patch.yaml
   # If you want your controller-manager to expose the /metrics
   # endpoint w/o any authn/z, uncomment the following line and
   # comment manager_auth_proxy_patch.yaml.
-  # Only one of manager_auth_proxy_patch.yaml and
-  # manager_prometheus_metrics_patch.yaml should be enabled.
-#- manager_prometheus_metrics_patch.yaml
+- path: manager_prometheus_metrics_patch.yaml
 
-# the following config is for teaching kustomize how to do var substitution
-vars:
-
+# No webhooks or certificate vars needed in this configuration

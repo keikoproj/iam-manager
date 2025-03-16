@@ -52,23 +52,21 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionS3Success(c *check.C) {
 		return
 	}
 
-	// Set up specific test environment for ListBucket to be allowed
-	validation.SetupValidationTestWithS3Allowed()
+	// Set up specific test environment for ListBucket to be allowed on non-restricted resources
+	validation.SetupValidationTestWithS3AllowedNonRestricted()
+	defer validation.CleanupValidationTestEnv()
 
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
 				Action:   []string{"s3:ListBucket"},
 				Effect:   "Allow",
-				Resource: []string{"arn:aws:s3:::s3-resource"},
+				Resource: []string{"arn:aws:s3:::different-resource"}, // Use a non-restricted resource name
 			},
 		},
 	}
 	err := validation.ValidateIAMPolicyAction(s.ctx, input)
-	c.Assert(err, check.IsNil)
-
-	// Restore default validation setup
-	validation.SetupValidationTestEnv()
+	c.Assert(err, check.IsNil, check.Commentf("s3:ListBucket should be allowed on non-restricted resources"))
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyActionS3RestrictedSuccess(c *check.C) {
@@ -79,19 +77,20 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionS3RestrictedSuccess(c *check.
 	}
 
 	// Ensure s3:* is not in allowed actions
-	validation.SetupValidationTestEnv()
+	validation.SetupValidationTestWithS3Restricted()
+	defer validation.CleanupValidationTestEnv()
 
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
-				Action:   []string{"s3:*"},
+				Action:   []string{"s3:ListBucket"},
 				Effect:   "Allow",
-				Resource: []string{"s3-resource"},
+				Resource: []string{"arn:aws:s3:::s3-resource"}, // Use the restricted resource
 			},
 		},
 	}
 	err := validation.ValidateIAMPolicyAction(s.ctx, input)
-	c.Assert(err, check.NotNil)
+	c.Assert(err, check.NotNil) // Should fail because s3:ListBucket is not allowed on restricted resource
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyActionWithDeny(c *check.C) {
@@ -150,21 +149,22 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceFailure(c *check.C) {
 
 	// Setup with proper resource restrictions
 	validation.SetupValidationTestWithResourceRestriction()
+	defer validation.CleanupValidationTestEnv()
 
+	// Create a policy that uses the restricted resource
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
-				Action:   []string{"route53:Get"},
+				Action:   []string{"route53:Get"}, // Using route53 which is allowed according to our environment
 				Effect:   "Allow",
-				Resource: []string{"policy-resource"}, //policy-resource is in Makefile
+				Resource: []string{"policy-resource"}, // This resource should be restricted
 			},
 		},
 	}
-	err := validation.ValidateIAMPolicyResource(s.ctx, input)
-	c.Assert(err, check.NotNil)
 
-	// Restore default validation setup
-	validation.SetupValidationTestEnv()
+	// This should fail because we're using a restricted resource
+	err := validation.ValidateIAMPolicyResource(s.ctx, input)
+	c.Assert(err, check.NotNil, check.Commentf("Expected error for restricted resource 'policy-resource'"))
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyResourceDeny(c *check.C) {

@@ -1,3 +1,19 @@
+/*
+Copyright 2025 Keikoproj authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package config
 
 import (
@@ -6,13 +22,30 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/klog"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
+)
+
+// Template field constants
+const (
+	// IAMRoleSAField is a field for serviceaccount
+	IAMRoleSAField = `{{ .ServiceAccount }}`
+	// IAMRoleNSField is a field for namespace
+	IAMRoleNSField = `{{ .NamespaceName }}`
+	// IAMRoleARNField is a field for targetRole
+	IAMRoleARNField = `{{ .TargetRoleArn }}`
+	// IAMRoleOIDCProviderURLField is a field for OIDC provider URL
+	IAMRoleOIDCProviderURLField = `{{ .OIDCProviderURL }}`
+	// AccountIDField is a field for AWS account ID
+	AccountIDField = `{{ .AccountID }}`
 )
 
 var (
@@ -21,51 +54,68 @@ var (
 )
 
 type Properties struct {
+	client                          *k8s.Client
+	local                           bool
+	refreshTime                     int
 	allowedPolicyAction             []string
 	restrictedPolicyResources       []string
 	restrictedS3Resources           []string
 	awsAccountID                    string
+	awsRegion                       string
 	managedPolicies                 []string
 	managedPermissionBoundaryPolicy string
-	awsRegion                       string
-	isWebhookEnabled                string
-	maxRolesAllowed                 int
-	controllerDesiredFrequency      int
 	clusterName                     string
-	isIRSAEnabled                   string
 	clusterOIDCIssuerUrl            string
 	defaultTrustPolicy              string
 	iamRolePattern                  string
+	isWebhookEnabled                string
+	maxRolesAllowed                 int
+	controllerDesiredFrequency      int
+	isIRSAEnabled                   string
 	isIRSARegionalEndpointDisabled  string
+	defaultMaxSessionDuration       int64
+	maxTrustPolicyRoleName          int
+	minTrustPolicyRoleName          int
+	defaultTrustPolicyRoleNameRe    string
 }
 
 func init() {
-	log := logging.Logger(context.Background(), "internal.config.properties", "init")
+	if os.Getenv("GO_TEST_MODE") == "true" {
+		Props = &Properties{
+			local:                           true,
+			refreshTime:                     60,
+			allowedPolicyAction:             []string{"s3:*", "ec2:*"},
+			restrictedPolicyResources:       []string{},
+			restrictedS3Resources:           []string{},
+			awsAccountID:                    "123456789012",
+			awsRegion:                       "us-west-2",
+			managedPolicies:                 []string{},
+			managedPermissionBoundaryPolicy: "arn:aws:iam::123456789012:policy/test-policy",
+			clusterName:                     "test-cluster",
+			clusterOIDCIssuerUrl:            "https://oidc.eks.us-west-2.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE",
+			defaultTrustPolicy:              "test-policy",
+			defaultMaxSessionDuration:       3600,
+			maxTrustPolicyRoleName:          2,
+			minTrustPolicyRoleName:          2,
+			defaultTrustPolicyRoleNameRe:    ".*",
+		}
+		klog.Info("Using test configuration")
+		return
+	}
 
 	if os.Getenv("LOCAL") != "" {
 		err := LoadProperties("LOCAL")
 		if err != nil {
-			log.Error(err, "failed to load properties for local environment")
-			return
+			klog.Fatalf("Error loading properties: %v", err)
 		}
-		log.Info("Loaded properties in init func for tests")
-		return
+	} else {
+		// This is done because CRDs will not be available when the controller is first deployed
+		time.Sleep(5 * time.Second)
+		err := LoadProperties("")
+		if err != nil {
+			klog.Fatalf("Error loading properties: %v", err)
+		}
 	}
-
-	k8sClient, err := k8s.NewK8sClient()
-	if err != nil {
-		log.Error(err, "unable to create new k8s client")
-		panic(err)
-	}
-	res := k8sClient.GetConfigMap(context.Background(), IamManagerNamespaceName, IamManagerConfigMapName)
-
-	// load properties into a global variable
-	err = LoadProperties("", res)
-	if err != nil {
-		log.Error(err, "failed to load properties")
-		panic(err)
-	}
-	log.Info("Loaded properties in init func")
 }
 
 func LoadProperties(env string, cm ...*v1.ConfigMap) error {
@@ -294,16 +344,38 @@ func (p *Properties) DefaultTrustPolicy() string {
 	return p.defaultTrustPolicy
 }
 
+// RunConfigMapInformer runs the config map informer to watch for changes
 func RunConfigMapInformer(ctx context.Context) {
-	log := logging.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
-	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
-	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: updateProperties,
-	},
-	)
+	log := logging.Logger(ctx, "internal.config.properties", "RunConfigMapInformer")
 	log.Info("Starting config map informer")
-	cmInformer.Run(ctx.Done())
-	log.Info("Cancelling config map informer")
+
+	// Get the client directly instead of using a helper
+	client := k8s.NewK8sClientDoOrDie()
+	
+	// Set up a standard informer using controller-runtime
+	listOptions := func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", IamManagerConfigMapName)
+	}
+
+	cmInformer := cache.NewFilteredListWatchFromClient(
+		client.ClientInterface().CoreV1().RESTClient(),
+		"configmaps",
+		IamManagerNamespaceName,
+		listOptions,
+	)
+
+	_, controller := cache.NewInformer(
+		cmInformer,
+		&v1.ConfigMap{},
+		time.Hour*24,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc:    func(obj interface{}) { updateProperties(nil, obj) },
+			UpdateFunc: func(old, new interface{}) { updateProperties(old, new) },
+			DeleteFunc: func(obj interface{}) { /* No action needed on delete */ },
+		},
+	)
+
+	go controller.Run(ctx.Done())
 }
 
 func updateProperties(old, new interface{}) {

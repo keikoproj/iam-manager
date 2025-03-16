@@ -1,7 +1,12 @@
 version: "3"
+projectName: iam-manager
 domain: keikoproj.io
 repo: github.com/keikoproj/iam-manager
+layout:
+  go.kubebuilder.io/v4: {}
 resources:
 - group: iammanager
-  version: v1alpha1
   kind: Iamrole
+  version: v1alpha1
+plugins:
+  go.sdk.operatorframework.io/v1: {}

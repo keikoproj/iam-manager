@@ -19,17 +19,36 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
 
+      - name: Setup Docker
+        uses: docker-practice/actions-setup-docker@master
+        with:
+          docker_channel: stable
+          docker_version: 20.10
+
       - name: Build
         run: |
           make docker-build
 
-      - name: Test
+      - name: Install KIND and Setup Cluster
+        run: |
+          make kind-install
+          make kind-setup
+
+      - name: Deploy CRDs
+        run: |
+          make kind-deploy
+
+      - name: Run Tests
         run: |
           make test
+
+      - name: Cleanup KIND resources
+        if: always()
+        run: |
+          make kind-clean
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./coverage.out
+          files: ./cover.out
           token: ${{ secrets.CODECOV_TOKEN }}
-          

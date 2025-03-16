@@ -1,4 +1,5 @@
 /*
+Copyright 2025 Keikoproj authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,108 +21,144 @@ import (
 	"flag"
 	"os"
 
-	// +kubebuilder:scaffold:imports
-	"k8s.io/apimachinery/pkg/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	// +kubebuilder:scaffold:imports
-
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
-	"github.com/keikoproj/iam-manager/internal/controllers"
+	"github.com/keikoproj/iam-manager/internal/controllers" // Changed import path
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
+	// +kubebuilder:scaffold:imports
 )
 
 var (
-	scheme = runtime.NewScheme()
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
-	_ = clientgoscheme.AddToScheme(scheme)
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(iammanagerv1alpha1.AddToScheme(scheme))
 
-	_ = iammanagerv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	var debug bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
-		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&debug, "debug", false, "Enable Debug?")
+	var probeAddr string
+	var enableWebhook bool
+	var webhookPort int
+	var props string
+
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableWebhook, "enable-webhook", false, "Enable webhook server")
+	flag.IntVar(&webhookPort, "webhook-port", 9443, "Webhook server port")
+	flag.StringVar(&props, "properties", "LOCAL", "Property file location. Default is empty which means use local env.")
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	// Initialize logging
 	logging.New()
 	log := logging.Logger(context.Background(), "main", "setup")
 
-	go config.RunConfigMapInformer(context.Background())
+	// Set up controller-runtime style logging
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:           scheme,
-		Metrics:          metricsserver.Options{BindAddress: metricsAddr},
-		LeaderElection:   enableLeaderElection,
-		WebhookServer:    webhook.NewServer(webhook.Options{Port: 9443}),
-		LeaderElectionID: "controller-leader-election-helper",
+	// Load configurations
+	err := config.LoadProperties(props)
+	if err != nil {
+		setupLog.Error(err, "Unable to load properties")
+		os.Exit(1)
+	}
+
+	// Create controller-runtime manager
+	webhookServer := webhook.NewServer(webhook.Options{
+		Port: webhookPort,
 	})
 
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: metricsAddr,
+		},
+		HealthProbeBindAddress: probeAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "955d5887.keikoproj.io",
+		WebhookServer:          webhookServer,
+	})
 	if err != nil {
-		log.Error(err, "unable to start manager")
+		setupLog.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 
-	log.V(1).Info("Setting up reconciler with manager")
+	// Create AWS API client
 	log.Info("region ", "region", config.Props.AWSRegion())
-
 	iamClient := awsapi.NewIAM(config.Props.AWSRegion())
-	if err := handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
-		log.Error(err, "unable to complete/verify oidc setup for IRSA")
-	}
 
-	controller := &controllers.IamroleReconciler{
-		Client:    mgr.GetClient(),
-		IAMClient: iamClient,
-		Recorder:  k8s.NewK8sClientDoOrDie().SetUpEventHandler(context.Background()),
-	}
-
-	if err = controller.SetupWithManager(mgr); err != nil {
-		log.Error(err, "unable to create controller", "controller", "Iamrole")
-		os.Exit(1)
-	}
-
-	// Add another runnable to the manager, it will run concurrently with the main controller thread
-	if err = mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
-		return controller.StartControllerReconcileCronJob(ctx)
-	})); err != nil {
-		log.Error(err, "unable to add StartControllerReconcileCronJob runnable to manager")
-		os.Exit(1)
-	}
-
-	//Get the client
-	iammanagerv1alpha1.NewWClient()
-	if config.Props.IsWebHookEnabled() {
-		log.Info("Registering webhook")
-		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
-			log.Error(err, "unable to create webhook", "webhook", "Iamrole")
+	// Setup OIDC for IRSA if needed
+	if os.Getenv("LOCAL") != "true" {
+		if err = handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
+			setupLog.Error(err, "Error while setting up OIDC for IRSA")
 			os.Exit(1)
 		}
 	}
 
+	// Setup controller with Kubebuilder v4 patterns
+	reconciler := &controllers.IamroleReconciler{ // Changed import path
+		Client:    mgr.GetClient(),
+		IAMClient: iamClient,
+		Recorder:  mgr.GetEventRecorderFor("iamrole-controller"),
+	}
+
+	if err = reconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "Unable to create controller", "controller", "Iamrole")
+		os.Exit(1)
+	}
+
+	// Setup webhooks if enabled
+	iammanagerv1alpha1.NewWClient()
+	if config.Props.IsWebHookEnabled() || enableWebhook {
+		setupLog.Info("Registering webhook")
+		if err = (&iammanagerv1alpha1.Iamrole{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "Unable to create webhook", "webhook", "Iamrole")
+			os.Exit(1)
+		}
+	}
 	// +kubebuilder:scaffold:builder
 
-	log.Info("Registering controller")
+	// Setup health checks
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "Unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "Unable to set up ready check")
+		os.Exit(1)
+	}
+
+	setupLog.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Error(err, "problem running manager")
+		setupLog.Error(err, "Problem running manager")
 		os.Exit(1)
 	}
 }
@@ -130,10 +167,9 @@ func main() {
 func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
 	log := logging.Logger(ctx, "main", "handleOIDCSetupForIRSA")
 
-	//Creating OIDC provider if config map has an entry
-
+	// Creating OIDC provider if config map has an entry
 	if config.Props.IsIRSAEnabled() {
-		//Fetch cert thumb print
+		// Fetch cert thumb print
 		thumbprint, err := utils.GetIdpServerCertThumbprint(context.Background(), config.Props.OIDCIssuerUrl())
 		if err != nil {
 			log.Error(err, "unable to get the OIDC IDP server thumbprint")
@@ -146,7 +182,6 @@ func handleOIDCSetupForIRSA(ctx context.Context, iamClient *awsapi.IAM) error {
 			return err
 		}
 		log.Info("OIDC provider setup is successfully completed")
-
 	}
 
 	return nil

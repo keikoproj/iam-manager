@@ -7,8 +7,6 @@ KUBEBUILDER_ARCH ?= amd64
 ENVTEST_K8S_VERSION = 1.28.0
 
 LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -69,28 +67,28 @@ run: generate fmt vet manifests
 	go run ./cmd/main.go
 
 # Install CRDs into a cluster
-install: manifests
-	kustomize build config/crd_no_webhook | kubectl apply -f -
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd_no_webhook | kubectl apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default_no_webhook | kubectl apply -f -
+deploy: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default_no_webhook | kubectl apply -f -
 
 # Install CRDs into a cluster
-install_with_webhook: manifests
-	kustomize build config/crd | kubectl apply -f -
+install_with_webhook: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy_with_webhook: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
+deploy_with_webhook: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 # updates the full config yaml file
-update: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default_no_webhook > hack/iam-manager.yaml
-	kustomize build config/default > hack/iam-manager_with_webhook.yaml
+update: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default_no_webhook > hack/iam-manager.yaml
+	$(KUSTOMIZE) build config/default > hack/iam-manager_with_webhook.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -128,7 +126,23 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
+## Tool Binaries
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+
+## Tool Versions
+KUSTOMIZE_VERSION ?= v4.2.0
+CONTROLLER_TOOLS_VERSION ?= v0.8.0
+
+KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
+
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)

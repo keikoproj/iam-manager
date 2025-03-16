@@ -6,39 +6,16 @@ metadata:
     control-plane: controller-manager
   name: iam-manager-system
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: iam-manager-system/iam-manager-serving-cert
-    controller-gen.kubebuilder.io/version: v0.2.5
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.14.0
   labels:
     app: iam-manager
   name: iamroles.iammanager.keikoproj.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.state
-    description: current state of the iam role
-    name: State
-    type: string
-  - JSONPath: .status.roleName
-    description: Name of the role
-    name: RoleName
-    type: string
-  - JSONPath: .status.retryCount
-    description: Retry count
-    name: RetryCount
-    type: integer
-  - JSONPath: .status.lastUpdatedTimestamp
-    description: last updated iam role timestamp
-    format: date-time
-    name: LastUpdatedTimestamp
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    description: time passed since iamrole creation
-    name: Age
-    type: date
   group: iammanager.keikoproj.io
   names:
     kind: Iamrole
@@ -48,203 +25,195 @@ spec:
     - iam
     singular: iamrole
   scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: Iamrole is the Schema for the iamroles API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: IamroleSpec defines the desired state of Iamrole
-          properties:
-            AssumeRolePolicyDocument:
-              properties:
-                Statement:
-                  description: Statement allows list of TrustPolicyStatement objects
-                  items:
-                    description: TrustPolicy struct holds Trust policy
-                    properties:
-                      Action:
-                        description: Action can be performed
-                        type: string
-                      Condition:
-                        description: Condition struct holds Condition
-                        properties:
-                          StringEquals:
-                            additionalProperties:
-                              type: string
-                            description: StringEquals can be used to define Equal
-                              condition
-                            type: object
-                          StringLike:
-                            additionalProperties:
-                              type: string
-                            description: StringLike can be used for regex as supported
-                              by AWS
-                            type: object
-                        type: object
-                      Effect:
-                        description: Effect allowed/denied
-                        enum:
-                        - Allow
-                        - Deny
-                        type: string
-                      Principal:
-                        description: Principal struct holds AWS principal
-                        properties:
-                          AWS:
-                            description: StringOrStrings type accepts one string or
-                              multiple strings
-                            items:
-                              type: string
-                            type: array
-                          Federated:
-                            type: string
-                          Service:
-                            type: string
-                        type: object
-                    type: object
-                  type: array
-                Version:
-                  description: Version specifies IAM policy version By default, this
-                    value is "2012-10-17"
-                  type: string
-              type: object
-            PolicyDocument:
-              description: PolicyDocument type defines IAM policy struct
-              properties:
-                Statement:
-                  description: Statement allows list of statement object
-                  items:
-                    description: Statement type defines the AWS IAM policy statement
-                    properties:
-                      Action:
-                        description: Action allowed on specific resources
-                        items:
-                          type: string
-                        type: array
-                      Effect:
-                        description: Effect allowed/denied
-                        enum:
-                        - Allow
-                        - Deny
-                        type: string
-                      Resource:
-                        description: Resources defines target resources which IAM
-                          policy will be applied
-                        items:
-                          type: string
-                        type: array
-                      Sid:
-                        description: Sid is an optional field which describes the
-                          specific statement action
-                        type: string
-                    required:
-                    - Action
-                    - Effect
-                    - Resource
-                    type: object
-                  type: array
-                Version:
-                  description: Version specifies IAM policy version By default, this
-                    value is "2012-10-17"
-                  type: string
-              required:
-              - Statement
-              type: object
-            RoleName:
-              description: RoleName can be passed only for privileged namespaces.
-                This will be respected only during new iamrole creation and will be
-                ignored during iamrole update Please check the documentation for more
-                on how to configure privileged namespace using annotation for iam-manager
-              type: string
-          required:
-          - PolicyDocument
-          type: object
-        status:
-          description: IamroleStatus defines the observed state of Iamrole
-          properties:
-            errorDescription:
-              description: ErrorDescription in case of error
-              type: string
-            lastUpdatedTimestamp:
-              description: LastUpdatedTimestamp represents the last time the iam role
-                has been modified
-              format: date-time
-              type: string
-            retryCount:
-              description: RetryCount in case of error
-              type: integer
-            roleARN:
-              description: RoleARN represents the ARN of an IAM role
-              type: string
-            roleID:
-              description: RoleID represents the unique ID of the role which can be
-                used in S3 policy etc
-              type: string
-            roleName:
-              description: RoleName represents the name of the iam role created in
-                AWS
-              type: string
-            state:
-              description: State of the resource
-              type: string
-          required:
-          - retryCount
-          type: object
-      type: object
-  version: v1alpha1
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: current state of the iam role
+      jsonPath: .status.state
+      name: State
+      type: string
+    - description: Name of the role
+      jsonPath: .status.roleName
+      name: RoleName
+      type: string
+    - description: Retry count
+      jsonPath: .status.retryCount
+      name: RetryCount
+      type: integer
+    - description: last updated iam role timestamp
+      format: date-time
+      jsonPath: .status.lastUpdatedTimestamp
+      name: LastUpdatedTimestamp
+      type: string
+    - description: time passed since iamrole creation
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Iamrole is the Schema for the iamroles API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: IamroleSpec defines the desired state of Iamrole
+            properties:
+              AssumeRolePolicyDocument:
+                properties:
+                  Statement:
+                    description: Statement allows list of TrustPolicyStatement objects
+                    items:
+                      description: TrustPolicy struct holds Trust policy
+                      properties:
+                        Action:
+                          description: Action can be performed
+                          type: string
+                        Condition:
+                          description: Condition struct holds Condition
+                          properties:
+                            StringEquals:
+                              additionalProperties:
+                                type: string
+                              description: StringEquals can be used to define Equal
+                                condition
+                              type: object
+                            StringLike:
+                              additionalProperties:
+                                type: string
+                              description: StringLike can be used for regex as supported
+                                by AWS
+                              type: object
+                          type: object
+                        Effect:
+                          description: Effect allowed/denied
+                          enum:
+                          - Allow
+                          - Deny
+                          type: string
+                        Principal:
+                          description: Principal struct holds AWS principal
+                          properties:
+                            AWS:
+                              description: StringOrStrings type accepts one string
+                                or multiple strings
+                              items:
+                                type: string
+                              type: array
+                            Federated:
+                              type: string
+                            Service:
+                              type: string
+                          type: object
+                      type: object
+                    type: array
+                  Version:
+                    description: |-
+                      Version specifies IAM policy version
+                      By default, this value is "2012-10-17"
+                    type: string
+                type: object
+              PolicyDocument:
+                description: PolicyDocument type defines IAM policy struct
+                properties:
+                  Statement:
+                    description: Statement allows list of statement object
+                    items:
+                      description: Statement type defines the AWS IAM policy statement
+                      properties:
+                        Action:
+                          description: Action allowed on specific resources
+                          items:
+                            type: string
+                          type: array
+                        Effect:
+                          description: Effect allowed/denied
+                          enum:
+                          - Allow
+                          - Deny
+                          type: string
+                        Resource:
+                          description: Resources defines target resources which IAM
+                            policy will be applied
+                          items:
+                            type: string
+                          type: array
+                        Sid:
+                          description: Sid is an optional field which describes the
+                            specific statement action
+                          type: string
+                      required:
+                      - Action
+                      - Effect
+                      - Resource
+                      type: object
+                    type: array
+                  Version:
+                    description: |-
+                      Version specifies IAM policy version
+                      By default, this value is "2012-10-17"
+                    type: string
+                required:
+                - Statement
+                type: object
+              RoleName:
+                description: |-
+                  RoleName can be passed only for privileged namespaces. This will be respected only during new iamrole creation and will be ignored during iamrole update
+                  Please check the documentation for more on how to configure privileged namespace using annotation for iam-manager
+                type: string
+            required:
+            - PolicyDocument
+            type: object
+          status:
+            description: IamroleStatus defines the observed state of Iamrole
+            properties:
+              errorDescription:
+                description: ErrorDescription in case of error
+                type: string
+              lastUpdatedTimestamp:
+                description: LastUpdatedTimestamp represents the last time the iam
+                  role has been modified
+                format: date-time
+                type: string
+              retryCount:
+                description: RetryCount in case of error
+                type: integer
+              roleARN:
+                description: RoleARN represents the ARN of an IAM role
+                type: string
+              roleID:
+                description: RoleID represents the unique ID of the role which can
+                  be used in S3 policy etc
+                type: string
+              roleName:
+                description: RoleName represents the name of the iam role created
+                  in AWS
+                type: string
+              state:
+                description: State of the resource
+                type: string
+            required:
+            - retryCount
+            type: object
+        type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
----
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
-metadata:
-  annotations:
-    cert-manager.io/inject-ca-from: iam-manager-system/iam-manager-serving-cert
-  creationTimestamp: null
-  labels:
-    app: iam-manager
-  name: iam-manager-mutating-webhook-configuration
-webhooks:
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: iam-manager-webhook-service
-      namespace: iam-manager-system
-      path: /mutate-iammanager-keikoproj-io-v1alpha1-iamrole
-  failurePolicy: Fail
-  name: miamrole.kb.io
-  rules:
-  - apiGroups:
-    - iammanager.keikoproj.io
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - iamroles
+    subresources:
+      status: {}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -284,7 +253,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   labels:
     app: iam-manager
   name: iam-manager-manager-role
@@ -528,18 +496,48 @@ metadata:
 spec:
   selfSigned: {}
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: iam-manager-system/iam-manager-serving-cert
+  labels:
+    app: iam-manager
+  name: iam-manager-mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: iam-manager-webhook-service
+      namespace: iam-manager-system
+      path: /mutate-iammanager-keikoproj-io-v1alpha1-iamrole
+  failurePolicy: Fail
+  name: miamrole.kb.io
+  rules:
+  - apiGroups:
+    - iammanager.keikoproj.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - iamroles
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: iam-manager-system/iam-manager-serving-cert
-  creationTimestamp: null
   labels:
     app: iam-manager
   name: iam-manager-validating-webhook-configuration
 webhooks:
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: iam-manager-webhook-service
       namespace: iam-manager-system
@@ -556,3 +554,4 @@ webhooks:
     - UPDATE
     resources:
     - iamroles
+  sideEffects: None

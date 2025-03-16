@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: iamroles.iammanager.keikoproj.io
 spec:
   group: iammanager.keikoproj.io
@@ -44,14 +44,19 @@ spec:
         description: Iamrole is the Schema for the iamroles API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -107,8 +112,9 @@ spec:
                       type: object
                     type: array
                   Version:
-                    description: Version specifies IAM policy version By default,
-                      this value is "2012-10-17"
+                    description: |-
+                      Version specifies IAM policy version
+                      By default, this value is "2012-10-17"
                     type: string
                 type: object
               PolicyDocument:
@@ -147,18 +153,17 @@ spec:
                       type: object
                     type: array
                   Version:
-                    description: Version specifies IAM policy version By default,
-                      this value is "2012-10-17"
+                    description: |-
+                      Version specifies IAM policy version
+                      By default, this value is "2012-10-17"
                     type: string
                 required:
                 - Statement
                 type: object
               RoleName:
-                description: RoleName can be passed only for privileged namespaces.
-                  This will be respected only during new iamrole creation and will
-                  be ignored during iamrole update Please check the documentation
-                  for more on how to configure privileged namespace using annotation
-                  for iam-manager
+                description: |-
+                  RoleName can be passed only for privileged namespaces. This will be respected only during new iamrole creation and will be ignored during iamrole update
+                  Please check the documentation for more on how to configure privileged namespace using annotation for iam-manager
                 type: string
             required:
             - PolicyDocument

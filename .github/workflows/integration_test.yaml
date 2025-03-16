@@ -25,6 +25,23 @@ jobs:
           docker --version
           docker info
 
+      - name: Set up envtest binaries
+        run: |
+          # Create directories for envtest binaries
+          mkdir -p bin/k8s/1.28.0-linux-amd64
+          
+          # Install envtest-setup
+          go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+          
+          # Download envtest binaries
+          KUBEBUILDER_ASSETS=$(setup-envtest use 1.28.0 -p path --bin-dir ${{ github.workspace }}/bin/k8s/1.28.0-linux-amd64)
+          echo "KUBEBUILDER_ASSETS=$KUBEBUILDER_ASSETS" >> $GITHUB_ENV
+          
+          # Verify binaries
+          ls -la $KUBEBUILDER_ASSETS
+          echo "Etcd binary: $KUBEBUILDER_ASSETS/etcd"
+          echo "Kube-apiserver binary: $KUBEBUILDER_ASSETS/kube-apiserver"
+
       - name: Generate mocks
         run: |
           # Install mockgen
@@ -80,6 +97,7 @@ jobs:
         run: |
           GO_TEST_MODE=true \
           KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig \
+          KUBEBUILDER_ASSETS=$KUBEBUILDER_ASSETS \
           go test -tags=integration ./internal/controllers/... ./pkg/awsapi/... -v
 
       - name: Cleanup KIND resources

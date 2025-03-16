@@ -104,10 +104,22 @@ vet: ## Run go vet against code.
 	go vet ./cmd/... ./api/... ./internal/controllers/... ./internal/config/... ./internal/utils/... ./pkg/k8s/... ./pkg/logging/...
 
 .PHONY: test
-test: manifests generate fmt vet kind-setup envtest gotestsum generate-test-configmap ## Run tests.
+test: manifests generate fmt vet kind-setup envtest gotestsum generate-test-configmap ## Run all tests.
 	KUBECONFIG=$(KIND_KUBECONFIG) \
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	$(GOTESTSUM) -- -v ./... -coverprofile cover.out
+
+.PHONY: test-unit
+test-unit: generate-test-configmap mocks ## Run only unit tests.
+	GO_TEST_MODE=true \
+	go test -v ./api/... ./pkg/k8s/... ./pkg/logging/... ./pkg/validation/... -coverprofile cover.out
+
+.PHONY: test-integration
+test-integration: manifests generate fmt vet kind-setup envtest gotestsum generate-test-configmap mocks ## Run only integration tests.
+	GO_TEST_MODE=true \
+	KUBECONFIG=$(KIND_KUBECONFIG) \
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
+	go test -tags=integration ./internal/controllers/... ./pkg/awsapi/... -v
 
 .PHONY: lint
 lint: ## Run golangci-lint on the code.

@@ -19,12 +19,6 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
 
-      # Docker is pre-installed on GitHub's Ubuntu 22.04 runner
-      - name: Verify Docker Installation
-        run: |
-          docker --version
-          docker info
-
       - name: Generate mocks
         run: |
           # Install mockgen
@@ -37,76 +31,15 @@ jobs:
           mockgen -destination=pkg/awsapi/mocks/mock_eksiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/eks/eksiface EKSAPI
           mockgen -destination=pkg/awsapi/mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
           mockgen -destination=pkg/awsapi/mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
-          
-          # Create test ConfigMap for properties
-          mkdir -p hack/test
-          cat > hack/test/test-configmap.yaml <<EOF
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: iamroles-v1alpha1-configmap
-            namespace: dev
-          data:
-            iam.policy.action.prefix.whitelist: "s3:,sts:,ec2:Describe"
-            iam.policy.resource.blacklist: "kops"
-            iam.policy.s3.restricted.resource: "*"
-            aws.accountId: "123456789012"
-            aws.region: "us-west-2"
-            iam.managed.policies: "shared.policy"
-            iam.managed.permission.boundary.policy: "iam-manager-permission-boundary"
-            webhook.enabled: "true"
-            iam.role.max.limit.per.namespace: "10"
-            controller.desired.frequency: "30"
-            k8s.cluster.name: "test-cluster"
-            irsaEnabled: "true"
-            k8s.cluster.oidc.issuer.url: "https://oidc.eks.us-west-2.amazonaws.com/test"
-            iam.default.trust.policy: "default-policy"
-          EOF
 
-      - name: Build
+      - name: Generate test ConfigMap
         run: |
-          make docker-build
+          ./hack/generate-test-configmap.sh
 
-      # Use standard KIND installation from GitHub Actions
-      - name: Install KIND
-        uses: helm/kind-action@v1.8.0
-        with:
-          install_only: true
-
-      - name: Create Kubeconfig directory
-        run: |
-          mkdir -p hack/tools
-          echo "KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig" >> $GITHUB_ENV
-
-      - name: Create KIND cluster
-        run: |
-          kind create cluster --name iam-manager-test --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig --wait 5m
-          echo "Using KIND cluster 'iam-manager-test'"
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig config use-context kind-iam-manager-test
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig cluster-info
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get nodes -o wide
-
-      - name: Create required namespaces
-        run: |
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig create namespace dev
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig create namespace iam-manager-system
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get namespaces
-
-      - name: Deploy CRDs and test ConfigMap
-        run: |
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f config/crd/bases/
-          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f hack/test/test-configmap.yaml
-
-      - name: Run Tests
+      - name: Run Unit Tests
         run: |
           GO_TEST_MODE=true \
-          KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig \
-          make test
-
-      - name: Cleanup KIND resources
-        if: always()
-        run: |
-          kind delete cluster --name iam-manager-test
+          go test -v ./api/... ./pkg/k8s/... ./pkg/logging/... ./pkg/validation/... -coverprofile=cover.out
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4

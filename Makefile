@@ -7,11 +7,13 @@ KUBEBUILDER_ARCH ?= amd64
 ENVTEST_K8S_VERSION = 1.28.0
 
 LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
+# Export local bin to path for all recipes
+export PATH := $(LOCALBIN):$(PATH)
 
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+## Tool Binaries
+MOCKGEN ?= $(LOCALBIN)/mockgen
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 
 KUBECONFIG                  ?= $(HOME)/.kube/config
 LOCAL                       ?= true
@@ -37,8 +39,12 @@ endif
 
 all: manager
 
-mock:
-	go install github.com/golang/mock/mockgen@v1.6.0
+# Build manager binary
+manager: $(LOCALBIN)/manager
+$(LOCALBIN)/manager: generate fmt vet update
+	go build -o $(LOCALBIN)/manager cmd/main.go
+
+mock: $(MOCKGEN)
 	@echo "mockgen is in progess"
 	@for pkg in $(shell go list ./...) ; do \
 		go generate ./... ;\
@@ -60,43 +66,38 @@ test: mock generate fmt manifests envtest
 	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
-# Build manager binary
-manager: generate fmt vet update
-	go build -o bin/manager cmd/main.go
-
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	go run ./cmd/main.go
 
 # Install CRDs into a cluster
-install: manifests
-	kustomize build config/crd_no_webhook | kubectl apply -f -
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd_no_webhook | kubectl apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default_no_webhook | kubectl apply -f -
+deploy: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default_no_webhook | kubectl apply -f -
 
 # Install CRDs into a cluster
-install_with_webhook: manifests
-	kustomize build config/crd | kubectl apply -f -
+install_with_webhook: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy_with_webhook: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
+deploy_with_webhook: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 # updates the full config yaml file
-update: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default_no_webhook > hack/iam-manager.yaml
-	kustomize build config/default > hack/iam-manager_with_webhook.yaml
+update: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default_no_webhook > hack/iam-manager.yaml
+	$(KUSTOMIZE) build config/default > hack/iam-manager_with_webhook.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
-
 
 # Run go fmt against code
 fmt:
@@ -118,17 +119,30 @@ docker-build:
 docker-push:
 	docker push ${IMG}
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.13.0
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
+
+## Tool Versions
+MOCKGEN_VERSION ?= v1.6.0
+KUSTOMIZE_VERSION ?= v4.2.0
+CONTROLLER_TOOLS_VERSION ?= v0.17.0
+
+$(MOCKGEN): $(LOCALBIN) ## Download mockgen if necessary.
+	GOBIN=$(LOCALBIN) go install github.com/golang/mock/mockgen@$(MOCKGEN_VERSION)
+
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen if necessary.
+$(CONTROLLER_GEN): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
+KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)

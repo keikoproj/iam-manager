@@ -298,8 +298,18 @@ func (s *IAMAPISuite) TestTagRoleFailureUnattachable(c *check.C) {
 //###########
 
 func (s *IAMAPISuite) TestAddPermissionBoundarySuccess(c *check.C) {
-	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{RoleName: aws.String("VALID_ROLE"), PermissionsBoundary: aws.String(config.Props.ManagedPermissionBoundaryPolicy())}).Times(1).Return(nil, nil)
-	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy()}
+	validPolicyArn := "arn:aws:iam::123456789012:policy/iam-manager-permission-boundary"
+	s.mockI.EXPECT().PutRolePermissionsBoundary(&iam.PutRolePermissionsBoundaryInput{
+		RoleName:            aws.String("VALID_ROLE"),
+		PermissionsBoundary: aws.String(validPolicyArn),
+	}).Times(1).Return(nil, nil)
+	
+	req := awsapi.IAMRoleRequest{
+		Name:                          "VALID_ROLE",
+		PolicyName:                    "VALID_POLICY",
+		PermissionPolicy:              "SOMETHING",
+		ManagedPermissionBoundaryPolicy: validPolicyArn,
+	}
 	err := s.mockIAM.AddPermissionBoundary(s.ctx, req)
 	c.Assert(err, check.IsNil)
 }

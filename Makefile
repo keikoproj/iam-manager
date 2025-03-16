@@ -247,8 +247,11 @@ kind-delete: kind-install ## Delete the KIND cluster.
 
 .PHONY: kind-deploy
 kind-deploy: manifests kind-setup ## Deploy the controller to the KIND cluster.
+	@echo "Creating required namespaces..."
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl create namespace dev --dry-run=client -o yaml | kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f -
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl create namespace iam-manager-system --dry-run=client -o yaml | kubectl --kubeconfig=$(KIND_KUBECONFIG) apply -f -
 	@echo "Deploying CRDs to KIND cluster..."
-	@kubectl apply -f config/crd/bases
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl apply -f config/crd/bases
 
 .PHONY: kind-clean
 kind-clean: kind-delete ## Clean up KIND resources and binaries.

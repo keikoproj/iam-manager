@@ -48,6 +48,12 @@ jobs:
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig cluster-info
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get nodes -o wide
 
+      - name: Create required namespaces
+        run: |
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig create namespace dev
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig create namespace iam-manager-system
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get namespaces
+
       - name: Deploy CRDs
         run: |
           kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f config/crd/bases/

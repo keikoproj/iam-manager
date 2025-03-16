@@ -29,8 +29,15 @@ jobs:
         run: |
           # Install mockgen
           go install github.com/golang/mock/mockgen@v1.6.0
-          # Ensure mocks are properly included in go module
-          go mod tidy
+          
+          echo "Generating AWS API mocks directly..."
+          mkdir -p pkg/awsapi/mocks
+          
+          # Generate mocks directly to fix import issues
+          mockgen -destination=pkg/awsapi/mocks/mock_eksiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/eks/eksiface EKSAPI
+          mockgen -destination=pkg/awsapi/mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
+          mockgen -destination=pkg/awsapi/mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
+          
           # Create test ConfigMap for properties
           mkdir -p hack/test
           cat > hack/test/test-configmap.yaml <<EOF

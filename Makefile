@@ -272,9 +272,12 @@ kind: kind-install kind-setup kind-deploy ## Run KIND targets.
 ##@ Mocks
 .PHONY: mocks
 mocks: ## Generate mock files using mockgen
-	go install github.com/golang/mock/mockgen@v1.6.0
-	go generate ./...
-	go mod tidy
+	@echo "Generating AWS API mocks directly..."
+	@mkdir -p pkg/awsapi/mocks
+	@go install github.com/golang/mock/mockgen@v1.6.0
+	@mockgen -destination=pkg/awsapi/mocks/mock_eksiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/eks/eksiface EKSAPI
+	@mockgen -destination=pkg/awsapi/mocks/mock_iamiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/iam/iamiface IAMAPI
+	@mockgen -destination=pkg/awsapi/mocks/mock_stsiface.go -package=mock_awsapi github.com/aws/aws-sdk-go/service/sts/stsiface STSAPI
 
 ##@ Test ConfigMap
 .PHONY: generate-test-configmap

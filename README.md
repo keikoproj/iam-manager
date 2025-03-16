@@ -33,7 +33,7 @@ iam-manager simplifies AWS IAM role management within Kubernetes clusters by pro
 
 Originally developed at Intuit to manage IAM roles across 200+ clusters and 8000+ namespaces, iam-manager allows application teams to create and update IAM roles as part of their GitOps deployment pipelines, eliminating manual IAM policy management. This enables a "single manifest" approach where teams can manage both Kubernetes resources and IAM permissions together. For more details on the design principles and origin story, see the [Managing IAM Roles as K8s Resources](https://medium.com/keikoproj/managing-iam-roles-as-k8s-resources-aa00c5c4447f) article.
 
-![IAM Manager Architecture](docs/images/iam-manager-arch.png)
+For a more detailed view of the architecture, see the [Architecture Documentation](docs/architecture.md).
 
 ## Requirements
 

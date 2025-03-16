@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	v1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -196,7 +196,7 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 	if os.Getenv("GO_TEST_MODE") == "true" {
 		return 0, nil
 	}
-	
+
 	// In a real implementation, this would count IAM roles
 	// but for our Kubebuilder v4 migration test, we're just
 	// returning a placeholder implementation

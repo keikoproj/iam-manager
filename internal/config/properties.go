@@ -25,9 +25,9 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
@@ -351,7 +351,7 @@ func RunConfigMapInformer(ctx context.Context) {
 
 	// Get the client directly instead of using a helper
 	client := k8s.NewK8sClientDoOrDie()
-	
+
 	// Set up a standard informer using controller-runtime
 	listOptions := func(options *metav1.ListOptions) {
 		options.FieldSelector = fmt.Sprintf("metadata.name=%s", IamManagerConfigMapName)

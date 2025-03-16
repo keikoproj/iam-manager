@@ -24,7 +24,7 @@ type STSAPISuite struct {
 }
 
 func TestSTSAPITestSuite(t *testing.T) {
-	check.Suite(&IAMAPISuite{t: t})
+	check.Suite(&STSAPISuite{t: t})
 	check.TestingT(t)
 }
 

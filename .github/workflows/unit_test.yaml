@@ -20,10 +20,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@master
-        with:
-          docker_channel: stable
-          docker_version: 20.10
+        run: |
+          # Install Docker using GitHub's own setup
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo chmod 666 /var/run/docker.sock
+          docker --version
 
       - name: Build
         run: |

@@ -234,8 +234,10 @@ kind-setup: kind-install ## Create a KIND cluster if it doesn't exist.
 		echo "KIND cluster '$(KIND_CLUSTER_NAME)' created" \
 	)
 	@echo "Using KIND cluster '$(KIND_CLUSTER_NAME)'"
-	@export KUBECONFIG=$(KIND_KUBECONFIG)
-	@kubectl cluster-info
+	@cp $(KIND_KUBECONFIG) $(KIND_KUBECONFIG).bak || true
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl config use-context kind-$(KIND_CLUSTER_NAME)
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl cluster-info
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl get nodes -o wide
 
 .PHONY: kind-delete
 kind-delete: kind-install ## Delete the KIND cluster.

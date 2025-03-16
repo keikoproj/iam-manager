@@ -29,23 +29,37 @@ jobs:
         run: |
           make docker-build
 
-      - name: Install KIND and Setup Cluster
+      # Use standard KIND installation from GitHub Actions
+      - name: Install KIND
+        uses: helm/kind-action@v1.8.0
+        with:
+          install_only: true
+
+      - name: Create Kubeconfig directory
         run: |
-          make kind-install
-          make kind-setup
+          mkdir -p hack/tools
+          echo "KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig" >> $GITHUB_ENV
+
+      - name: Create KIND cluster
+        run: |
+          kind create cluster --name iam-manager-test --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig --wait 5m
+          echo "Using KIND cluster 'iam-manager-test'"
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig config use-context kind-iam-manager-test
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig cluster-info
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig get nodes -o wide
 
       - name: Deploy CRDs
         run: |
-          make kind-deploy
+          kubectl --kubeconfig=${{ github.workspace }}/hack/tools/kubeconfig apply -f config/crd/bases/
 
       - name: Run Tests
         run: |
-          make test
+          KUBECONFIG=${{ github.workspace }}/hack/tools/kubeconfig make test
 
       - name: Cleanup KIND resources
         if: always()
         run: |
-          make kind-clean
+          kind delete cluster --name iam-manager-test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4

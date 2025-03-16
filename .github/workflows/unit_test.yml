@@ -30,19 +30,37 @@ jobs:
           go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
           go install github.com/golang/mock/mockgen@v1.6.0
           
+      # Ensure go fmt runs BEFORE go vet to avoid formatting issues
+      - name: Run go fmt
+        run: |
+          go fmt ./...
+          
+      # Generate mocks BEFORE running go vet
       - name: Generate mocks
         run: |
           # Ensure mocks directory exists
           mkdir -p pkg/awsapi/mocks
+          
           # Generate mocks with source mode for better compatibility
-          make mock
+          echo "Generating mocks..."
+          mockgen -source=pkg/awsapi/eks.go -destination=pkg/awsapi/mocks/mock_eksapi.go -package=mock_awsapi
+          mockgen -source=pkg/awsapi/iam.go -destination=pkg/awsapi/mocks/mock_iamapi.go -package=mock_awsapi
+          mockgen -source=pkg/awsapi/sts.go -destination=pkg/awsapi/mocks/mock_stsapi.go -package=mock_awsapi
+          
           # Verify mock files were created
+          echo "Verifying mock files..."
           ls -la pkg/awsapi/mocks/
 
+      # Generate manifests and code BEFORE running go vet
       - name: Generate manifests and code
         run: |
           make manifests
           make generate
+          
+      # Only run go vet AFTER mocks and code generation
+      - name: Run go vet
+        run: |
+          go vet ./...
 
       - name: Build manager binary
         run: |

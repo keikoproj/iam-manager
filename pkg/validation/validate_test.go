@@ -32,13 +32,22 @@ func TestValidateSuite(t *testing.T) {
 func (s *ValidateSuite) SetUpTest(c *check.C) {
 	s.ctx = context.Background()
 	s.mockCtrl = gomock.NewController(s.t)
+	
+	// Set up test environment for validation
+	validation.SetupTestEnvironment()
+	validation.CleanupValidationTestEnv() // Clean up first to ensure a clean state
 }
 
 func (s *ValidateSuite) TearDownTest(c *check.C) {
 	s.mockCtrl.Finish()
+	validation.CleanupValidationTestEnv()
+	validation.CleanupTestEnvironment()
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyActionS3Success(c *check.C) {
+	// Set up test with the specific environment needed for this test
+	validation.SetupValidationTestWithS3AllowedNonRestricted()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -53,6 +62,9 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionS3Success(c *check.C) {
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyActionS3RestrictedSuccess(c *check.C) {
+	// Set up test with the specific environment needed for this test
+	validation.SetupValidationTestWithS3Restricted()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -67,6 +79,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionS3RestrictedSuccess(c *check.
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyActionWithDeny(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -81,6 +95,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyActionWithDeny(c *check.C) {
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyDefaultWithDeny(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -100,6 +116,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyDefaultWithDeny(c *check.C) {
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyResourceSuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -114,6 +132,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceSuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyResourceFailure(c *check.C) {
+	validation.SetupValidationTestWithResourceRestriction()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -128,6 +148,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceFailure(c *check.C) {
 }
 
 func (s *ValidateSuite) TestValidateIAMPolicyResourceDeny(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -142,7 +164,8 @@ func (s *ValidateSuite) TestValidateIAMPolicyResourceDeny(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {
-
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -214,7 +237,8 @@ func (s *ValidateSuite) TestCompareRoleSuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestComparePermissionPolicySuccess(c *check.C) {
-
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -246,6 +270,8 @@ func (s *ValidateSuite) TestComparePermissionPolicySuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestComparePermissionPolicy2Success(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -276,6 +302,8 @@ func (s *ValidateSuite) TestComparePermissionPolicy2Success(c *check.C) {
 }
 
 func (s *ValidateSuite) TestComparePermissionPolicyFailure(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.PolicyDocument{
 		Statement: []v1alpha1.Statement{
 			{
@@ -306,7 +334,8 @@ func (s *ValidateSuite) TestComparePermissionPolicyFailure(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
-
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.AssumeRolePolicyDocument{
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
@@ -350,6 +379,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicySuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.AssumeRolePolicyDocument{
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
@@ -393,6 +424,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicy2Success(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := v1alpha1.AssumeRolePolicyDocument{
 		Statement: []v1alpha1.TrustPolicyStatement{
 			{
@@ -436,6 +469,8 @@ func (s *ValidateSuite) TestCompareAssumeRolePolicyFailure(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareTagsSuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := map[string]string{
 		"cluster":   "clusterName",
 		"managedBy": "iam-manager",
@@ -461,6 +496,8 @@ func (s *ValidateSuite) TestCompareTagsSuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	input1 := map[string]string{
 		"cluster":   "clusterName",
 		"managedBy": "iam-manager",
@@ -482,6 +519,8 @@ func (s *ValidateSuite) TestCompareTagsFailure(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareRoleIRSASuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	sa := v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-sa",
@@ -497,6 +536,8 @@ func (s *ValidateSuite) TestCompareRoleIRSASuccess(c *check.C) {
 }
 
 func (s *ValidateSuite) TestCompareRoleIRSAFailure(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	sa := v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-sa",
@@ -509,21 +550,29 @@ func (s *ValidateSuite) TestCompareRoleIRSAFailure(c *check.C) {
 }
 
 func (s *ValidateSuite) TestContainsStringSuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	resp := validation.ContainsString([]string{"iamrole.finalizers.iammanager.keikoproj.io", "iamrole.finalizers2.iammanager.keikoproj.io"}, "iamrole.finalizers.iammanager.keikoproj.io")
 	c.Assert(resp, check.Equals, true)
 }
 
 func (s *ValidateSuite) TestContainsStringFailure(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	resp := validation.ContainsString([]string{"iamrole.finalizers.iammanager.keikoproj.io", "iamrole.finalizers2.iammanager.keikoproj.io"}, "iamrole.finalizers.iammanager2.keikoproj.io")
 	c.Assert(resp, check.Equals, false)
 }
 
 func (s *ValidateSuite) TestRemoveStringSuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	resp := validation.RemoveString([]string{"iamrole.finalizers.iammanager.keikoproj.io", "iamrole.finalizers2.iammanager.keikoproj.io"}, "iamrole.finalizers2.iammanager.keikoproj.io")
 	c.Assert(resp, check.DeepEquals, []string{"iamrole.finalizers.iammanager.keikoproj.io"})
 }
 
 func (s *ValidateSuite) TestRemoveStringEmptySuccess(c *check.C) {
+	validation.SetupValidationTestEnv()
+	
 	resp := validation.RemoveString([]string{"iamrole.finalizers2.iammanager.keikoproj.io"}, "iamrole.finalizers2.iammanager.keikoproj.io")
 	c.Assert(len(resp), check.Equals, 0)
 }

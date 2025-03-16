@@ -32,6 +32,11 @@ endif
 
 all: manager
 
+# Build manager binary
+manager: $(LOCALBIN)/manager
+$(LOCALBIN)/manager: generate fmt vet update
+	go build -o $(LOCALBIN)/manager cmd/main.go
+
 mock:
 	go install github.com/golang/mock/mockgen@v1.6.0
 	@echo "mockgen is in progess"
@@ -54,10 +59,6 @@ test: mock generate fmt manifests envtest
 	CLUSTER_OIDC_ISSUER_URL="$(CLUSTER_OIDC_ISSUER_URL)" \
 	DEFAULT_TRUST_POLICY=$(DEFAULT_TRUST_POLICY) \
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
-
-# Build manager binary
-manager: generate fmt vet update
-	go build -o bin/manager cmd/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -92,7 +93,6 @@ manifests: controller-gen
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd_no_webhook/bases
 
-
 # Run go fmt against code
 fmt:
 	go fmt ./...
@@ -112,6 +112,7 @@ docker-build:
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
 
 ## Tool Binaries
 KUSTOMIZE ?= $(LOCALBIN)/kustomize

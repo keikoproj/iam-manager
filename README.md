@@ -15,6 +15,7 @@ A Kubernetes operator that manages AWS IAM roles for namespaces and service acco
 - [Overview](#overview)
 - [Requirements](#requirements)
 - [Features](#features)
+- [Architecture](#architecture)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
 - [Documentation](#documentation)
@@ -45,6 +46,19 @@ iam-manager provides a comprehensive set of features for IAM role management:
 - [Maximum Number of Roles per Namespace](docs/features.md#maximum-number-of-roles-per-namespace) - Governance controls
 - [Attaching Managed IAM Policies for All Roles](docs/features.md#attaching-managed-iam-policies-for-all-roles) - Simplified policy management
 - [Multiple Trust policies](docs/features.md#multiple-trust-policies) - Flexible trust relationship configuration
+
+## Architecture
+
+iam-manager follows a Kubernetes operator pattern that watches for Iamrole custom resources and manages the corresponding IAM roles in AWS.
+
+![IAM Manager Architecture](docs/images/iam-manager-architecture.png)
+
+The controller reconciles Kubernetes resources with AWS IAM roles, ensuring that:
+- Each valid Iamrole CR has a corresponding IAM role in AWS
+- Changes to Iamrole CRs are reflected in the AWS IAM roles
+- Deleted Iamrole CRs result in cleanup of the corresponding AWS resources
+
+For a more detailed view of the architecture including component interactions and workflows, see the [Architecture Documentation](docs/architecture.md).
 
 ## Quick Start
 

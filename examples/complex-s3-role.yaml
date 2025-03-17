@@ -1,0 +1,55 @@
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: complex-s3-manager
+  namespace: default
+spec:
+  # Policy document that defines the permissions for this role
+  # This example shows a more complex policy with multiple statements and conditions
+  PolicyDocument:
+    Statement:
+      - Effect: "Allow"
+        Action:
+          - "s3:GetObject"
+          - "s3:PutObject"
+          - "s3:DeleteObject"
+          - "s3:ListBucket"
+        Resource:
+          - "arn:aws:s3:::app-data-bucket"
+          - "arn:aws:s3:::app-data-bucket/data/*"
+        Sid: "S3DataAccess"
+        # Using conditions to restrict access
+        Condition:
+          StringLike:
+            "s3:prefix":
+              - "data/"
+              - "uploads/"
+      
+      - Effect: "Allow"
+        Action:
+          - "s3:ListAllMyBuckets"
+        Resource:
+          - "*"
+        Sid: "ListBuckets"
+      
+      - Effect: "Allow"
+        Action:
+          - "kms:Decrypt"
+          - "kms:GenerateDataKey"
+        Resource:
+          - "arn:aws:kms:*:*:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+        Sid: "KMSAccess"
+  
+  # Trust policy that defines who can assume this role
+  AssumeRolePolicyDocument:
+    Version: "2012-10-17"
+    Statement:
+      - Effect: "Allow"
+        Action: "sts:AssumeRole"
+        Principal:
+          AWS:
+            - "arn:aws:iam::123456789012:role/KubernetesNode"
+        # Adding condition to restrict which source accounts can assume the role
+        Condition:
+          StringEquals:
+            "aws:SourceAccount": "123456789012"

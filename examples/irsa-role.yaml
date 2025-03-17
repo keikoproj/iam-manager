@@ -1,0 +1,33 @@
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: irsa-dynamodb-app
+  namespace: default
+  annotations:
+    # This annotation specifies which service account will be associated with this role
+    iam.amazonaws.com/irsa-service-account: app-service-account
+spec:
+  # Policy document that defines the permissions for this role
+  PolicyDocument:
+    Statement:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:Query"
+          - "dynamodb:Scan"
+        Resource:
+          - "arn:aws:dynamodb:*:*:table/app-data-table"
+        Sid: "AllowDynamoDBAccess"
+      - Effect: "Allow"
+        Action:
+          - "logs:CreateLogGroup"
+          - "logs:CreateLogStream"
+          - "logs:PutLogEvents"
+        Resource:
+          - "arn:aws:logs:*:*:*"
+        Sid: "AllowLogging"
+  
+  # When using IRSA, the trust policy is automatically configured by the controller
+  # based on the OIDC provider of your EKS cluster and the specified service account

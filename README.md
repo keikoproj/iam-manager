@@ -77,6 +77,7 @@ spec:
           - "s3:ListBucket"
         Resource:
           - "arn:aws:s3:::your-bucket-name/*"
+          - "arn:aws:s3:::your-bucket-name"
         Sid: "AllowS3Access"
 ```
 

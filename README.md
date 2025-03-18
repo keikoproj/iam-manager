@@ -4,108 +4,159 @@
 [![PR](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)][GithubPrsUrl]
 [![slack](https://img.shields.io/badge/slack-join%20the%20conversation-ff69b4.svg)][SlackUrl]
 
-![version](https://img.shields.io/badge/version-0.0.1-blue.svg?cacheSeconds=2592000)
+[![Release][ReleaseImg]][ReleaseUrl]
 [![Build Status][BuildStatusImg]][BuildMasterUrl]
 [![codecov][CodecovImg]][CodecovUrl]
 [![Go Report Card][GoReportImg]][GoReportUrl]
 
+A Kubernetes operator that manages AWS IAM roles for namespaces and service accounts using custom resources.
 
-AWS IAM role management for K8s namespaces inside cluster using k8s CRD Operator. 
+## Table of Contents
+- [Overview](#overview)
+- [Requirements](#requirements)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Version Compatibility](#version-compatibility)
+- [Contributing](#contributing)
 
-#### Security:
+## Overview
 
-Security will be a main concern when we design a solution to create/update/delete IAM roles inside a cluster independently. iam-manager uses AWS IAM Permission Boundary concept along with other solutions to secure the implementation. Please check [AWS Security](docs/AWS_Security.md) for more details.
+iam-manager simplifies AWS IAM role management within Kubernetes clusters by providing a declarative approach through custom resources. It enables namespace-scoped IAM role creation, enforces security best practices, and integrates with AWS IAM Role for Service Accounts (IRSA).
 
-#### Supported Features
+Originally developed at Intuit to manage IAM roles across 200+ clusters and 8000+ namespaces, iam-manager allows application teams to create and update IAM roles as part of their GitOps deployment pipelines, eliminating manual IAM policy management. This enables a "single manifest" approach where teams can manage both Kubernetes resources and IAM permissions together. For more details on the design principles and origin story, see the [Managing IAM Roles as K8s Resources](https://medium.com/keikoproj/managing-iam-roles-as-k8s-resources-aa00c5c4447f) article.
 
-Following features are supported by IAM Manager
+## Requirements
 
-[IAM Roles Management](docs/Features.md#iam-roles-management)  
-[IAM Role for Service Accounts (IRSA)](docs/Features.md#iam-role-for-service-accounts-irsa)  
-[AWS Service-Linked Roles](docs/Features.md#aws-service-linked-roles)  
-[Default Trust Policy for All Roles](docs/Features.md#default-trust-policy-for-all-roles)  
-[Maximum Number of Roles per Namespace](docs/Features.md#maximum-number-of-roles-per-namespace)  
-[Attaching Managed IAM Policies for All Roles](docs/Features.md#attaching-managed-iam-policies-for-all-roles)  
-[Multiple Trust policies](docs/Features.md#multiple-trust-policies)
+- Kubernetes cluster 1.16+
+- AWS IAM permissions to create/update/delete roles
+- AWS account with permission boundary policy configured
+- Cert-manager (for webhook validation, optional)
 
-##### iam-manager config-map
-This [document](docs/Configmap_Properties.md) provide explanation on configmap variables.
+## Features
 
-#### Additional Info  
-iam-manager is built using kubebuilder project and like any other kubebuilder project iam-manager also uses cert-manager to manage the SSL certs for webhooks.
+iam-manager provides a comprehensive set of features for IAM role management:
 
+- [IAM Roles Management](docs/features.md#iam-roles-management) - Create, update, and delete IAM roles through Kubernetes resources
+- [IAM Role for Service Accounts (IRSA)](docs/features.md#iam-role-for-service-accounts-irsa) - Integration with AWS IAM Roles for Service Accounts
+- [AWS Service-Linked Roles](docs/features.md#aws-service-linked-roles) - Support for service-linked roles
+- [Default Trust Policy for All Roles](docs/features.md#default-trust-policy-for-all-roles) - Enforce consistent trust policies
+- [Maximum Number of Roles per Namespace](docs/features.md#maximum-number-of-roles-per-namespace) - Governance controls
+- [Attaching Managed IAM Policies for All Roles](docs/features.md#attaching-managed-iam-policies-for-all-roles) - Simplified policy management
+- [Multiple Trust policies](docs/features.md#multiple-trust-policies) - Flexible trust relationship configuration
 
-#### Usage:  
-Following is the sample Iamrole spec. 
+## Architecture
+
+iam-manager follows a Kubernetes operator pattern that watches for Iamrole custom resources and manages the corresponding IAM roles in AWS.
+
+![IAM Manager Architecture](docs/images/iam-manager-architecture.png)
+
+The controller reconciles Kubernetes resources with AWS IAM roles, ensuring that:
+- Each valid Iamrole CR has a corresponding IAM role in AWS
+- Changes to Iamrole CRs are reflected in the AWS IAM roles
+- Deleted Iamrole CRs result in cleanup of the corresponding AWS resources
+
+For a more detailed view of the architecture including component interactions and workflows, see the [Architecture Documentation](docs/architecture.md).
+
+## Quick Start
+
+The fastest way to install iam-manager is to use the provided installation script:
+
+```bash
+git clone https://github.com/keikoproj/iam-manager.git
+cd iam-manager
+./hack/install.sh [cluster_name] [aws_region] [aws_profile]
+```
+
+For detailed installation instructions, configuration options, and prerequisites, see the [Installation Guide](docs/install.md).
+
+## Usage
+
+Here's a minimal example of an IAM role for accessing S3:
 
 ```yaml
 apiVersion: iammanager.keikoproj.io/v1alpha1
 kind: Iamrole
 metadata:
-  name: iam-manager-iamrole
+  name: s3-reader-role
+  namespace: default
 spec:
-  # Add fields here
   PolicyDocument:
     Statement:
-      -
-        Effect: "Allow"
+      - Effect: "Allow"
         Action:
-          - "s3:Get*"
+          - "s3:GetObject"
+          - "s3:ListBucket"
         Resource:
-          - "arn:aws:s3:::intu-oim*"
+          - "arn:aws:s3:::your-bucket-name/*"
+          - "arn:aws:s3:::your-bucket-name"
         Sid: "AllowS3Access"
-  AssumeRolePolicyDocument:
-    Version: "2012-10-17"
+```
+
+For IRSA (IAM Roles for Service Accounts) integration:
+
+```yaml
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: app-role
+  namespace: default
+  annotations:
+    iam.amazonaws.com/irsa-service-account: app-service-account
+spec:
+  PolicyDocument:
     Statement:
-      -
-        Effect: "Allow"
-        Action: "sts:AssumeRole"
-        Principal:
-          AWS:
-            - "arn:aws:iam::XXXXXXXXXXX:role/20190504-k8s-kiam-role"
+      - Effect: "Allow"
+        Action: ["s3:GetObject"]
+        Resource: ["arn:aws:s3:::your-bucket-name/*"]
 ```
 
-To submit, kubectl apply -f iam_role.yaml --ns namespace1
+For detailed examples and usage patterns, see the [examples directory](examples/) and the [CRD Reference](docs/crd-reference.md).
 
-#### Installation:
- 
-Simplest way to install iam-manager along with the role required for it to do the job is to run [install.sh](hack/install.sh) command.  
+## Documentation
 
-Update the allowed policies in [allowed_policies.txt](hack/allowed_policies.txt) and config map properties [config_map](hack/iammanager.keikoproj.io_iamroles-configmap.yaml) as per your environment before you run install.sh.
+Comprehensive documentation is available:
 
-Note: You must be cluster admin and have exported KUBECONFIG and also has Administrator access to underlying AWS account and have the credentials exported.
+- [Architecture Documentation](docs/architecture.md)
+- [Quick Start Guide](docs/quickstart.md)
+- [Design Documentation](docs/design.md)
+- [Configuration Options](docs/configmap-properties.md)
+- [Developer Guide](docs/developer-guide.md)
+- [AWS Integration](docs/aws-integration.md)
+- [AWS Security](docs/aws-security.md)
+- [Features](docs/features.md)
+- [Installation Guide](docs/install.md)
+- [CRD Reference](docs/crd-reference.md)
+- [Troubleshooting Guide](docs/troubleshooting.md)
 
-example:
-```bash
-export KUBECONFIG=/Users/myhome/.kube/admin@eks-dev2-k8s  
-export AWS_PROFILE=admin_123456789012_account
-./install.sh [cluster_name] [aws_region] [aws_profile]
-./install.sh eks-dev2-k8s us-west-2 aws_profile
+## Version Compatibility
 
-```
+| iam-manager Version | Kubernetes Version | Go Version | Key Features |
+|---------------------|-------------------|------------|--------------|
+| v0.22.0 | 1.16 - 1.25 | 1.19+ | IRSA regional endpoint configuration |
+| v0.21.0 | 1.16 - 1.24 | 1.18+ | Enhanced security features |
+| v0.20.0 | 1.16 - 1.23 | 1.17+ | Improved reconciliation controller |
+| v0.19.0 | 1.16 - 1.22 | 1.16+ | IRSA support improvements |
+| v0.18.0 | 1.16 - 1.21 | 1.15+ | Custom role naming |
 
-To enable web hook or/and also update your installation of iam-manager to work with kiam please check [Installation](docs/Install.md) for detailed instructions.
+For detailed information about each release, see the [GitHub Releases page](https://github.com/keikoproj/iam-manager/releases).
 
+## Contributing
 
-## ❤ Contributing ❤
-
-Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
-
-## Developer Guide
-
-Please see [DEVELOPER.md](.github/DEVELOPER.md).
+Please check [CONTRIBUTING.md](CONTRIBUTING.md) before contributing.
 
 <!-- Markdown link -->
-[install]: docs/README.md
-[ext_link]: https://upload.wikimedia.org/wikipedia/commons/d/d9/VisualEditor_-_Icon_-_External-link.svg
-
-
 [GithubMaintainedUrl]: https://github.com/keikoproj/iam-manager/graphs/commit-activity
 [GithubPrsUrl]: https://github.com/keikoproj/iam-manager/pulls
-[SlackUrl]: https://keikoproj.slack.com/messages/iam-manager
+[SlackUrl]: https://keikoproj.slack.com/app_redirect?channel=iam-manager
 
-[BuildStatusImg]: https://travis-ci.org/keikoproj/iam-manager.svg?branch=master
-[BuildMasterUrl]: https://travis-ci.org/keikoproj/iam-manager
+[ReleaseImg]: https://img.shields.io/github/release/keikoproj/iam-manager.svg
+[ReleaseUrl]: https://github.com/keikoproj/iam-manager/releases
+
+[BuildStatusImg]: https://github.com/keikoproj/iam-manager/actions/workflows/unit_test.yaml/badge.svg
+[BuildMasterUrl]: https://github.com/keikoproj/iam-manager/actions/workflows/unit_test.yaml
 
 [CodecovImg]: https://codecov.io/gh/keikoproj/iam-manager/branch/master/graph/badge.svg
 [CodecovUrl]: https://codecov.io/gh/keikoproj/iam-manager

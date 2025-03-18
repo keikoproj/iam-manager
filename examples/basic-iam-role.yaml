@@ -1,0 +1,28 @@
+apiVersion: iammanager.keikoproj.io/v1alpha1
+kind: Iamrole
+metadata:
+  name: basic-s3-reader
+  namespace: default
+spec:
+  # Policy document that defines the permissions for this role
+  PolicyDocument:
+    Statement:
+      - Effect: "Allow"
+        Action:
+          - "s3:GetObject"
+          - "s3:ListBucket"
+        Resource:
+          - "arn:aws:s3:::example-bucket/*"
+          - "arn:aws:s3:::example-bucket"
+        Sid: "AllowS3ReadAccess"
+  
+  # Trust policy that defines who can assume this role
+  AssumeRolePolicyDocument:
+    Version: "2012-10-17"
+    Statement:
+      - Effect: "Allow"
+        Action: "sts:AssumeRole"
+        Principal:
+          AWS:
+            # Replace with the ARN of the entity that should be able to assume this role
+            - "arn:aws:iam::123456789012:role/KubernetesNode"

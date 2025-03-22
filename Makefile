@@ -41,7 +41,7 @@ all: manager
 
 # Build manager binary
 manager: $(LOCALBIN)/manager
-$(LOCALBIN)/manager: generate fmt vet update
+$(LOCALBIN)/manager: generate fmt mock vet update
 	go build -o $(LOCALBIN)/manager cmd/main.go
 
 mock: $(MOCKGEN)
@@ -104,7 +104,7 @@ fmt:
 	go fmt ./...
 
 # Run go vet against code
-vet:
+vet: mock
 	go vet ./...
 
 # Generate code
@@ -137,6 +137,7 @@ KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/k
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
+	rm -f $(KUSTOMIZE) || true
 	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
 
 .PHONY: envtest

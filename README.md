@@ -135,6 +135,7 @@ Comprehensive documentation is available:
 
 | iam-manager Version | Kubernetes Version | Go Version | Key Features |
 |---------------------|-------------------|------------|--------------|
+| current | 1.16 - 1.27 | 1.24+ | Upgrade to Go 1.24 |
 | v0.22.0 | 1.16 - 1.25 | 1.19+ | IRSA regional endpoint configuration |
 | v0.21.0 | 1.16 - 1.24 | 1.18+ | Enhanced security features |
 | v0.20.0 | 1.16 - 1.23 | 1.17+ | Improved reconciliation controller |

@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	k8s.io/api v0.32.4
-	k8s.io/apimachinery v0.32.4
+	k8s.io/apimachinery v0.32.5
 	k8s.io/client-go v0.32.4
 	k8s.io/klog v1.0.0
 	sigs.k8s.io/controller-runtime v0.20.4

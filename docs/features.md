@@ -70,10 +70,16 @@ Note: To setup OIDC IDP in AWS IAM, you must provide required permissions to iam
 ```
 
 Request:  
-Once pre-requisites are completed, Attach following annotation to the IAM Role CR and IAM Manager will automatically attaches required trust policy to IAM Role.  
+Once pre-requisites are completed, attach following annotation to the IAM Role CR and IAM Manager will automatically attach required trust policy to IAM Role.  
 ```bash
 iam.amazonaws.com/irsa-service-account: "service_account_name"
 ```
+OR
+You can provide the Service Account name in the config map and the controller will add the IRSA annotation to the IamRole CR:
+```bash
+iam.irsa.serviceaccount: "service_account_name"
+```
+
 IAM Manager will create Service Account if its doesn't exist or update the service account with required annotations.
 
 Note: For kops clusters, you must install AWS [amazon-eks-pod-identity-webhook](https://github.com/aws/amazon-eks-pod-identity-webhook)  

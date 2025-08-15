@@ -37,6 +37,7 @@ type Properties struct {
 	defaultTrustPolicy              string
 	iamRolePattern                  string
 	isIRSARegionalEndpointDisabled  string
+	irsaServiceAccount              string
 }
 
 func init() {
@@ -87,6 +88,7 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 			defaultTrustPolicy:              os.Getenv("DEFAULT_TRUST_POLICY"),
 			iamRolePattern:                  os.Getenv("IAM_ROLE_PATTERN"),
 			isIRSARegionalEndpointDisabled:  os.Getenv("IRSA_REGIONAL_ENDPOINT_DISABLED"),
+			irsaServiceAccount:              os.Getenv("IRSA_SERVICE_ACCOUNT"),
 		}
 		return nil
 	}
@@ -101,12 +103,14 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 	restrictedS3Resources := strings.Split(cm[0].Data[propertyIamPolicyS3Restricted], separator)
 	clusterName := cm[0].Data[propertyClusterName]
 	defaultTrustPolicy := cm[0].Data[propertyDefaultTrustPolicy]
+	irsaServiceAccount := cm[0].Data[propertyIRSAServiceAccount]
 	Props = &Properties{
 		allowedPolicyAction:       allowedPolicyAction,
 		restrictedPolicyResources: restrictedPolicyResources,
 		restrictedS3Resources:     restrictedS3Resources,
 		clusterName:               clusterName,
 		defaultTrustPolicy:        defaultTrustPolicy,
+		irsaServiceAccount:        irsaServiceAccount,
 	}
 
 	//Defaults
@@ -280,6 +284,10 @@ func (p *Properties) IsIRSARegionalEndpointDisabled() bool {
 		resp = true
 	}
 	return resp
+}
+
+func (p *Properties) IRSAServiceAccount() string {
+	return p.irsaServiceAccount
 }
 
 func (p *Properties) ClusterName() string {

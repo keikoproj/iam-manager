@@ -132,6 +132,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 			"iam.role.max.limit.per.namespace":       "5",
 			"iam.role.pattern":                       "pfx-{{ .ObjectMeta.Name }}",
 			"iam.irsa.regional.endpoint.disabled":    "true",
+			"iam.irsa.serviceaccount":                "default",
 		},
 	}
 	err := LoadProperties("", cm)
@@ -140,6 +141,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 	c.Assert(Props.ControllerDesiredFrequency(), check.Equals, 30)
 	c.Assert(Props.IamRolePattern(), check.Equals, "pfx-{{ .ObjectMeta.Name }}")
 	c.Assert(Props.IsIRSARegionalEndpointDisabled(), check.Equals, true)
+	c.Assert(Props.IRSAServiceAccount(), check.Equals, "default")
 }
 
 func (s *PropertiesSuite) TestGetAllowedPolicyAction(c *check.C) {

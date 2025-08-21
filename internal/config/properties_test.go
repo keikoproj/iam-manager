@@ -132,7 +132,7 @@ func (s *PropertiesSuite) TestLoadPropertiesSuccessWithCustom(c *check.C) {
 			"iam.role.max.limit.per.namespace":       "5",
 			"iam.role.pattern":                       "pfx-{{ .ObjectMeta.Name }}",
 			"iam.irsa.regional.endpoint.disabled":    "true",
-			"iam.irsa.serviceaccount":                "default",
+			"iam.irsa.default.serviceaccount":        "default",
 		},
 	}
 	err := LoadProperties("", cm)

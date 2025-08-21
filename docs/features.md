@@ -77,7 +77,7 @@ iam.amazonaws.com/irsa-service-account: "service_account_name"
 OR
 You can provide the Service Account name in the config map and the controller will add the IRSA annotation to the IamRole CR:
 ```bash
-iam.irsa.serviceaccount: "service_account_name"
+iam.irsa.default.serviceaccount: "service_account_name"
 ```
 
 IAM Manager will create Service Account if its doesn't exist or update the service account with required annotations.

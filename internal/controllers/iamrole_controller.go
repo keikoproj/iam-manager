@@ -133,6 +133,27 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	log := logging.Logger(ctx, "controllers", "iamrole_controller", "HandleReconcile")
 	log = log.WithValues("iam_role_cr", iamRole.Name)
 	log.Info("state of the custom resource ", "state", iamRole.Status.State)
+
+	// Add IRSA annotation to Iamrole CR with ServiceAccount if specified in ConfigMap
+	if config.Props.IRSAServiceAccount() != "" {
+		if iamRole.Annotations == nil {
+			iamRole.Annotations = map[string]string{}
+		}
+
+		// Only add annotation if it doesn't already exist
+		if _, exists := iamRole.Annotations[config.IRSAAnnotation]; !exists {
+			patch := client.MergeFrom(iamRole.DeepCopy())
+			iamRole.Annotations[config.IRSAAnnotation] = config.Props.IRSAServiceAccount()
+			if err := r.Patch(ctx, iamRole, patch); err != nil {
+				log.Error(err, "Failed to update Iamrole with IRSA annotation")
+				return ctrl.Result{RequeueAfter: defaultRequeueTime}, nil
+			}
+
+			log.Info("Added IRSA annotation to IamRole with specified ServiceAccount", "serviceAccount", config.Props.IRSAServiceAccount())
+			return ctrl.Result{Requeue: true}, nil
+		}
+	}
+
 	ns := v1.Namespace{}
 	if iamRole.Status.RoleName == "" && iamRole.Spec.RoleName != "" {
 		//Get Namespace metadata

@@ -11,6 +11,7 @@ import (
 )
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyHasAccess(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -35,6 +36,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyHasAccess(c
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessNewPolicyHasAccess(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -60,6 +62,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessNewPolicyHasAccess(c *che
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRoleFailure(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, errors.New("get role failed"))
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
@@ -69,6 +72,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRoleFailure(c *check.C
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRolePolicyFailure(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -82,6 +86,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRolePolicyFailure(c *c
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyAndNewRequestHaveAccess(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -106,6 +111,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyAndNewReque
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccountAndNewRequestSameAccount(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -131,6 +137,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccoun
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAndNewRequestHasAccess(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -156,6 +163,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAnd
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAndNewRequestHasAccessWithArrayFields(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -181,6 +189,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAnd
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessInvalidRoleArn(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("INVALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("invalid-arn-format"),
@@ -194,6 +203,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessInvalidRoleArn(c *check.C
 }
 
 func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccountAndNewRequestSameAccountWithArrayResources(c *check.C) {
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = true
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.GetRoleOutput{
 		Role: &iam.Role{
 			Arn: aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
@@ -216,4 +226,14 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccoun
 	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
+}
+
+func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessFeatureFlagDisabled(c *check.C) {
+	// When DisallowSameAccountDynamoDBAccess is false, validation should be skipped entirely
+	s.mockIAM.DisallowSameAccountDynamoDBAccess = false
+
+	// No mock expectations needed since the function returns early without making any AWS API calls
+	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
+	c.Assert(err, check.IsNil)
 }

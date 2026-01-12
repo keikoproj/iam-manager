@@ -33,7 +33,8 @@ func (s *IAMAPISuite) SetUpTest(c *check.C) {
 	s.mockCtrl = gomock.NewController(s.t)
 	s.mockI = mock_awsapi.NewMockIAMAPI(s.mockCtrl)
 	s.mockIAM = awsapi.IAM{
-		Client: s.mockI,
+		Client:                            s.mockI,
+		DisallowSameAccountDynamoDBAccess: true,
 	}
 
 	_ = config.LoadProperties("LOCAL")

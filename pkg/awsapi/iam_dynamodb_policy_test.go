@@ -30,7 +30,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyHasAccess(c
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.IsNil)
 }
 
@@ -54,7 +54,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessNewPolicyHasAccess(c *che
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
 }
@@ -63,7 +63,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRoleFailure(c *check.C
 	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, errors.New("get role failed"))
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*get role failed: VALID_ROLE*")
 }
@@ -77,7 +77,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessGetRolePolicyFailure(c *c
 	s.mockI.EXPECT().GetRolePolicy(&iam.GetRolePolicyInput{RoleName: aws.String("VALID_ROLE"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(nil, errors.New("get role policy failed"))
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.IsNil)
 }
 
@@ -101,7 +101,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyAndNewReque
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/MyTable"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.IsNil)
 }
 
@@ -125,7 +125,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccoun
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/MyTable"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
 }
@@ -150,7 +150,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAnd
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/MyTable"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
 }
@@ -175,7 +175,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyNoAccessAnd
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "arn:aws:dynamodb:us-west-2:123456789012:table/MyTable"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
 }
@@ -188,7 +188,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessInvalidRoleArn(c *check.C
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "INVALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": "*"}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*invalid ARN format*")
 }
@@ -213,7 +213,7 @@ func (s *IAMAPISuite) TestValidateAllowedDynamoDBAccessExistingPolicyOtherAccoun
 	}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Action": "dynamodb:*", "Resource": ["arn:aws:dynamodb:us-west-2:123456789012:table/MyTable"]}]}`}
-	err := s.mockIAM.ValidateAllowedDynamoDBAccess(s.ctx, req)
+	err := s.mockIAM.ValidateAllowSameAccountDynamoDBAccess(s.ctx, req)
 	c.Assert(err, check.NotNil)
 	c.Assert(err.Error(), check.Matches, "*existing policy doesn't have DynamoDB access to the same AWS account, and new permission policy has DynamoDB access to the same AWS account*")
 }

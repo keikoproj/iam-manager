@@ -41,6 +41,7 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
 	_ "go.uber.org/mock/mockgen/model"
+	appconfig "github.com/keikoproj/iam-manager/internal/config"
 )
 
 var (
@@ -89,7 +90,7 @@ func main() {
 	log.V(1).Info("Setting up reconciler with manager")
 	log.Info("region ", "region", config.Props.AWSRegion())
 
-	iamClient := awsapi.NewIAM(config.Props.AWSRegion())
+	iamClient := awsapi.NewIAM(appconfig.Props.AWSRegion(), appconfig.Props.DisallowSameAccountDynamoDBAccess())
 	if err := handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
 		log.Error(err, "unable to complete/verify oidc setup for IRSA")
 	}

@@ -69,10 +69,11 @@ func NewIAMRoleResponseFromCreateRole(output iam.CreateRoleOutput) *IAMRoleRespo
 }
 
 type IAM struct {
-	Client iamiface.IAMAPI
+	Client                            iamiface.IAMAPI
+	DisallowSameAccountDynamoDBAccess bool
 }
 
-func NewIAM(region string) *IAM {
+func NewIAM(region string, disallowSameAccountDynamoDBAccess bool) *IAM {
 	config := aws.NewConfig().
 		WithRegion(region).
 		WithCredentialsChainVerboseErrors(true)
@@ -91,7 +92,8 @@ func NewIAM(region string) *IAM {
 		panic(err)
 	}
 	return &IAM{
-		Client: iam.New(sess),
+		Client:                            iam.New(sess),
+		DisallowSameAccountDynamoDBAccess: disallowSameAccountDynamoDBAccess,
 	}
 }
 
@@ -394,7 +396,7 @@ func (i *IAM) UpdateRole(ctx context.Context, req IAMRoleRequest) (*IAMRoleRespo
 	// Attach the Inline policy
 	log.V(1).Info("AssumeRole Policy is successfully updated")
 
-	if err = i.ValidateAllowedDynamoDBAccess(ctx, req); err != nil {
+	if err = i.ValidateAllowSameAccountDynamoDBAccess(ctx, req); err != nil {
 		log.V(1).Error(err, "validation error")
 		return nil, err
 	}
@@ -426,8 +428,13 @@ func getActions(action interface{}) []string {
 //
 //  2. If new policy has DynamoDB access to the IKS AWS account DynamoDB table, but existing policy doesn't
 //     have DynamoDB access to the IKS AWS account DynamoDB table, return error
-func (i *IAM) ValidateAllowedDynamoDBAccess(ctx context.Context, req IAMRoleRequest) error {
-	log := logging.Logger(ctx, "awsapi", "iam", "validateAllowedDynamoDBAccess")
+func (i *IAM) ValidateAllowSameAccountDynamoDBAccess(ctx context.Context, req IAMRoleRequest) error {
+	log := logging.Logger(ctx, "awsapi", "iam", "ValidateAllowSameAccountDynamoDBAccess")
+
+	if !i.DisallowSameAccountDynamoDBAccess {
+		log.V(1).Info("DisallowSameAccountDynamoDBAccess is disabled, allowing same-account DynamoDB access")
+		return nil
+	}
 
 	role, err := i.Client.GetRole(&iam.GetRoleInput{
 		RoleName: aws.String(req.Name),

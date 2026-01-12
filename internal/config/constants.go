@@ -60,6 +60,9 @@ const (
 
 	//propertyIRSAaRegionalEndpointDisabled can be used to disable sts regional endpoints for service accounts, and use global endpoint in us-east-1 instead
 	propertyIRSARegionalEndpointDisabled = "iam.irsa.regional.endpoint.disabled"
+
+	//propertyDisallowSameAccountDynamoDBAccess can be used to enable validation that prevents adding same-account DynamoDB access when it wasn't previously allowed
+	propertyDisallowSameAccountDynamoDBAccess = "iam.policy.dynamodb.same.account.disallow"
 )
 
 const (

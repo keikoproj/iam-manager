@@ -21,22 +21,23 @@ var (
 )
 
 type Properties struct {
-	allowedPolicyAction             []string
-	restrictedPolicyResources       []string
-	restrictedS3Resources           []string
-	awsAccountID                    string
-	managedPolicies                 []string
-	managedPermissionBoundaryPolicy string
-	awsRegion                       string
-	isWebhookEnabled                string
-	maxRolesAllowed                 int
-	controllerDesiredFrequency      int
-	clusterName                     string
-	isIRSAEnabled                   string
-	clusterOIDCIssuerUrl            string
-	defaultTrustPolicy              string
-	iamRolePattern                  string
-	isIRSARegionalEndpointDisabled  string
+	allowedPolicyAction               []string
+	restrictedPolicyResources         []string
+	restrictedS3Resources             []string
+	awsAccountID                      string
+	managedPolicies                   []string
+	managedPermissionBoundaryPolicy   string
+	awsRegion                         string
+	isWebhookEnabled                  string
+	maxRolesAllowed                   int
+	controllerDesiredFrequency        int
+	clusterName                       string
+	isIRSAEnabled                     string
+	clusterOIDCIssuerUrl              string
+	defaultTrustPolicy                string
+	iamRolePattern                    string
+	isIRSARegionalEndpointDisabled    string
+	disallowSameAccountDynamoDBAccess string
 }
 
 func init() {
@@ -215,6 +216,13 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.isIRSARegionalEndpointDisabled = "false"
 	}
 
+	disallowSameAccountDynamoDBAccess := cm[0].Data[propertyDisallowSameAccountDynamoDBAccess]
+	if disallowSameAccountDynamoDBAccess == "true" {
+		Props.disallowSameAccountDynamoDBAccess = "true"
+	} else {
+		Props.disallowSameAccountDynamoDBAccess = "false"
+	}
+
 	return nil
 }
 
@@ -292,6 +300,14 @@ func (p *Properties) OIDCIssuerUrl() string {
 
 func (p *Properties) DefaultTrustPolicy() string {
 	return p.defaultTrustPolicy
+}
+
+func (p *Properties) DisallowSameAccountDynamoDBAccess() bool {
+	resp := false
+	if p.disallowSameAccountDynamoDBAccess == "true" {
+		resp = true
+	}
+	return resp
 }
 
 func RunConfigMapInformer(ctx context.Context) {

@@ -382,12 +382,15 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 // SetupWithManager sets up manager with controller
 // GenerationChangedPredicate will take care of not allowing to trigger reconcile for every time status update happens
 func (r *IamroleReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
+	maxConcurrent := config.Props.MaxConcurrentReconciles()
+	if maxConcurrent < 1 {
+		maxConcurrent = config.DefaultMaxConcurrentReconciles
+	}
 	//Lets try to predicate based on Status retry count
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&iammanagerv1alpha1.Iamrole{}).
 		WithEventFilter(StatusUpdatePredicate{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: maxConcurrent}).
 		Complete(r)
 }
 

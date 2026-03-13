@@ -6,7 +6,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
@@ -31,6 +33,8 @@ type Properties struct {
 	isWebhookEnabled                  string
 	maxRolesAllowed                   int
 	controllerDesiredFrequency        int
+	maxConcurrentReconciles           int
+	resyncPeriodSeconds               int
 	clusterName                       string
 	isIRSAEnabled                     string
 	clusterOIDCIssuerUrl              string
@@ -145,6 +149,34 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.controllerDesiredFrequency = controllerDesiredFreq
 	} else {
 		Props.controllerDesiredFrequency = 1800
+	}
+
+	maxConcurrentReconciles := cm[0].Data[propertyMaxConcurrentReconciles]
+	if maxConcurrentReconciles != "" {
+		n, parseErr := strconv.Atoi(maxConcurrentReconciles)
+		if parseErr != nil {
+			return parseErr
+		}
+		if n < 1 {
+			n = 1
+		}
+		Props.maxConcurrentReconciles = n
+	} else {
+		Props.maxConcurrentReconciles = DefaultMaxConcurrentReconciles
+	}
+
+	resyncPeriod := cm[0].Data[propertyResyncPeriod]
+	if resyncPeriod != "" {
+		n, parseErr := strconv.Atoi(resyncPeriod)
+		if parseErr != nil {
+			return parseErr
+		}
+		if n < 0 {
+			n = 0
+		}
+		Props.resyncPeriodSeconds = n
+	} else {
+		Props.resyncPeriodSeconds = DefaultResyncPeriodSeconds
 	}
 
 	awsAccountID := cm[0].Data[propertyAWSAccountID]
@@ -272,6 +304,55 @@ func (p *Properties) MaxRolesAllowed() int {
 
 func (p *Properties) ControllerDesiredFrequency() int {
 	return p.controllerDesiredFrequency
+}
+
+// MaxConcurrentReconciles returns max concurrent reconciles for the Iamrole controller (1–20). Default 10.
+func (p *Properties) MaxConcurrentReconciles() int {
+	return p.maxConcurrentReconciles
+}
+
+// ResyncPeriod returns the cache resync period for controller-runtime. 0 means disable resync.
+// Caller must not modify the returned pointer.
+func (p *Properties) ResyncPeriod() *time.Duration {
+	if p.resyncPeriodSeconds == 0 {
+		zero := time.Duration(0)
+		return &zero
+	}
+	d := time.Duration(p.resyncPeriodSeconds) * time.Second
+	return &d
+}
+
+// ResyncPeriodSeconds returns the cache resync period in seconds. 0 means disabled.
+func (p *Properties) ResyncPeriodSeconds() int {
+	return p.resyncPeriodSeconds
+}
+
+// LogStartupConfig dumps the loaded config to the given logger at startup.
+func (p *Properties) LogStartupConfig(log logr.Logger) {
+	if p == nil {
+		return
+	}
+	log.Info("config loaded",
+		"aws.region", p.AWSRegion(),
+		"aws.accountId", p.AWSAccountID(),
+		"cluster.name", p.ClusterName(),
+		"k8s.cluster.oidc.issuer.url", p.OIDCIssuerUrl(),
+		"webhook.enabled", p.IsWebHookEnabled(),
+		"iam.irsa.enabled", p.IsIRSAEnabled(),
+		"iam.irsa.regional.endpoint.disabled", p.IsIRSARegionalEndpointDisabled(),
+		"iam.role.pattern", p.IamRolePattern(),
+		"iam.role.max.limit.per.namespace", p.MaxRolesAllowed(),
+		"controller.desired.frequency", p.ControllerDesiredFrequency(),
+		"controller.max.concurrent.reconciles", p.MaxConcurrentReconciles(),
+		"controller.resync.period", p.ResyncPeriodSeconds(),
+		"iam.managed.permission.boundary.policy", p.ManagedPermissionBoundaryPolicy(),
+		"iam.default.trust.policy.length", len(p.DefaultTrustPolicy()),
+		"allowed.policy.actions", p.AllowedPolicyAction(),
+		"restricted.policy.resources", p.RestrictedPolicyResources(),
+		"restricted.s3.resources", p.RestrictedS3Resources(),
+		"managed.policies", p.ManagedPolicies(),
+		"iam.policy.dynamodb.same.account.disallow", p.DisallowSameAccountDynamoDBAccess(),
+	)
 }
 
 func (p *Properties) IsIRSAEnabled() bool {

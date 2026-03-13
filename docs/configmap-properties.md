@@ -23,7 +23,7 @@ data:
   
   # Controller configuration
   controller.reconcile.interval: "5m"
-  controller.max-concurrent-reconciles: "5"
+  controller.max.concurrent.reconciles: "10"
   
   # IAM role defaults
   defaults.permission-boundary-policy: "iam-manager-permission-boundary"
@@ -71,7 +71,8 @@ data:
 | Property | Default | Description | Required |
 |----------|---------|-------------|----------|
 | `controller.reconcile.interval` | `5m` | How often to run full reconciliation | Optional |
-| `controller.max-concurrent-reconciles` | `5` | Maximum number of concurrent reconciles | Optional |
+| `controller.max.concurrent.reconciles` | `10` | Maximum number of concurrent reconciles | Optional |
+| `controller.resync.period` | `36000` | Cache resync period in seconds (10 hours). Set to `0` to disable resync. | Optional |
 | `controller.status-update-interval` | `1m` | How often to update status for resources | Optional |
 | `controller.manager-workers` | `10` | Number of worker threads in the controller manager | Optional |
 | `controller.desired.frequency` | `300` | Controller frequency to check state in seconds (legacy syntax) | Optional |

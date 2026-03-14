@@ -25,6 +25,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -40,6 +41,8 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
+	_ "go.uber.org/mock/mockgen/model"
+	appconfig "github.com/keikoproj/iam-manager/internal/config"
 )
 
 var (
@@ -70,6 +73,9 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
+		Cache: cache.Options{
+			SyncPeriod: config.Props.ResyncPeriod(),
+		},
 		Metrics: metricsserver.Options{
 			BindAddress:    metricsAddr,
 			SecureServing:  true,
@@ -86,9 +92,9 @@ func main() {
 	}
 
 	log.V(1).Info("Setting up reconciler with manager")
-	log.Info("region ", "region", config.Props.AWSRegion())
+	config.Props.LogStartupConfig(log)
 
-	iamClient := awsapi.NewIAM(config.Props.AWSRegion())
+	iamClient := awsapi.NewIAM(appconfig.Props.AWSRegion(), appconfig.Props.DisallowSameAccountDynamoDBAccess())
 	if err := handleOIDCSetupForIRSA(context.Background(), iamClient); err != nil {
 		log.Error(err, "unable to complete/verify oidc setup for IRSA")
 	}

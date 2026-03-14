@@ -46,6 +46,12 @@ const (
 	//propertyDesiredStateFrequency is a configurable param to make sure to check the external state (in seconds). default to 30 mins (1800 seconds)
 	propertyDesiredStateFrequency = "controller.desired.frequency"
 
+	// propertyMaxConcurrentReconciles limits concurrent reconciles for the Iamrole controller (alphabet + dot only)
+	propertyMaxConcurrentReconciles = "controller.max.concurrent.reconciles"
+
+	// propertyResyncPeriod is the cache resync period in seconds; 0 disables resync (controller-runtime)
+	propertyResyncPeriod = "controller.resync.period"
+
 	//propertyClusterName can be used to set cluster name
 	propertyClusterName = "k8s.cluster.name"
 
@@ -60,6 +66,9 @@ const (
 
 	//propertyIRSAaRegionalEndpointDisabled can be used to disable sts regional endpoints for service accounts, and use global endpoint in us-east-1 instead
 	propertyIRSARegionalEndpointDisabled = "iam.irsa.regional.endpoint.disabled"
+
+	//propertyDisallowSameAccountDynamoDBAccess can be used to enable validation that prevents adding same-account DynamoDB access when it wasn't previously allowed
+	propertyDisallowSameAccountDynamoDBAccess = "iam.policy.dynamodb.same.account.disallow"
 )
 
 const (
@@ -78,4 +87,10 @@ const (
 
 const (
 	ControllerMinimumDesiredFrequency = 1800
+
+	// DefaultMaxConcurrentReconciles is the default max concurrent reconciles for the Iamrole controller when not set in config.
+	DefaultMaxConcurrentReconciles = 10
+
+	// DefaultResyncPeriodSeconds is the default cache resync period in seconds (10 hours). Use 0 in config to disable resync.
+	DefaultResyncPeriodSeconds = 36000
 )

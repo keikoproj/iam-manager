@@ -5,14 +5,14 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/golang/mock/gomock"
-	"gopkg.in/check.v1"
-
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	mock_awsapi "github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
+	"go.uber.org/mock/gomock"
+	"gopkg.in/check.v1"
 )
 
 type STSAPISuite struct {
@@ -24,7 +24,7 @@ type STSAPISuite struct {
 }
 
 func TestSTSAPITestSuite(t *testing.T) {
-	check.Suite(&IAMAPISuite{t: t})
+	check.Suite(&STSAPISuite{t: t})
 	check.TestingT(t)
 }
 
@@ -44,7 +44,9 @@ func (s *STSAPISuite) TearDownTest(c *check.C) {
 }
 
 func (s *STSAPISuite) TestGetAccountIDSuccess(c *check.C) {
-	s.mockI.EXPECT().GetCallerIdentity(&sts.GetCallerIdentityInput{}).Times(1).Return(&sts.GetCallerIdentityOutput{}, nil)
+	s.mockI.EXPECT().GetCallerIdentity(&sts.GetCallerIdentityInput{}).Times(1).Return(&sts.GetCallerIdentityOutput{
+		Account: aws.String("123456789012"),
+	}, nil)
 	accountID, err := s.mockSTS.GetAccountID(s.ctx)
 	c.Assert(err, check.IsNil)
 	c.Assert(accountID, check.NotNil)

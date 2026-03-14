@@ -8,12 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/golang/mock/gomock"
-	"gopkg.in/check.v1"
-
 	"github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
-	"github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
+	mock_awsapi "github.com/keikoproj/iam-manager/pkg/awsapi/mocks"
+	"go.uber.org/mock/gomock"
+	"gopkg.in/check.v1"
 )
 
 type IAMAPISuite struct {
@@ -34,7 +33,8 @@ func (s *IAMAPISuite) SetUpTest(c *check.C) {
 	s.mockCtrl = gomock.NewController(s.t)
 	s.mockI = mock_awsapi.NewMockIAMAPI(s.mockCtrl)
 	s.mockIAM = awsapi.IAM{
-		Client: s.mockI,
+		Client:                            s.mockI,
+		DisallowSameAccountDynamoDBAccess: true,
 	}
 
 	_ = config.LoadProperties("LOCAL")
@@ -71,6 +71,16 @@ func (s *IAMAPISuite) TestEnsureRoleSuccess(c *check.C) {
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(), ManagedPolicies: config.Props.ManagedPolicies(), Tags: map[string]string{
 		"managedBy": "iam-manager",
 	}}
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(
+		&iam.GetRoleOutput{
+			Role: &iam.Role{
+				RoleId:   aws.String("ABCDE1234"),
+				RoleName: aws.String("VALID_ROLE"),
+				Arn:      aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
+			},
+		},
+		nil)
+	s.mockI.EXPECT().GetRolePolicy(&iam.GetRolePolicyInput{PolicyName: aws.String("VALID_POLICY"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 	resp, err := s.mockIAM.EnsureRole(s.ctx, req)
 	c.Assert(resp.RoleARN, check.Equals, "arn:aws:iam::123456789012:role/VALID_ROLE")
 	c.Assert(resp.RoleID, check.Equals, "ABCDE1234")
@@ -103,6 +113,16 @@ func (s *IAMAPISuite) TestEnsureRoleSuccessWithNoManagedPolicies(c *check.C) {
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING", ManagedPermissionBoundaryPolicy: config.Props.ManagedPermissionBoundaryPolicy(), ManagedPolicies: []string{""}, Tags: map[string]string{
 		"managedBy": "iam-manager",
 	}}
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(
+		&iam.GetRoleOutput{
+			Role: &iam.Role{
+				RoleId:   aws.String("ABCDE1234"),
+				RoleName: aws.String("VALID_ROLE"),
+				Arn:      aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
+			},
+		},
+		nil)
+	s.mockI.EXPECT().GetRolePolicy(&iam.GetRolePolicyInput{PolicyName: aws.String("VALID_POLICY"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 	resp, err := s.mockIAM.EnsureRole(s.ctx, req)
 	c.Assert(resp.RoleARN, check.Equals, "arn:aws:iam::123456789012:role/VALID_ROLE")
 	c.Assert(resp.RoleID, check.Equals, "ABCDE1234")
@@ -363,6 +383,16 @@ func (s *IAMAPISuite) TestAddPermissionBoundaryFailureInvalidInput(c *check.C) {
 func (s *IAMAPISuite) TestUpdateRoleSuccess(c *check.C) {
 	s.mockI.EXPECT().UpdateRole(&iam.UpdateRoleInput{RoleName: aws.String("VALID_ROLE"), MaxSessionDuration: aws.Int64(3600), Description: aws.String("")}).Times(1).Return(nil, nil)
 	s.mockI.EXPECT().UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(&iam.UpdateAssumeRolePolicyOutput{}, nil)
+	s.mockI.EXPECT().GetRole(&iam.GetRoleInput{RoleName: aws.String("VALID_ROLE")}).Times(1).Return(
+		&iam.GetRoleOutput{
+			Role: &iam.Role{
+				RoleId:   aws.String("ABCDE1234"),
+				RoleName: aws.String("VALID_ROLE"),
+				Arn:      aws.String("arn:aws:iam::123456789012:role/VALID_ROLE"),
+			},
+		},
+		nil)
+	s.mockI.EXPECT().GetRolePolicy(&iam.GetRolePolicyInput{PolicyName: aws.String("VALID_POLICY"), RoleName: aws.String("VALID_ROLE")}).Times(1).Return(nil, awserr.New(iam.ErrCodeNoSuchEntityException, "", errors.New(iam.ErrCodeNoSuchEntityException)))
 	s.mockI.EXPECT().PutRolePolicy(&iam.PutRolePolicyInput{PolicyDocument: aws.String("SOMETHING"), RoleName: aws.String("VALID_ROLE"), PolicyName: aws.String("VALID_POLICY")}).Times(1).Return(&iam.PutRolePolicyOutput{}, nil)
 
 	req := awsapi.IAMRoleRequest{Name: "VALID_ROLE", PolicyName: "VALID_POLICY", PermissionPolicy: "SOMETHING", SessionDuration: 3600, TrustPolicy: "SOMETHING"}

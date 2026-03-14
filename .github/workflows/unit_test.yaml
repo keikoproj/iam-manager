@@ -38,7 +38,7 @@ jobs:
       - name: Run golangci-lint (Non-blocking)
         id: lint
         continue-on-error: true
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           args: --timeout=5m --issues-exit-code=0

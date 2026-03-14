@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
@@ -38,7 +38,7 @@ jobs:
       - name: Run golangci-lint (Non-blocking)
         id: lint
         continue-on-error: true
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           args: --timeout=5m --issues-exit-code=0
@@ -49,7 +49,7 @@ jobs:
     needs: lint
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go 1.x
         uses: actions/setup-go@v5

@@ -110,7 +110,9 @@ func (r *IamroleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			if err := r.IAMClient.DeleteRole(ctx, roleName); err != nil {
 				log.Error(err, "Unable to delete the role")
 				//i got to fix this
-				r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, defaultRequeueTime)
+				if _, statusErr := r.UpdateStatus(ctx, &iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, RetryCount: iamRole.Status.RetryCount + 1, LastUpdatedTimestamp: metav1.Now(), ErrorDescription: err.Error(), State: iammanagerv1alpha1.Error}, defaultRequeueTime); statusErr != nil {
+					log.Error(statusErr, "failed to update status after delete role error")
+				}
 				r.Recorder.Event(&iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.Error), "unable to delete the role due to "+err.Error())
 
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
@@ -209,9 +211,7 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		}
 		if validation.CompareRole(ctx, *input, targetRole, *targetPolicy) && saConsistent {
 			log.Info("No change in the incoming policy compare to state of the world(external AWS IAM) policy")
-			r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready}, requeueTime)
-
-			return successRequeueIt()
+			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: aws.StringValue(targetRole.Role.RoleId), RoleARN: aws.StringValue(targetRole.Role.Arn), LastUpdatedTimestamp: iamRole.Status.LastUpdatedTimestamp, State: iammanagerv1alpha1.Ready}, requeueTime)
 		}
 		fallthrough
 
@@ -283,10 +283,13 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		r.Recorder.Event(iamRole, v1.EventTypeNormal, string(iammanagerv1alpha1.Ready), "Successfully created/updated iam role")
-		r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready}, requeueTime)
+		result, err := r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RetryCount: 0, RoleName: roleName, ErrorDescription: "", RoleID: resp.RoleID, RoleARN: resp.RoleARN, LastUpdatedTimestamp: metav1.Now(), State: iammanagerv1alpha1.Ready}, requeueTime)
+		if err != nil {
+			return result, err
+		}
 	}
-	log.Info("Successfully reconciled")
 
+	log.Info("Successfully reconciled")
 	return successRequeueIt()
 }
 

@@ -394,10 +394,11 @@ func (p *Properties) DisallowSameAccountDynamoDBAccess() bool {
 func RunConfigMapInformer(ctx context.Context) {
 	log := logging.Logger(context.Background(), "internal.config.properties", "RunConfigMapInformer")
 	cmInformer := k8s.GetConfigMapInformer(ctx, IamManagerNamespaceName, IamManagerConfigMapName)
-	cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	if _, err := cmInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: updateProperties,
-	},
-	)
+	}); err != nil {
+		log.Error(err, "failed to add config map event handler")
+	}
 	log.Info("Starting config map informer")
 	cmInformer.Run(ctx.Done())
 	log.Info("Cancelling config map informer")

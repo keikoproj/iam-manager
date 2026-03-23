@@ -10,9 +10,9 @@
 package mock_awsapi
 
 import (
-	context "context"
 	reflect "reflect"
 
+	aws "github.com/aws/aws-sdk-go/aws"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	eks "github.com/aws/aws-sdk-go/service/eks"
 	gomock "go.uber.org/mock/gomock"
@@ -73,7 +73,7 @@ func (mr *MockEKSAPIMockRecorder) AssociateAccessPolicyRequest(arg0 any) *gomock
 }
 
 // AssociateAccessPolicyWithContext mocks base method.
-func (m *MockEKSAPI) AssociateAccessPolicyWithContext(arg0 context.Context, arg1 *eks.AssociateAccessPolicyInput, arg2 ...request.Option) (*eks.AssociateAccessPolicyOutput, error) {
+func (m *MockEKSAPI) AssociateAccessPolicyWithContext(arg0 aws.Context, arg1 *eks.AssociateAccessPolicyInput, arg2 ...request.Option) (*eks.AssociateAccessPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -123,7 +123,7 @@ func (mr *MockEKSAPIMockRecorder) AssociateEncryptionConfigRequest(arg0 any) *go
 }
 
 // AssociateEncryptionConfigWithContext mocks base method.
-func (m *MockEKSAPI) AssociateEncryptionConfigWithContext(arg0 context.Context, arg1 *eks.AssociateEncryptionConfigInput, arg2 ...request.Option) (*eks.AssociateEncryptionConfigOutput, error) {
+func (m *MockEKSAPI) AssociateEncryptionConfigWithContext(arg0 aws.Context, arg1 *eks.AssociateEncryptionConfigInput, arg2 ...request.Option) (*eks.AssociateEncryptionConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -173,7 +173,7 @@ func (mr *MockEKSAPIMockRecorder) AssociateIdentityProviderConfigRequest(arg0 an
 }
 
 // AssociateIdentityProviderConfigWithContext mocks base method.
-func (m *MockEKSAPI) AssociateIdentityProviderConfigWithContext(arg0 context.Context, arg1 *eks.AssociateIdentityProviderConfigInput, arg2 ...request.Option) (*eks.AssociateIdentityProviderConfigOutput, error) {
+func (m *MockEKSAPI) AssociateIdentityProviderConfigWithContext(arg0 aws.Context, arg1 *eks.AssociateIdentityProviderConfigInput, arg2 ...request.Option) (*eks.AssociateIdentityProviderConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -223,7 +223,7 @@ func (mr *MockEKSAPIMockRecorder) CreateAccessEntryRequest(arg0 any) *gomock.Cal
 }
 
 // CreateAccessEntryWithContext mocks base method.
-func (m *MockEKSAPI) CreateAccessEntryWithContext(arg0 context.Context, arg1 *eks.CreateAccessEntryInput, arg2 ...request.Option) (*eks.CreateAccessEntryOutput, error) {
+func (m *MockEKSAPI) CreateAccessEntryWithContext(arg0 aws.Context, arg1 *eks.CreateAccessEntryInput, arg2 ...request.Option) (*eks.CreateAccessEntryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -273,7 +273,7 @@ func (mr *MockEKSAPIMockRecorder) CreateAddonRequest(arg0 any) *gomock.Call {
 }
 
 // CreateAddonWithContext mocks base method.
-func (m *MockEKSAPI) CreateAddonWithContext(arg0 context.Context, arg1 *eks.CreateAddonInput, arg2 ...request.Option) (*eks.CreateAddonOutput, error) {
+func (m *MockEKSAPI) CreateAddonWithContext(arg0 aws.Context, arg1 *eks.CreateAddonInput, arg2 ...request.Option) (*eks.CreateAddonOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -323,7 +323,7 @@ func (mr *MockEKSAPIMockRecorder) CreateClusterRequest(arg0 any) *gomock.Call {
 }
 
 // CreateClusterWithContext mocks base method.
-func (m *MockEKSAPI) CreateClusterWithContext(arg0 context.Context, arg1 *eks.CreateClusterInput, arg2 ...request.Option) (*eks.CreateClusterOutput, error) {
+func (m *MockEKSAPI) CreateClusterWithContext(arg0 aws.Context, arg1 *eks.CreateClusterInput, arg2 ...request.Option) (*eks.CreateClusterOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -373,7 +373,7 @@ func (mr *MockEKSAPIMockRecorder) CreateEksAnywhereSubscriptionRequest(arg0 any)
 }
 
 // CreateEksAnywhereSubscriptionWithContext mocks base method.
-func (m *MockEKSAPI) CreateEksAnywhereSubscriptionWithContext(arg0 context.Context, arg1 *eks.CreateEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.CreateEksAnywhereSubscriptionOutput, error) {
+func (m *MockEKSAPI) CreateEksAnywhereSubscriptionWithContext(arg0 aws.Context, arg1 *eks.CreateEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.CreateEksAnywhereSubscriptionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -423,7 +423,7 @@ func (mr *MockEKSAPIMockRecorder) CreateFargateProfileRequest(arg0 any) *gomock.
 }
 
 // CreateFargateProfileWithContext mocks base method.
-func (m *MockEKSAPI) CreateFargateProfileWithContext(arg0 context.Context, arg1 *eks.CreateFargateProfileInput, arg2 ...request.Option) (*eks.CreateFargateProfileOutput, error) {
+func (m *MockEKSAPI) CreateFargateProfileWithContext(arg0 aws.Context, arg1 *eks.CreateFargateProfileInput, arg2 ...request.Option) (*eks.CreateFargateProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -473,7 +473,7 @@ func (mr *MockEKSAPIMockRecorder) CreateNodegroupRequest(arg0 any) *gomock.Call 
 }
 
 // CreateNodegroupWithContext mocks base method.
-func (m *MockEKSAPI) CreateNodegroupWithContext(arg0 context.Context, arg1 *eks.CreateNodegroupInput, arg2 ...request.Option) (*eks.CreateNodegroupOutput, error) {
+func (m *MockEKSAPI) CreateNodegroupWithContext(arg0 aws.Context, arg1 *eks.CreateNodegroupInput, arg2 ...request.Option) (*eks.CreateNodegroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -523,7 +523,7 @@ func (mr *MockEKSAPIMockRecorder) CreatePodIdentityAssociationRequest(arg0 any) 
 }
 
 // CreatePodIdentityAssociationWithContext mocks base method.
-func (m *MockEKSAPI) CreatePodIdentityAssociationWithContext(arg0 context.Context, arg1 *eks.CreatePodIdentityAssociationInput, arg2 ...request.Option) (*eks.CreatePodIdentityAssociationOutput, error) {
+func (m *MockEKSAPI) CreatePodIdentityAssociationWithContext(arg0 aws.Context, arg1 *eks.CreatePodIdentityAssociationInput, arg2 ...request.Option) (*eks.CreatePodIdentityAssociationOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -573,7 +573,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteAccessEntryRequest(arg0 any) *gomock.Cal
 }
 
 // DeleteAccessEntryWithContext mocks base method.
-func (m *MockEKSAPI) DeleteAccessEntryWithContext(arg0 context.Context, arg1 *eks.DeleteAccessEntryInput, arg2 ...request.Option) (*eks.DeleteAccessEntryOutput, error) {
+func (m *MockEKSAPI) DeleteAccessEntryWithContext(arg0 aws.Context, arg1 *eks.DeleteAccessEntryInput, arg2 ...request.Option) (*eks.DeleteAccessEntryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -623,7 +623,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteAddonRequest(arg0 any) *gomock.Call {
 }
 
 // DeleteAddonWithContext mocks base method.
-func (m *MockEKSAPI) DeleteAddonWithContext(arg0 context.Context, arg1 *eks.DeleteAddonInput, arg2 ...request.Option) (*eks.DeleteAddonOutput, error) {
+func (m *MockEKSAPI) DeleteAddonWithContext(arg0 aws.Context, arg1 *eks.DeleteAddonInput, arg2 ...request.Option) (*eks.DeleteAddonOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -673,7 +673,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteClusterRequest(arg0 any) *gomock.Call {
 }
 
 // DeleteClusterWithContext mocks base method.
-func (m *MockEKSAPI) DeleteClusterWithContext(arg0 context.Context, arg1 *eks.DeleteClusterInput, arg2 ...request.Option) (*eks.DeleteClusterOutput, error) {
+func (m *MockEKSAPI) DeleteClusterWithContext(arg0 aws.Context, arg1 *eks.DeleteClusterInput, arg2 ...request.Option) (*eks.DeleteClusterOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -723,7 +723,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteEksAnywhereSubscriptionRequest(arg0 any)
 }
 
 // DeleteEksAnywhereSubscriptionWithContext mocks base method.
-func (m *MockEKSAPI) DeleteEksAnywhereSubscriptionWithContext(arg0 context.Context, arg1 *eks.DeleteEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.DeleteEksAnywhereSubscriptionOutput, error) {
+func (m *MockEKSAPI) DeleteEksAnywhereSubscriptionWithContext(arg0 aws.Context, arg1 *eks.DeleteEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.DeleteEksAnywhereSubscriptionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -773,7 +773,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteFargateProfileRequest(arg0 any) *gomock.
 }
 
 // DeleteFargateProfileWithContext mocks base method.
-func (m *MockEKSAPI) DeleteFargateProfileWithContext(arg0 context.Context, arg1 *eks.DeleteFargateProfileInput, arg2 ...request.Option) (*eks.DeleteFargateProfileOutput, error) {
+func (m *MockEKSAPI) DeleteFargateProfileWithContext(arg0 aws.Context, arg1 *eks.DeleteFargateProfileInput, arg2 ...request.Option) (*eks.DeleteFargateProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -823,7 +823,7 @@ func (mr *MockEKSAPIMockRecorder) DeleteNodegroupRequest(arg0 any) *gomock.Call 
 }
 
 // DeleteNodegroupWithContext mocks base method.
-func (m *MockEKSAPI) DeleteNodegroupWithContext(arg0 context.Context, arg1 *eks.DeleteNodegroupInput, arg2 ...request.Option) (*eks.DeleteNodegroupOutput, error) {
+func (m *MockEKSAPI) DeleteNodegroupWithContext(arg0 aws.Context, arg1 *eks.DeleteNodegroupInput, arg2 ...request.Option) (*eks.DeleteNodegroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -873,7 +873,7 @@ func (mr *MockEKSAPIMockRecorder) DeletePodIdentityAssociationRequest(arg0 any) 
 }
 
 // DeletePodIdentityAssociationWithContext mocks base method.
-func (m *MockEKSAPI) DeletePodIdentityAssociationWithContext(arg0 context.Context, arg1 *eks.DeletePodIdentityAssociationInput, arg2 ...request.Option) (*eks.DeletePodIdentityAssociationOutput, error) {
+func (m *MockEKSAPI) DeletePodIdentityAssociationWithContext(arg0 aws.Context, arg1 *eks.DeletePodIdentityAssociationInput, arg2 ...request.Option) (*eks.DeletePodIdentityAssociationOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -923,7 +923,7 @@ func (mr *MockEKSAPIMockRecorder) DeregisterClusterRequest(arg0 any) *gomock.Cal
 }
 
 // DeregisterClusterWithContext mocks base method.
-func (m *MockEKSAPI) DeregisterClusterWithContext(arg0 context.Context, arg1 *eks.DeregisterClusterInput, arg2 ...request.Option) (*eks.DeregisterClusterOutput, error) {
+func (m *MockEKSAPI) DeregisterClusterWithContext(arg0 aws.Context, arg1 *eks.DeregisterClusterInput, arg2 ...request.Option) (*eks.DeregisterClusterOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -973,7 +973,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeAccessEntryRequest(arg0 any) *gomock.C
 }
 
 // DescribeAccessEntryWithContext mocks base method.
-func (m *MockEKSAPI) DescribeAccessEntryWithContext(arg0 context.Context, arg1 *eks.DescribeAccessEntryInput, arg2 ...request.Option) (*eks.DescribeAccessEntryOutput, error) {
+func (m *MockEKSAPI) DescribeAccessEntryWithContext(arg0 aws.Context, arg1 *eks.DescribeAccessEntryInput, arg2 ...request.Option) (*eks.DescribeAccessEntryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1038,7 +1038,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeAddonConfigurationRequest(arg0 any) *g
 }
 
 // DescribeAddonConfigurationWithContext mocks base method.
-func (m *MockEKSAPI) DescribeAddonConfigurationWithContext(arg0 context.Context, arg1 *eks.DescribeAddonConfigurationInput, arg2 ...request.Option) (*eks.DescribeAddonConfigurationOutput, error) {
+func (m *MockEKSAPI) DescribeAddonConfigurationWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonConfigurationInput, arg2 ...request.Option) (*eks.DescribeAddonConfigurationOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1102,7 +1102,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeAddonVersionsPages(arg0, arg1 any) *go
 }
 
 // DescribeAddonVersionsPagesWithContext mocks base method.
-func (m *MockEKSAPI) DescribeAddonVersionsPagesWithContext(arg0 context.Context, arg1 *eks.DescribeAddonVersionsInput, arg2 func(*eks.DescribeAddonVersionsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) DescribeAddonVersionsPagesWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonVersionsInput, arg2 func(*eks.DescribeAddonVersionsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -1136,7 +1136,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeAddonVersionsRequest(arg0 any) *gomock
 }
 
 // DescribeAddonVersionsWithContext mocks base method.
-func (m *MockEKSAPI) DescribeAddonVersionsWithContext(arg0 context.Context, arg1 *eks.DescribeAddonVersionsInput, arg2 ...request.Option) (*eks.DescribeAddonVersionsOutput, error) {
+func (m *MockEKSAPI) DescribeAddonVersionsWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonVersionsInput, arg2 ...request.Option) (*eks.DescribeAddonVersionsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1156,7 +1156,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeAddonVersionsWithContext(arg0, arg1 an
 }
 
 // DescribeAddonWithContext mocks base method.
-func (m *MockEKSAPI) DescribeAddonWithContext(arg0 context.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.Option) (*eks.DescribeAddonOutput, error) {
+func (m *MockEKSAPI) DescribeAddonWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.Option) (*eks.DescribeAddonOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1206,7 +1206,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeClusterRequest(arg0 any) *gomock.Call 
 }
 
 // DescribeClusterWithContext mocks base method.
-func (m *MockEKSAPI) DescribeClusterWithContext(arg0 context.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.Option) (*eks.DescribeClusterOutput, error) {
+func (m *MockEKSAPI) DescribeClusterWithContext(arg0 aws.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.Option) (*eks.DescribeClusterOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1256,7 +1256,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeEksAnywhereSubscriptionRequest(arg0 an
 }
 
 // DescribeEksAnywhereSubscriptionWithContext mocks base method.
-func (m *MockEKSAPI) DescribeEksAnywhereSubscriptionWithContext(arg0 context.Context, arg1 *eks.DescribeEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.DescribeEksAnywhereSubscriptionOutput, error) {
+func (m *MockEKSAPI) DescribeEksAnywhereSubscriptionWithContext(arg0 aws.Context, arg1 *eks.DescribeEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.DescribeEksAnywhereSubscriptionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1306,7 +1306,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeFargateProfileRequest(arg0 any) *gomoc
 }
 
 // DescribeFargateProfileWithContext mocks base method.
-func (m *MockEKSAPI) DescribeFargateProfileWithContext(arg0 context.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.Option) (*eks.DescribeFargateProfileOutput, error) {
+func (m *MockEKSAPI) DescribeFargateProfileWithContext(arg0 aws.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.Option) (*eks.DescribeFargateProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1356,7 +1356,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeIdentityProviderConfigRequest(arg0 any
 }
 
 // DescribeIdentityProviderConfigWithContext mocks base method.
-func (m *MockEKSAPI) DescribeIdentityProviderConfigWithContext(arg0 context.Context, arg1 *eks.DescribeIdentityProviderConfigInput, arg2 ...request.Option) (*eks.DescribeIdentityProviderConfigOutput, error) {
+func (m *MockEKSAPI) DescribeIdentityProviderConfigWithContext(arg0 aws.Context, arg1 *eks.DescribeIdentityProviderConfigInput, arg2 ...request.Option) (*eks.DescribeIdentityProviderConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1406,7 +1406,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeInsightRequest(arg0 any) *gomock.Call 
 }
 
 // DescribeInsightWithContext mocks base method.
-func (m *MockEKSAPI) DescribeInsightWithContext(arg0 context.Context, arg1 *eks.DescribeInsightInput, arg2 ...request.Option) (*eks.DescribeInsightOutput, error) {
+func (m *MockEKSAPI) DescribeInsightWithContext(arg0 aws.Context, arg1 *eks.DescribeInsightInput, arg2 ...request.Option) (*eks.DescribeInsightOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1456,7 +1456,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeNodegroupRequest(arg0 any) *gomock.Cal
 }
 
 // DescribeNodegroupWithContext mocks base method.
-func (m *MockEKSAPI) DescribeNodegroupWithContext(arg0 context.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.Option) (*eks.DescribeNodegroupOutput, error) {
+func (m *MockEKSAPI) DescribeNodegroupWithContext(arg0 aws.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.Option) (*eks.DescribeNodegroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1506,7 +1506,7 @@ func (mr *MockEKSAPIMockRecorder) DescribePodIdentityAssociationRequest(arg0 any
 }
 
 // DescribePodIdentityAssociationWithContext mocks base method.
-func (m *MockEKSAPI) DescribePodIdentityAssociationWithContext(arg0 context.Context, arg1 *eks.DescribePodIdentityAssociationInput, arg2 ...request.Option) (*eks.DescribePodIdentityAssociationOutput, error) {
+func (m *MockEKSAPI) DescribePodIdentityAssociationWithContext(arg0 aws.Context, arg1 *eks.DescribePodIdentityAssociationInput, arg2 ...request.Option) (*eks.DescribePodIdentityAssociationOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1556,7 +1556,7 @@ func (mr *MockEKSAPIMockRecorder) DescribeUpdateRequest(arg0 any) *gomock.Call {
 }
 
 // DescribeUpdateWithContext mocks base method.
-func (m *MockEKSAPI) DescribeUpdateWithContext(arg0 context.Context, arg1 *eks.DescribeUpdateInput, arg2 ...request.Option) (*eks.DescribeUpdateOutput, error) {
+func (m *MockEKSAPI) DescribeUpdateWithContext(arg0 aws.Context, arg1 *eks.DescribeUpdateInput, arg2 ...request.Option) (*eks.DescribeUpdateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1606,7 +1606,7 @@ func (mr *MockEKSAPIMockRecorder) DisassociateAccessPolicyRequest(arg0 any) *gom
 }
 
 // DisassociateAccessPolicyWithContext mocks base method.
-func (m *MockEKSAPI) DisassociateAccessPolicyWithContext(arg0 context.Context, arg1 *eks.DisassociateAccessPolicyInput, arg2 ...request.Option) (*eks.DisassociateAccessPolicyOutput, error) {
+func (m *MockEKSAPI) DisassociateAccessPolicyWithContext(arg0 aws.Context, arg1 *eks.DisassociateAccessPolicyInput, arg2 ...request.Option) (*eks.DisassociateAccessPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1656,7 +1656,7 @@ func (mr *MockEKSAPIMockRecorder) DisassociateIdentityProviderConfigRequest(arg0
 }
 
 // DisassociateIdentityProviderConfigWithContext mocks base method.
-func (m *MockEKSAPI) DisassociateIdentityProviderConfigWithContext(arg0 context.Context, arg1 *eks.DisassociateIdentityProviderConfigInput, arg2 ...request.Option) (*eks.DisassociateIdentityProviderConfigOutput, error) {
+func (m *MockEKSAPI) DisassociateIdentityProviderConfigWithContext(arg0 aws.Context, arg1 *eks.DisassociateIdentityProviderConfigInput, arg2 ...request.Option) (*eks.DisassociateIdentityProviderConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1705,7 +1705,7 @@ func (mr *MockEKSAPIMockRecorder) ListAccessEntriesPages(arg0, arg1 any) *gomock
 }
 
 // ListAccessEntriesPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListAccessEntriesPagesWithContext(arg0 context.Context, arg1 *eks.ListAccessEntriesInput, arg2 func(*eks.ListAccessEntriesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListAccessEntriesPagesWithContext(arg0 aws.Context, arg1 *eks.ListAccessEntriesInput, arg2 func(*eks.ListAccessEntriesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -1739,7 +1739,7 @@ func (mr *MockEKSAPIMockRecorder) ListAccessEntriesRequest(arg0 any) *gomock.Cal
 }
 
 // ListAccessEntriesWithContext mocks base method.
-func (m *MockEKSAPI) ListAccessEntriesWithContext(arg0 context.Context, arg1 *eks.ListAccessEntriesInput, arg2 ...request.Option) (*eks.ListAccessEntriesOutput, error) {
+func (m *MockEKSAPI) ListAccessEntriesWithContext(arg0 aws.Context, arg1 *eks.ListAccessEntriesInput, arg2 ...request.Option) (*eks.ListAccessEntriesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1788,7 +1788,7 @@ func (mr *MockEKSAPIMockRecorder) ListAccessPoliciesPages(arg0, arg1 any) *gomoc
 }
 
 // ListAccessPoliciesPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListAccessPoliciesPagesWithContext(arg0 context.Context, arg1 *eks.ListAccessPoliciesInput, arg2 func(*eks.ListAccessPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListAccessPoliciesPagesWithContext(arg0 aws.Context, arg1 *eks.ListAccessPoliciesInput, arg2 func(*eks.ListAccessPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -1822,7 +1822,7 @@ func (mr *MockEKSAPIMockRecorder) ListAccessPoliciesRequest(arg0 any) *gomock.Ca
 }
 
 // ListAccessPoliciesWithContext mocks base method.
-func (m *MockEKSAPI) ListAccessPoliciesWithContext(arg0 context.Context, arg1 *eks.ListAccessPoliciesInput, arg2 ...request.Option) (*eks.ListAccessPoliciesOutput, error) {
+func (m *MockEKSAPI) ListAccessPoliciesWithContext(arg0 aws.Context, arg1 *eks.ListAccessPoliciesInput, arg2 ...request.Option) (*eks.ListAccessPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1871,7 +1871,7 @@ func (mr *MockEKSAPIMockRecorder) ListAddonsPages(arg0, arg1 any) *gomock.Call {
 }
 
 // ListAddonsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListAddonsPagesWithContext(arg0 context.Context, arg1 *eks.ListAddonsInput, arg2 func(*eks.ListAddonsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListAddonsPagesWithContext(arg0 aws.Context, arg1 *eks.ListAddonsInput, arg2 func(*eks.ListAddonsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -1905,7 +1905,7 @@ func (mr *MockEKSAPIMockRecorder) ListAddonsRequest(arg0 any) *gomock.Call {
 }
 
 // ListAddonsWithContext mocks base method.
-func (m *MockEKSAPI) ListAddonsWithContext(arg0 context.Context, arg1 *eks.ListAddonsInput, arg2 ...request.Option) (*eks.ListAddonsOutput, error) {
+func (m *MockEKSAPI) ListAddonsWithContext(arg0 aws.Context, arg1 *eks.ListAddonsInput, arg2 ...request.Option) (*eks.ListAddonsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1954,7 +1954,7 @@ func (mr *MockEKSAPIMockRecorder) ListAssociatedAccessPoliciesPages(arg0, arg1 a
 }
 
 // ListAssociatedAccessPoliciesPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListAssociatedAccessPoliciesPagesWithContext(arg0 context.Context, arg1 *eks.ListAssociatedAccessPoliciesInput, arg2 func(*eks.ListAssociatedAccessPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListAssociatedAccessPoliciesPagesWithContext(arg0 aws.Context, arg1 *eks.ListAssociatedAccessPoliciesInput, arg2 func(*eks.ListAssociatedAccessPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -1988,7 +1988,7 @@ func (mr *MockEKSAPIMockRecorder) ListAssociatedAccessPoliciesRequest(arg0 any) 
 }
 
 // ListAssociatedAccessPoliciesWithContext mocks base method.
-func (m *MockEKSAPI) ListAssociatedAccessPoliciesWithContext(arg0 context.Context, arg1 *eks.ListAssociatedAccessPoliciesInput, arg2 ...request.Option) (*eks.ListAssociatedAccessPoliciesOutput, error) {
+func (m *MockEKSAPI) ListAssociatedAccessPoliciesWithContext(arg0 aws.Context, arg1 *eks.ListAssociatedAccessPoliciesInput, arg2 ...request.Option) (*eks.ListAssociatedAccessPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2037,7 +2037,7 @@ func (mr *MockEKSAPIMockRecorder) ListClustersPages(arg0, arg1 any) *gomock.Call
 }
 
 // ListClustersPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListClustersPagesWithContext(arg0 context.Context, arg1 *eks.ListClustersInput, arg2 func(*eks.ListClustersOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListClustersPagesWithContext(arg0 aws.Context, arg1 *eks.ListClustersInput, arg2 func(*eks.ListClustersOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2071,7 +2071,7 @@ func (mr *MockEKSAPIMockRecorder) ListClustersRequest(arg0 any) *gomock.Call {
 }
 
 // ListClustersWithContext mocks base method.
-func (m *MockEKSAPI) ListClustersWithContext(arg0 context.Context, arg1 *eks.ListClustersInput, arg2 ...request.Option) (*eks.ListClustersOutput, error) {
+func (m *MockEKSAPI) ListClustersWithContext(arg0 aws.Context, arg1 *eks.ListClustersInput, arg2 ...request.Option) (*eks.ListClustersOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2120,7 +2120,7 @@ func (mr *MockEKSAPIMockRecorder) ListEksAnywhereSubscriptionsPages(arg0, arg1 a
 }
 
 // ListEksAnywhereSubscriptionsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListEksAnywhereSubscriptionsPagesWithContext(arg0 context.Context, arg1 *eks.ListEksAnywhereSubscriptionsInput, arg2 func(*eks.ListEksAnywhereSubscriptionsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListEksAnywhereSubscriptionsPagesWithContext(arg0 aws.Context, arg1 *eks.ListEksAnywhereSubscriptionsInput, arg2 func(*eks.ListEksAnywhereSubscriptionsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2154,7 +2154,7 @@ func (mr *MockEKSAPIMockRecorder) ListEksAnywhereSubscriptionsRequest(arg0 any) 
 }
 
 // ListEksAnywhereSubscriptionsWithContext mocks base method.
-func (m *MockEKSAPI) ListEksAnywhereSubscriptionsWithContext(arg0 context.Context, arg1 *eks.ListEksAnywhereSubscriptionsInput, arg2 ...request.Option) (*eks.ListEksAnywhereSubscriptionsOutput, error) {
+func (m *MockEKSAPI) ListEksAnywhereSubscriptionsWithContext(arg0 aws.Context, arg1 *eks.ListEksAnywhereSubscriptionsInput, arg2 ...request.Option) (*eks.ListEksAnywhereSubscriptionsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2203,7 +2203,7 @@ func (mr *MockEKSAPIMockRecorder) ListFargateProfilesPages(arg0, arg1 any) *gomo
 }
 
 // ListFargateProfilesPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListFargateProfilesPagesWithContext(arg0 context.Context, arg1 *eks.ListFargateProfilesInput, arg2 func(*eks.ListFargateProfilesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListFargateProfilesPagesWithContext(arg0 aws.Context, arg1 *eks.ListFargateProfilesInput, arg2 func(*eks.ListFargateProfilesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2237,7 +2237,7 @@ func (mr *MockEKSAPIMockRecorder) ListFargateProfilesRequest(arg0 any) *gomock.C
 }
 
 // ListFargateProfilesWithContext mocks base method.
-func (m *MockEKSAPI) ListFargateProfilesWithContext(arg0 context.Context, arg1 *eks.ListFargateProfilesInput, arg2 ...request.Option) (*eks.ListFargateProfilesOutput, error) {
+func (m *MockEKSAPI) ListFargateProfilesWithContext(arg0 aws.Context, arg1 *eks.ListFargateProfilesInput, arg2 ...request.Option) (*eks.ListFargateProfilesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2286,7 +2286,7 @@ func (mr *MockEKSAPIMockRecorder) ListIdentityProviderConfigsPages(arg0, arg1 an
 }
 
 // ListIdentityProviderConfigsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListIdentityProviderConfigsPagesWithContext(arg0 context.Context, arg1 *eks.ListIdentityProviderConfigsInput, arg2 func(*eks.ListIdentityProviderConfigsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListIdentityProviderConfigsPagesWithContext(arg0 aws.Context, arg1 *eks.ListIdentityProviderConfigsInput, arg2 func(*eks.ListIdentityProviderConfigsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2320,7 +2320,7 @@ func (mr *MockEKSAPIMockRecorder) ListIdentityProviderConfigsRequest(arg0 any) *
 }
 
 // ListIdentityProviderConfigsWithContext mocks base method.
-func (m *MockEKSAPI) ListIdentityProviderConfigsWithContext(arg0 context.Context, arg1 *eks.ListIdentityProviderConfigsInput, arg2 ...request.Option) (*eks.ListIdentityProviderConfigsOutput, error) {
+func (m *MockEKSAPI) ListIdentityProviderConfigsWithContext(arg0 aws.Context, arg1 *eks.ListIdentityProviderConfigsInput, arg2 ...request.Option) (*eks.ListIdentityProviderConfigsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2369,7 +2369,7 @@ func (mr *MockEKSAPIMockRecorder) ListInsightsPages(arg0, arg1 any) *gomock.Call
 }
 
 // ListInsightsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListInsightsPagesWithContext(arg0 context.Context, arg1 *eks.ListInsightsInput, arg2 func(*eks.ListInsightsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListInsightsPagesWithContext(arg0 aws.Context, arg1 *eks.ListInsightsInput, arg2 func(*eks.ListInsightsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2403,7 +2403,7 @@ func (mr *MockEKSAPIMockRecorder) ListInsightsRequest(arg0 any) *gomock.Call {
 }
 
 // ListInsightsWithContext mocks base method.
-func (m *MockEKSAPI) ListInsightsWithContext(arg0 context.Context, arg1 *eks.ListInsightsInput, arg2 ...request.Option) (*eks.ListInsightsOutput, error) {
+func (m *MockEKSAPI) ListInsightsWithContext(arg0 aws.Context, arg1 *eks.ListInsightsInput, arg2 ...request.Option) (*eks.ListInsightsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2452,7 +2452,7 @@ func (mr *MockEKSAPIMockRecorder) ListNodegroupsPages(arg0, arg1 any) *gomock.Ca
 }
 
 // ListNodegroupsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListNodegroupsPagesWithContext(arg0 context.Context, arg1 *eks.ListNodegroupsInput, arg2 func(*eks.ListNodegroupsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListNodegroupsPagesWithContext(arg0 aws.Context, arg1 *eks.ListNodegroupsInput, arg2 func(*eks.ListNodegroupsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2486,7 +2486,7 @@ func (mr *MockEKSAPIMockRecorder) ListNodegroupsRequest(arg0 any) *gomock.Call {
 }
 
 // ListNodegroupsWithContext mocks base method.
-func (m *MockEKSAPI) ListNodegroupsWithContext(arg0 context.Context, arg1 *eks.ListNodegroupsInput, arg2 ...request.Option) (*eks.ListNodegroupsOutput, error) {
+func (m *MockEKSAPI) ListNodegroupsWithContext(arg0 aws.Context, arg1 *eks.ListNodegroupsInput, arg2 ...request.Option) (*eks.ListNodegroupsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2535,7 +2535,7 @@ func (mr *MockEKSAPIMockRecorder) ListPodIdentityAssociationsPages(arg0, arg1 an
 }
 
 // ListPodIdentityAssociationsPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListPodIdentityAssociationsPagesWithContext(arg0 context.Context, arg1 *eks.ListPodIdentityAssociationsInput, arg2 func(*eks.ListPodIdentityAssociationsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListPodIdentityAssociationsPagesWithContext(arg0 aws.Context, arg1 *eks.ListPodIdentityAssociationsInput, arg2 func(*eks.ListPodIdentityAssociationsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2569,7 +2569,7 @@ func (mr *MockEKSAPIMockRecorder) ListPodIdentityAssociationsRequest(arg0 any) *
 }
 
 // ListPodIdentityAssociationsWithContext mocks base method.
-func (m *MockEKSAPI) ListPodIdentityAssociationsWithContext(arg0 context.Context, arg1 *eks.ListPodIdentityAssociationsInput, arg2 ...request.Option) (*eks.ListPodIdentityAssociationsOutput, error) {
+func (m *MockEKSAPI) ListPodIdentityAssociationsWithContext(arg0 aws.Context, arg1 *eks.ListPodIdentityAssociationsInput, arg2 ...request.Option) (*eks.ListPodIdentityAssociationsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2619,7 +2619,7 @@ func (mr *MockEKSAPIMockRecorder) ListTagsForResourceRequest(arg0 any) *gomock.C
 }
 
 // ListTagsForResourceWithContext mocks base method.
-func (m *MockEKSAPI) ListTagsForResourceWithContext(arg0 context.Context, arg1 *eks.ListTagsForResourceInput, arg2 ...request.Option) (*eks.ListTagsForResourceOutput, error) {
+func (m *MockEKSAPI) ListTagsForResourceWithContext(arg0 aws.Context, arg1 *eks.ListTagsForResourceInput, arg2 ...request.Option) (*eks.ListTagsForResourceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2668,7 +2668,7 @@ func (mr *MockEKSAPIMockRecorder) ListUpdatesPages(arg0, arg1 any) *gomock.Call 
 }
 
 // ListUpdatesPagesWithContext mocks base method.
-func (m *MockEKSAPI) ListUpdatesPagesWithContext(arg0 context.Context, arg1 *eks.ListUpdatesInput, arg2 func(*eks.ListUpdatesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockEKSAPI) ListUpdatesPagesWithContext(arg0 aws.Context, arg1 *eks.ListUpdatesInput, arg2 func(*eks.ListUpdatesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2702,7 +2702,7 @@ func (mr *MockEKSAPIMockRecorder) ListUpdatesRequest(arg0 any) *gomock.Call {
 }
 
 // ListUpdatesWithContext mocks base method.
-func (m *MockEKSAPI) ListUpdatesWithContext(arg0 context.Context, arg1 *eks.ListUpdatesInput, arg2 ...request.Option) (*eks.ListUpdatesOutput, error) {
+func (m *MockEKSAPI) ListUpdatesWithContext(arg0 aws.Context, arg1 *eks.ListUpdatesInput, arg2 ...request.Option) (*eks.ListUpdatesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2752,7 +2752,7 @@ func (mr *MockEKSAPIMockRecorder) RegisterClusterRequest(arg0 any) *gomock.Call 
 }
 
 // RegisterClusterWithContext mocks base method.
-func (m *MockEKSAPI) RegisterClusterWithContext(arg0 context.Context, arg1 *eks.RegisterClusterInput, arg2 ...request.Option) (*eks.RegisterClusterOutput, error) {
+func (m *MockEKSAPI) RegisterClusterWithContext(arg0 aws.Context, arg1 *eks.RegisterClusterInput, arg2 ...request.Option) (*eks.RegisterClusterOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2802,7 +2802,7 @@ func (mr *MockEKSAPIMockRecorder) TagResourceRequest(arg0 any) *gomock.Call {
 }
 
 // TagResourceWithContext mocks base method.
-func (m *MockEKSAPI) TagResourceWithContext(arg0 context.Context, arg1 *eks.TagResourceInput, arg2 ...request.Option) (*eks.TagResourceOutput, error) {
+func (m *MockEKSAPI) TagResourceWithContext(arg0 aws.Context, arg1 *eks.TagResourceInput, arg2 ...request.Option) (*eks.TagResourceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2852,7 +2852,7 @@ func (mr *MockEKSAPIMockRecorder) UntagResourceRequest(arg0 any) *gomock.Call {
 }
 
 // UntagResourceWithContext mocks base method.
-func (m *MockEKSAPI) UntagResourceWithContext(arg0 context.Context, arg1 *eks.UntagResourceInput, arg2 ...request.Option) (*eks.UntagResourceOutput, error) {
+func (m *MockEKSAPI) UntagResourceWithContext(arg0 aws.Context, arg1 *eks.UntagResourceInput, arg2 ...request.Option) (*eks.UntagResourceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2902,7 +2902,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateAccessEntryRequest(arg0 any) *gomock.Cal
 }
 
 // UpdateAccessEntryWithContext mocks base method.
-func (m *MockEKSAPI) UpdateAccessEntryWithContext(arg0 context.Context, arg1 *eks.UpdateAccessEntryInput, arg2 ...request.Option) (*eks.UpdateAccessEntryOutput, error) {
+func (m *MockEKSAPI) UpdateAccessEntryWithContext(arg0 aws.Context, arg1 *eks.UpdateAccessEntryInput, arg2 ...request.Option) (*eks.UpdateAccessEntryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2952,7 +2952,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateAddonRequest(arg0 any) *gomock.Call {
 }
 
 // UpdateAddonWithContext mocks base method.
-func (m *MockEKSAPI) UpdateAddonWithContext(arg0 context.Context, arg1 *eks.UpdateAddonInput, arg2 ...request.Option) (*eks.UpdateAddonOutput, error) {
+func (m *MockEKSAPI) UpdateAddonWithContext(arg0 aws.Context, arg1 *eks.UpdateAddonInput, arg2 ...request.Option) (*eks.UpdateAddonOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3002,7 +3002,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateClusterConfigRequest(arg0 any) *gomock.C
 }
 
 // UpdateClusterConfigWithContext mocks base method.
-func (m *MockEKSAPI) UpdateClusterConfigWithContext(arg0 context.Context, arg1 *eks.UpdateClusterConfigInput, arg2 ...request.Option) (*eks.UpdateClusterConfigOutput, error) {
+func (m *MockEKSAPI) UpdateClusterConfigWithContext(arg0 aws.Context, arg1 *eks.UpdateClusterConfigInput, arg2 ...request.Option) (*eks.UpdateClusterConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3052,7 +3052,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateClusterVersionRequest(arg0 any) *gomock.
 }
 
 // UpdateClusterVersionWithContext mocks base method.
-func (m *MockEKSAPI) UpdateClusterVersionWithContext(arg0 context.Context, arg1 *eks.UpdateClusterVersionInput, arg2 ...request.Option) (*eks.UpdateClusterVersionOutput, error) {
+func (m *MockEKSAPI) UpdateClusterVersionWithContext(arg0 aws.Context, arg1 *eks.UpdateClusterVersionInput, arg2 ...request.Option) (*eks.UpdateClusterVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3102,7 +3102,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateEksAnywhereSubscriptionRequest(arg0 any)
 }
 
 // UpdateEksAnywhereSubscriptionWithContext mocks base method.
-func (m *MockEKSAPI) UpdateEksAnywhereSubscriptionWithContext(arg0 context.Context, arg1 *eks.UpdateEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.UpdateEksAnywhereSubscriptionOutput, error) {
+func (m *MockEKSAPI) UpdateEksAnywhereSubscriptionWithContext(arg0 aws.Context, arg1 *eks.UpdateEksAnywhereSubscriptionInput, arg2 ...request.Option) (*eks.UpdateEksAnywhereSubscriptionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3152,7 +3152,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateNodegroupConfigRequest(arg0 any) *gomock
 }
 
 // UpdateNodegroupConfigWithContext mocks base method.
-func (m *MockEKSAPI) UpdateNodegroupConfigWithContext(arg0 context.Context, arg1 *eks.UpdateNodegroupConfigInput, arg2 ...request.Option) (*eks.UpdateNodegroupConfigOutput, error) {
+func (m *MockEKSAPI) UpdateNodegroupConfigWithContext(arg0 aws.Context, arg1 *eks.UpdateNodegroupConfigInput, arg2 ...request.Option) (*eks.UpdateNodegroupConfigOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3202,7 +3202,7 @@ func (mr *MockEKSAPIMockRecorder) UpdateNodegroupVersionRequest(arg0 any) *gomoc
 }
 
 // UpdateNodegroupVersionWithContext mocks base method.
-func (m *MockEKSAPI) UpdateNodegroupVersionWithContext(arg0 context.Context, arg1 *eks.UpdateNodegroupVersionInput, arg2 ...request.Option) (*eks.UpdateNodegroupVersionOutput, error) {
+func (m *MockEKSAPI) UpdateNodegroupVersionWithContext(arg0 aws.Context, arg1 *eks.UpdateNodegroupVersionInput, arg2 ...request.Option) (*eks.UpdateNodegroupVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3252,7 +3252,7 @@ func (mr *MockEKSAPIMockRecorder) UpdatePodIdentityAssociationRequest(arg0 any) 
 }
 
 // UpdatePodIdentityAssociationWithContext mocks base method.
-func (m *MockEKSAPI) UpdatePodIdentityAssociationWithContext(arg0 context.Context, arg1 *eks.UpdatePodIdentityAssociationInput, arg2 ...request.Option) (*eks.UpdatePodIdentityAssociationOutput, error) {
+func (m *MockEKSAPI) UpdatePodIdentityAssociationWithContext(arg0 aws.Context, arg1 *eks.UpdatePodIdentityAssociationInput, arg2 ...request.Option) (*eks.UpdatePodIdentityAssociationOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3286,7 +3286,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilAddonActive(arg0 any) *gomock.Call {
 }
 
 // WaitUntilAddonActiveWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilAddonActiveWithContext(arg0 context.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilAddonActiveWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3319,7 +3319,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilAddonDeleted(arg0 any) *gomock.Call {
 }
 
 // WaitUntilAddonDeletedWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilAddonDeletedWithContext(arg0 context.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilAddonDeletedWithContext(arg0 aws.Context, arg1 *eks.DescribeAddonInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3352,7 +3352,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilClusterActive(arg0 any) *gomock.Call 
 }
 
 // WaitUntilClusterActiveWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilClusterActiveWithContext(arg0 context.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilClusterActiveWithContext(arg0 aws.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3385,7 +3385,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilClusterDeleted(arg0 any) *gomock.Call
 }
 
 // WaitUntilClusterDeletedWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilClusterDeletedWithContext(arg0 context.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilClusterDeletedWithContext(arg0 aws.Context, arg1 *eks.DescribeClusterInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3418,7 +3418,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilFargateProfileActive(arg0 any) *gomoc
 }
 
 // WaitUntilFargateProfileActiveWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilFargateProfileActiveWithContext(arg0 context.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilFargateProfileActiveWithContext(arg0 aws.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3451,7 +3451,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilFargateProfileDeleted(arg0 any) *gomo
 }
 
 // WaitUntilFargateProfileDeletedWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilFargateProfileDeletedWithContext(arg0 context.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilFargateProfileDeletedWithContext(arg0 aws.Context, arg1 *eks.DescribeFargateProfileInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3484,7 +3484,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilNodegroupActive(arg0 any) *gomock.Cal
 }
 
 // WaitUntilNodegroupActiveWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilNodegroupActiveWithContext(arg0 context.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilNodegroupActiveWithContext(arg0 aws.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3517,7 +3517,7 @@ func (mr *MockEKSAPIMockRecorder) WaitUntilNodegroupDeleted(arg0 any) *gomock.Ca
 }
 
 // WaitUntilNodegroupDeletedWithContext mocks base method.
-func (m *MockEKSAPI) WaitUntilNodegroupDeletedWithContext(arg0 context.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.WaiterOption) error {
+func (m *MockEKSAPI) WaitUntilNodegroupDeletedWithContext(arg0 aws.Context, arg1 *eks.DescribeNodegroupInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {

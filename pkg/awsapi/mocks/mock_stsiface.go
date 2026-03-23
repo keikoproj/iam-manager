@@ -10,9 +10,9 @@
 package mock_awsapi
 
 import (
-	context "context"
 	reflect "reflect"
 
+	aws "github.com/aws/aws-sdk-go/aws"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	sts "github.com/aws/aws-sdk-go/service/sts"
 	gomock "go.uber.org/mock/gomock"
@@ -73,7 +73,7 @@ func (mr *MockSTSAPIMockRecorder) AssumeRoleRequest(arg0 any) *gomock.Call {
 }
 
 // AssumeRoleWithContext mocks base method.
-func (m *MockSTSAPI) AssumeRoleWithContext(arg0 context.Context, arg1 *sts.AssumeRoleInput, arg2 ...request.Option) (*sts.AssumeRoleOutput, error) {
+func (m *MockSTSAPI) AssumeRoleWithContext(arg0 aws.Context, arg1 *sts.AssumeRoleInput, arg2 ...request.Option) (*sts.AssumeRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -123,7 +123,7 @@ func (mr *MockSTSAPIMockRecorder) AssumeRoleWithSAMLRequest(arg0 any) *gomock.Ca
 }
 
 // AssumeRoleWithSAMLWithContext mocks base method.
-func (m *MockSTSAPI) AssumeRoleWithSAMLWithContext(arg0 context.Context, arg1 *sts.AssumeRoleWithSAMLInput, arg2 ...request.Option) (*sts.AssumeRoleWithSAMLOutput, error) {
+func (m *MockSTSAPI) AssumeRoleWithSAMLWithContext(arg0 aws.Context, arg1 *sts.AssumeRoleWithSAMLInput, arg2 ...request.Option) (*sts.AssumeRoleWithSAMLOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -173,7 +173,7 @@ func (mr *MockSTSAPIMockRecorder) AssumeRoleWithWebIdentityRequest(arg0 any) *go
 }
 
 // AssumeRoleWithWebIdentityWithContext mocks base method.
-func (m *MockSTSAPI) AssumeRoleWithWebIdentityWithContext(arg0 context.Context, arg1 *sts.AssumeRoleWithWebIdentityInput, arg2 ...request.Option) (*sts.AssumeRoleWithWebIdentityOutput, error) {
+func (m *MockSTSAPI) AssumeRoleWithWebIdentityWithContext(arg0 aws.Context, arg1 *sts.AssumeRoleWithWebIdentityInput, arg2 ...request.Option) (*sts.AssumeRoleWithWebIdentityOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -223,7 +223,7 @@ func (mr *MockSTSAPIMockRecorder) DecodeAuthorizationMessageRequest(arg0 any) *g
 }
 
 // DecodeAuthorizationMessageWithContext mocks base method.
-func (m *MockSTSAPI) DecodeAuthorizationMessageWithContext(arg0 context.Context, arg1 *sts.DecodeAuthorizationMessageInput, arg2 ...request.Option) (*sts.DecodeAuthorizationMessageOutput, error) {
+func (m *MockSTSAPI) DecodeAuthorizationMessageWithContext(arg0 aws.Context, arg1 *sts.DecodeAuthorizationMessageInput, arg2 ...request.Option) (*sts.DecodeAuthorizationMessageOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -273,7 +273,7 @@ func (mr *MockSTSAPIMockRecorder) GetAccessKeyInfoRequest(arg0 any) *gomock.Call
 }
 
 // GetAccessKeyInfoWithContext mocks base method.
-func (m *MockSTSAPI) GetAccessKeyInfoWithContext(arg0 context.Context, arg1 *sts.GetAccessKeyInfoInput, arg2 ...request.Option) (*sts.GetAccessKeyInfoOutput, error) {
+func (m *MockSTSAPI) GetAccessKeyInfoWithContext(arg0 aws.Context, arg1 *sts.GetAccessKeyInfoInput, arg2 ...request.Option) (*sts.GetAccessKeyInfoOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -323,7 +323,7 @@ func (mr *MockSTSAPIMockRecorder) GetCallerIdentityRequest(arg0 any) *gomock.Cal
 }
 
 // GetCallerIdentityWithContext mocks base method.
-func (m *MockSTSAPI) GetCallerIdentityWithContext(arg0 context.Context, arg1 *sts.GetCallerIdentityInput, arg2 ...request.Option) (*sts.GetCallerIdentityOutput, error) {
+func (m *MockSTSAPI) GetCallerIdentityWithContext(arg0 aws.Context, arg1 *sts.GetCallerIdentityInput, arg2 ...request.Option) (*sts.GetCallerIdentityOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -373,7 +373,7 @@ func (mr *MockSTSAPIMockRecorder) GetFederationTokenRequest(arg0 any) *gomock.Ca
 }
 
 // GetFederationTokenWithContext mocks base method.
-func (m *MockSTSAPI) GetFederationTokenWithContext(arg0 context.Context, arg1 *sts.GetFederationTokenInput, arg2 ...request.Option) (*sts.GetFederationTokenOutput, error) {
+func (m *MockSTSAPI) GetFederationTokenWithContext(arg0 aws.Context, arg1 *sts.GetFederationTokenInput, arg2 ...request.Option) (*sts.GetFederationTokenOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -423,7 +423,7 @@ func (mr *MockSTSAPIMockRecorder) GetSessionTokenRequest(arg0 any) *gomock.Call 
 }
 
 // GetSessionTokenWithContext mocks base method.
-func (m *MockSTSAPI) GetSessionTokenWithContext(arg0 context.Context, arg1 *sts.GetSessionTokenInput, arg2 ...request.Option) (*sts.GetSessionTokenOutput, error) {
+func (m *MockSTSAPI) GetSessionTokenWithContext(arg0 aws.Context, arg1 *sts.GetSessionTokenInput, arg2 ...request.Option) (*sts.GetSessionTokenOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {

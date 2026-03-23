@@ -1,6 +1,6 @@
 module github.com/keikoproj/iam-manager
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8

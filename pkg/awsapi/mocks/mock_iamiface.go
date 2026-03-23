@@ -10,9 +10,9 @@
 package mock_awsapi
 
 import (
-	context "context"
 	reflect "reflect"
 
+	aws "github.com/aws/aws-sdk-go/aws"
 	request "github.com/aws/aws-sdk-go/aws/request"
 	iam "github.com/aws/aws-sdk-go/service/iam"
 	gomock "go.uber.org/mock/gomock"
@@ -73,7 +73,7 @@ func (mr *MockIAMAPIMockRecorder) AddClientIDToOpenIDConnectProviderRequest(arg0
 }
 
 // AddClientIDToOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) AddClientIDToOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.AddClientIDToOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.AddClientIDToOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) AddClientIDToOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.AddClientIDToOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.AddClientIDToOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -123,7 +123,7 @@ func (mr *MockIAMAPIMockRecorder) AddRoleToInstanceProfileRequest(arg0 any) *gom
 }
 
 // AddRoleToInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) AddRoleToInstanceProfileWithContext(arg0 context.Context, arg1 *iam.AddRoleToInstanceProfileInput, arg2 ...request.Option) (*iam.AddRoleToInstanceProfileOutput, error) {
+func (m *MockIAMAPI) AddRoleToInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.AddRoleToInstanceProfileInput, arg2 ...request.Option) (*iam.AddRoleToInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -173,7 +173,7 @@ func (mr *MockIAMAPIMockRecorder) AddUserToGroupRequest(arg0 any) *gomock.Call {
 }
 
 // AddUserToGroupWithContext mocks base method.
-func (m *MockIAMAPI) AddUserToGroupWithContext(arg0 context.Context, arg1 *iam.AddUserToGroupInput, arg2 ...request.Option) (*iam.AddUserToGroupOutput, error) {
+func (m *MockIAMAPI) AddUserToGroupWithContext(arg0 aws.Context, arg1 *iam.AddUserToGroupInput, arg2 ...request.Option) (*iam.AddUserToGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -223,7 +223,7 @@ func (mr *MockIAMAPIMockRecorder) AttachGroupPolicyRequest(arg0 any) *gomock.Cal
 }
 
 // AttachGroupPolicyWithContext mocks base method.
-func (m *MockIAMAPI) AttachGroupPolicyWithContext(arg0 context.Context, arg1 *iam.AttachGroupPolicyInput, arg2 ...request.Option) (*iam.AttachGroupPolicyOutput, error) {
+func (m *MockIAMAPI) AttachGroupPolicyWithContext(arg0 aws.Context, arg1 *iam.AttachGroupPolicyInput, arg2 ...request.Option) (*iam.AttachGroupPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -273,7 +273,7 @@ func (mr *MockIAMAPIMockRecorder) AttachRolePolicyRequest(arg0 any) *gomock.Call
 }
 
 // AttachRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) AttachRolePolicyWithContext(arg0 context.Context, arg1 *iam.AttachRolePolicyInput, arg2 ...request.Option) (*iam.AttachRolePolicyOutput, error) {
+func (m *MockIAMAPI) AttachRolePolicyWithContext(arg0 aws.Context, arg1 *iam.AttachRolePolicyInput, arg2 ...request.Option) (*iam.AttachRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -323,7 +323,7 @@ func (mr *MockIAMAPIMockRecorder) AttachUserPolicyRequest(arg0 any) *gomock.Call
 }
 
 // AttachUserPolicyWithContext mocks base method.
-func (m *MockIAMAPI) AttachUserPolicyWithContext(arg0 context.Context, arg1 *iam.AttachUserPolicyInput, arg2 ...request.Option) (*iam.AttachUserPolicyOutput, error) {
+func (m *MockIAMAPI) AttachUserPolicyWithContext(arg0 aws.Context, arg1 *iam.AttachUserPolicyInput, arg2 ...request.Option) (*iam.AttachUserPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -373,7 +373,7 @@ func (mr *MockIAMAPIMockRecorder) ChangePasswordRequest(arg0 any) *gomock.Call {
 }
 
 // ChangePasswordWithContext mocks base method.
-func (m *MockIAMAPI) ChangePasswordWithContext(arg0 context.Context, arg1 *iam.ChangePasswordInput, arg2 ...request.Option) (*iam.ChangePasswordOutput, error) {
+func (m *MockIAMAPI) ChangePasswordWithContext(arg0 aws.Context, arg1 *iam.ChangePasswordInput, arg2 ...request.Option) (*iam.ChangePasswordOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -423,7 +423,7 @@ func (mr *MockIAMAPIMockRecorder) CreateAccessKeyRequest(arg0 any) *gomock.Call 
 }
 
 // CreateAccessKeyWithContext mocks base method.
-func (m *MockIAMAPI) CreateAccessKeyWithContext(arg0 context.Context, arg1 *iam.CreateAccessKeyInput, arg2 ...request.Option) (*iam.CreateAccessKeyOutput, error) {
+func (m *MockIAMAPI) CreateAccessKeyWithContext(arg0 aws.Context, arg1 *iam.CreateAccessKeyInput, arg2 ...request.Option) (*iam.CreateAccessKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -473,7 +473,7 @@ func (mr *MockIAMAPIMockRecorder) CreateAccountAliasRequest(arg0 any) *gomock.Ca
 }
 
 // CreateAccountAliasWithContext mocks base method.
-func (m *MockIAMAPI) CreateAccountAliasWithContext(arg0 context.Context, arg1 *iam.CreateAccountAliasInput, arg2 ...request.Option) (*iam.CreateAccountAliasOutput, error) {
+func (m *MockIAMAPI) CreateAccountAliasWithContext(arg0 aws.Context, arg1 *iam.CreateAccountAliasInput, arg2 ...request.Option) (*iam.CreateAccountAliasOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -523,7 +523,7 @@ func (mr *MockIAMAPIMockRecorder) CreateGroupRequest(arg0 any) *gomock.Call {
 }
 
 // CreateGroupWithContext mocks base method.
-func (m *MockIAMAPI) CreateGroupWithContext(arg0 context.Context, arg1 *iam.CreateGroupInput, arg2 ...request.Option) (*iam.CreateGroupOutput, error) {
+func (m *MockIAMAPI) CreateGroupWithContext(arg0 aws.Context, arg1 *iam.CreateGroupInput, arg2 ...request.Option) (*iam.CreateGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -573,7 +573,7 @@ func (mr *MockIAMAPIMockRecorder) CreateInstanceProfileRequest(arg0 any) *gomock
 }
 
 // CreateInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) CreateInstanceProfileWithContext(arg0 context.Context, arg1 *iam.CreateInstanceProfileInput, arg2 ...request.Option) (*iam.CreateInstanceProfileOutput, error) {
+func (m *MockIAMAPI) CreateInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.CreateInstanceProfileInput, arg2 ...request.Option) (*iam.CreateInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -623,7 +623,7 @@ func (mr *MockIAMAPIMockRecorder) CreateLoginProfileRequest(arg0 any) *gomock.Ca
 }
 
 // CreateLoginProfileWithContext mocks base method.
-func (m *MockIAMAPI) CreateLoginProfileWithContext(arg0 context.Context, arg1 *iam.CreateLoginProfileInput, arg2 ...request.Option) (*iam.CreateLoginProfileOutput, error) {
+func (m *MockIAMAPI) CreateLoginProfileWithContext(arg0 aws.Context, arg1 *iam.CreateLoginProfileInput, arg2 ...request.Option) (*iam.CreateLoginProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -673,7 +673,7 @@ func (mr *MockIAMAPIMockRecorder) CreateOpenIDConnectProviderRequest(arg0 any) *
 }
 
 // CreateOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) CreateOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.CreateOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.CreateOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) CreateOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.CreateOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.CreateOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -753,7 +753,7 @@ func (mr *MockIAMAPIMockRecorder) CreatePolicyVersionRequest(arg0 any) *gomock.C
 }
 
 // CreatePolicyVersionWithContext mocks base method.
-func (m *MockIAMAPI) CreatePolicyVersionWithContext(arg0 context.Context, arg1 *iam.CreatePolicyVersionInput, arg2 ...request.Option) (*iam.CreatePolicyVersionOutput, error) {
+func (m *MockIAMAPI) CreatePolicyVersionWithContext(arg0 aws.Context, arg1 *iam.CreatePolicyVersionInput, arg2 ...request.Option) (*iam.CreatePolicyVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -773,7 +773,7 @@ func (mr *MockIAMAPIMockRecorder) CreatePolicyVersionWithContext(arg0, arg1 any,
 }
 
 // CreatePolicyWithContext mocks base method.
-func (m *MockIAMAPI) CreatePolicyWithContext(arg0 context.Context, arg1 *iam.CreatePolicyInput, arg2 ...request.Option) (*iam.CreatePolicyOutput, error) {
+func (m *MockIAMAPI) CreatePolicyWithContext(arg0 aws.Context, arg1 *iam.CreatePolicyInput, arg2 ...request.Option) (*iam.CreatePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -823,7 +823,7 @@ func (mr *MockIAMAPIMockRecorder) CreateRoleRequest(arg0 any) *gomock.Call {
 }
 
 // CreateRoleWithContext mocks base method.
-func (m *MockIAMAPI) CreateRoleWithContext(arg0 context.Context, arg1 *iam.CreateRoleInput, arg2 ...request.Option) (*iam.CreateRoleOutput, error) {
+func (m *MockIAMAPI) CreateRoleWithContext(arg0 aws.Context, arg1 *iam.CreateRoleInput, arg2 ...request.Option) (*iam.CreateRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -873,7 +873,7 @@ func (mr *MockIAMAPIMockRecorder) CreateSAMLProviderRequest(arg0 any) *gomock.Ca
 }
 
 // CreateSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) CreateSAMLProviderWithContext(arg0 context.Context, arg1 *iam.CreateSAMLProviderInput, arg2 ...request.Option) (*iam.CreateSAMLProviderOutput, error) {
+func (m *MockIAMAPI) CreateSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.CreateSAMLProviderInput, arg2 ...request.Option) (*iam.CreateSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -923,7 +923,7 @@ func (mr *MockIAMAPIMockRecorder) CreateServiceLinkedRoleRequest(arg0 any) *gomo
 }
 
 // CreateServiceLinkedRoleWithContext mocks base method.
-func (m *MockIAMAPI) CreateServiceLinkedRoleWithContext(arg0 context.Context, arg1 *iam.CreateServiceLinkedRoleInput, arg2 ...request.Option) (*iam.CreateServiceLinkedRoleOutput, error) {
+func (m *MockIAMAPI) CreateServiceLinkedRoleWithContext(arg0 aws.Context, arg1 *iam.CreateServiceLinkedRoleInput, arg2 ...request.Option) (*iam.CreateServiceLinkedRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -973,7 +973,7 @@ func (mr *MockIAMAPIMockRecorder) CreateServiceSpecificCredentialRequest(arg0 an
 }
 
 // CreateServiceSpecificCredentialWithContext mocks base method.
-func (m *MockIAMAPI) CreateServiceSpecificCredentialWithContext(arg0 context.Context, arg1 *iam.CreateServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.CreateServiceSpecificCredentialOutput, error) {
+func (m *MockIAMAPI) CreateServiceSpecificCredentialWithContext(arg0 aws.Context, arg1 *iam.CreateServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.CreateServiceSpecificCredentialOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1023,7 +1023,7 @@ func (mr *MockIAMAPIMockRecorder) CreateUserRequest(arg0 any) *gomock.Call {
 }
 
 // CreateUserWithContext mocks base method.
-func (m *MockIAMAPI) CreateUserWithContext(arg0 context.Context, arg1 *iam.CreateUserInput, arg2 ...request.Option) (*iam.CreateUserOutput, error) {
+func (m *MockIAMAPI) CreateUserWithContext(arg0 aws.Context, arg1 *iam.CreateUserInput, arg2 ...request.Option) (*iam.CreateUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1073,7 +1073,7 @@ func (mr *MockIAMAPIMockRecorder) CreateVirtualMFADeviceRequest(arg0 any) *gomoc
 }
 
 // CreateVirtualMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) CreateVirtualMFADeviceWithContext(arg0 context.Context, arg1 *iam.CreateVirtualMFADeviceInput, arg2 ...request.Option) (*iam.CreateVirtualMFADeviceOutput, error) {
+func (m *MockIAMAPI) CreateVirtualMFADeviceWithContext(arg0 aws.Context, arg1 *iam.CreateVirtualMFADeviceInput, arg2 ...request.Option) (*iam.CreateVirtualMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1123,7 +1123,7 @@ func (mr *MockIAMAPIMockRecorder) DeactivateMFADeviceRequest(arg0 any) *gomock.C
 }
 
 // DeactivateMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) DeactivateMFADeviceWithContext(arg0 context.Context, arg1 *iam.DeactivateMFADeviceInput, arg2 ...request.Option) (*iam.DeactivateMFADeviceOutput, error) {
+func (m *MockIAMAPI) DeactivateMFADeviceWithContext(arg0 aws.Context, arg1 *iam.DeactivateMFADeviceInput, arg2 ...request.Option) (*iam.DeactivateMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1173,7 +1173,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteAccessKeyRequest(arg0 any) *gomock.Call 
 }
 
 // DeleteAccessKeyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteAccessKeyWithContext(arg0 context.Context, arg1 *iam.DeleteAccessKeyInput, arg2 ...request.Option) (*iam.DeleteAccessKeyOutput, error) {
+func (m *MockIAMAPI) DeleteAccessKeyWithContext(arg0 aws.Context, arg1 *iam.DeleteAccessKeyInput, arg2 ...request.Option) (*iam.DeleteAccessKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1223,7 +1223,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteAccountAliasRequest(arg0 any) *gomock.Ca
 }
 
 // DeleteAccountAliasWithContext mocks base method.
-func (m *MockIAMAPI) DeleteAccountAliasWithContext(arg0 context.Context, arg1 *iam.DeleteAccountAliasInput, arg2 ...request.Option) (*iam.DeleteAccountAliasOutput, error) {
+func (m *MockIAMAPI) DeleteAccountAliasWithContext(arg0 aws.Context, arg1 *iam.DeleteAccountAliasInput, arg2 ...request.Option) (*iam.DeleteAccountAliasOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1273,7 +1273,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteAccountPasswordPolicyRequest(arg0 any) *
 }
 
 // DeleteAccountPasswordPolicyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteAccountPasswordPolicyWithContext(arg0 context.Context, arg1 *iam.DeleteAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.DeleteAccountPasswordPolicyOutput, error) {
+func (m *MockIAMAPI) DeleteAccountPasswordPolicyWithContext(arg0 aws.Context, arg1 *iam.DeleteAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.DeleteAccountPasswordPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1338,7 +1338,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteGroupPolicyRequest(arg0 any) *gomock.Cal
 }
 
 // DeleteGroupPolicyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteGroupPolicyWithContext(arg0 context.Context, arg1 *iam.DeleteGroupPolicyInput, arg2 ...request.Option) (*iam.DeleteGroupPolicyOutput, error) {
+func (m *MockIAMAPI) DeleteGroupPolicyWithContext(arg0 aws.Context, arg1 *iam.DeleteGroupPolicyInput, arg2 ...request.Option) (*iam.DeleteGroupPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1373,7 +1373,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteGroupRequest(arg0 any) *gomock.Call {
 }
 
 // DeleteGroupWithContext mocks base method.
-func (m *MockIAMAPI) DeleteGroupWithContext(arg0 context.Context, arg1 *iam.DeleteGroupInput, arg2 ...request.Option) (*iam.DeleteGroupOutput, error) {
+func (m *MockIAMAPI) DeleteGroupWithContext(arg0 aws.Context, arg1 *iam.DeleteGroupInput, arg2 ...request.Option) (*iam.DeleteGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1423,7 +1423,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteInstanceProfileRequest(arg0 any) *gomock
 }
 
 // DeleteInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) DeleteInstanceProfileWithContext(arg0 context.Context, arg1 *iam.DeleteInstanceProfileInput, arg2 ...request.Option) (*iam.DeleteInstanceProfileOutput, error) {
+func (m *MockIAMAPI) DeleteInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.DeleteInstanceProfileInput, arg2 ...request.Option) (*iam.DeleteInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1473,7 +1473,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteLoginProfileRequest(arg0 any) *gomock.Ca
 }
 
 // DeleteLoginProfileWithContext mocks base method.
-func (m *MockIAMAPI) DeleteLoginProfileWithContext(arg0 context.Context, arg1 *iam.DeleteLoginProfileInput, arg2 ...request.Option) (*iam.DeleteLoginProfileOutput, error) {
+func (m *MockIAMAPI) DeleteLoginProfileWithContext(arg0 aws.Context, arg1 *iam.DeleteLoginProfileInput, arg2 ...request.Option) (*iam.DeleteLoginProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1523,7 +1523,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteOpenIDConnectProviderRequest(arg0 any) *
 }
 
 // DeleteOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) DeleteOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.DeleteOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.DeleteOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) DeleteOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.DeleteOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.DeleteOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1603,7 +1603,7 @@ func (mr *MockIAMAPIMockRecorder) DeletePolicyVersionRequest(arg0 any) *gomock.C
 }
 
 // DeletePolicyVersionWithContext mocks base method.
-func (m *MockIAMAPI) DeletePolicyVersionWithContext(arg0 context.Context, arg1 *iam.DeletePolicyVersionInput, arg2 ...request.Option) (*iam.DeletePolicyVersionOutput, error) {
+func (m *MockIAMAPI) DeletePolicyVersionWithContext(arg0 aws.Context, arg1 *iam.DeletePolicyVersionInput, arg2 ...request.Option) (*iam.DeletePolicyVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1623,7 +1623,7 @@ func (mr *MockIAMAPIMockRecorder) DeletePolicyVersionWithContext(arg0, arg1 any,
 }
 
 // DeletePolicyWithContext mocks base method.
-func (m *MockIAMAPI) DeletePolicyWithContext(arg0 context.Context, arg1 *iam.DeletePolicyInput, arg2 ...request.Option) (*iam.DeletePolicyOutput, error) {
+func (m *MockIAMAPI) DeletePolicyWithContext(arg0 aws.Context, arg1 *iam.DeletePolicyInput, arg2 ...request.Option) (*iam.DeletePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1688,7 +1688,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteRolePermissionsBoundaryRequest(arg0 any)
 }
 
 // DeleteRolePermissionsBoundaryWithContext mocks base method.
-func (m *MockIAMAPI) DeleteRolePermissionsBoundaryWithContext(arg0 context.Context, arg1 *iam.DeleteRolePermissionsBoundaryInput, arg2 ...request.Option) (*iam.DeleteRolePermissionsBoundaryOutput, error) {
+func (m *MockIAMAPI) DeleteRolePermissionsBoundaryWithContext(arg0 aws.Context, arg1 *iam.DeleteRolePermissionsBoundaryInput, arg2 ...request.Option) (*iam.DeleteRolePermissionsBoundaryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1738,7 +1738,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteRolePolicyRequest(arg0 any) *gomock.Call
 }
 
 // DeleteRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteRolePolicyWithContext(arg0 context.Context, arg1 *iam.DeleteRolePolicyInput, arg2 ...request.Option) (*iam.DeleteRolePolicyOutput, error) {
+func (m *MockIAMAPI) DeleteRolePolicyWithContext(arg0 aws.Context, arg1 *iam.DeleteRolePolicyInput, arg2 ...request.Option) (*iam.DeleteRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1773,7 +1773,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteRoleRequest(arg0 any) *gomock.Call {
 }
 
 // DeleteRoleWithContext mocks base method.
-func (m *MockIAMAPI) DeleteRoleWithContext(arg0 context.Context, arg1 *iam.DeleteRoleInput, arg2 ...request.Option) (*iam.DeleteRoleOutput, error) {
+func (m *MockIAMAPI) DeleteRoleWithContext(arg0 aws.Context, arg1 *iam.DeleteRoleInput, arg2 ...request.Option) (*iam.DeleteRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1823,7 +1823,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteSAMLProviderRequest(arg0 any) *gomock.Ca
 }
 
 // DeleteSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) DeleteSAMLProviderWithContext(arg0 context.Context, arg1 *iam.DeleteSAMLProviderInput, arg2 ...request.Option) (*iam.DeleteSAMLProviderOutput, error) {
+func (m *MockIAMAPI) DeleteSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.DeleteSAMLProviderInput, arg2 ...request.Option) (*iam.DeleteSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1873,7 +1873,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteSSHPublicKeyRequest(arg0 any) *gomock.Ca
 }
 
 // DeleteSSHPublicKeyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteSSHPublicKeyWithContext(arg0 context.Context, arg1 *iam.DeleteSSHPublicKeyInput, arg2 ...request.Option) (*iam.DeleteSSHPublicKeyOutput, error) {
+func (m *MockIAMAPI) DeleteSSHPublicKeyWithContext(arg0 aws.Context, arg1 *iam.DeleteSSHPublicKeyInput, arg2 ...request.Option) (*iam.DeleteSSHPublicKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1923,7 +1923,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteServerCertificateRequest(arg0 any) *gomo
 }
 
 // DeleteServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) DeleteServerCertificateWithContext(arg0 context.Context, arg1 *iam.DeleteServerCertificateInput, arg2 ...request.Option) (*iam.DeleteServerCertificateOutput, error) {
+func (m *MockIAMAPI) DeleteServerCertificateWithContext(arg0 aws.Context, arg1 *iam.DeleteServerCertificateInput, arg2 ...request.Option) (*iam.DeleteServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -1973,7 +1973,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteServiceLinkedRoleRequest(arg0 any) *gomo
 }
 
 // DeleteServiceLinkedRoleWithContext mocks base method.
-func (m *MockIAMAPI) DeleteServiceLinkedRoleWithContext(arg0 context.Context, arg1 *iam.DeleteServiceLinkedRoleInput, arg2 ...request.Option) (*iam.DeleteServiceLinkedRoleOutput, error) {
+func (m *MockIAMAPI) DeleteServiceLinkedRoleWithContext(arg0 aws.Context, arg1 *iam.DeleteServiceLinkedRoleInput, arg2 ...request.Option) (*iam.DeleteServiceLinkedRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2023,7 +2023,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteServiceSpecificCredentialRequest(arg0 an
 }
 
 // DeleteServiceSpecificCredentialWithContext mocks base method.
-func (m *MockIAMAPI) DeleteServiceSpecificCredentialWithContext(arg0 context.Context, arg1 *iam.DeleteServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.DeleteServiceSpecificCredentialOutput, error) {
+func (m *MockIAMAPI) DeleteServiceSpecificCredentialWithContext(arg0 aws.Context, arg1 *iam.DeleteServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.DeleteServiceSpecificCredentialOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2073,7 +2073,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteSigningCertificateRequest(arg0 any) *gom
 }
 
 // DeleteSigningCertificateWithContext mocks base method.
-func (m *MockIAMAPI) DeleteSigningCertificateWithContext(arg0 context.Context, arg1 *iam.DeleteSigningCertificateInput, arg2 ...request.Option) (*iam.DeleteSigningCertificateOutput, error) {
+func (m *MockIAMAPI) DeleteSigningCertificateWithContext(arg0 aws.Context, arg1 *iam.DeleteSigningCertificateInput, arg2 ...request.Option) (*iam.DeleteSigningCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2138,7 +2138,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteUserPermissionsBoundaryRequest(arg0 any)
 }
 
 // DeleteUserPermissionsBoundaryWithContext mocks base method.
-func (m *MockIAMAPI) DeleteUserPermissionsBoundaryWithContext(arg0 context.Context, arg1 *iam.DeleteUserPermissionsBoundaryInput, arg2 ...request.Option) (*iam.DeleteUserPermissionsBoundaryOutput, error) {
+func (m *MockIAMAPI) DeleteUserPermissionsBoundaryWithContext(arg0 aws.Context, arg1 *iam.DeleteUserPermissionsBoundaryInput, arg2 ...request.Option) (*iam.DeleteUserPermissionsBoundaryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2188,7 +2188,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteUserPolicyRequest(arg0 any) *gomock.Call
 }
 
 // DeleteUserPolicyWithContext mocks base method.
-func (m *MockIAMAPI) DeleteUserPolicyWithContext(arg0 context.Context, arg1 *iam.DeleteUserPolicyInput, arg2 ...request.Option) (*iam.DeleteUserPolicyOutput, error) {
+func (m *MockIAMAPI) DeleteUserPolicyWithContext(arg0 aws.Context, arg1 *iam.DeleteUserPolicyInput, arg2 ...request.Option) (*iam.DeleteUserPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2223,7 +2223,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteUserRequest(arg0 any) *gomock.Call {
 }
 
 // DeleteUserWithContext mocks base method.
-func (m *MockIAMAPI) DeleteUserWithContext(arg0 context.Context, arg1 *iam.DeleteUserInput, arg2 ...request.Option) (*iam.DeleteUserOutput, error) {
+func (m *MockIAMAPI) DeleteUserWithContext(arg0 aws.Context, arg1 *iam.DeleteUserInput, arg2 ...request.Option) (*iam.DeleteUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2273,7 +2273,7 @@ func (mr *MockIAMAPIMockRecorder) DeleteVirtualMFADeviceRequest(arg0 any) *gomoc
 }
 
 // DeleteVirtualMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) DeleteVirtualMFADeviceWithContext(arg0 context.Context, arg1 *iam.DeleteVirtualMFADeviceInput, arg2 ...request.Option) (*iam.DeleteVirtualMFADeviceOutput, error) {
+func (m *MockIAMAPI) DeleteVirtualMFADeviceWithContext(arg0 aws.Context, arg1 *iam.DeleteVirtualMFADeviceInput, arg2 ...request.Option) (*iam.DeleteVirtualMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2323,7 +2323,7 @@ func (mr *MockIAMAPIMockRecorder) DetachGroupPolicyRequest(arg0 any) *gomock.Cal
 }
 
 // DetachGroupPolicyWithContext mocks base method.
-func (m *MockIAMAPI) DetachGroupPolicyWithContext(arg0 context.Context, arg1 *iam.DetachGroupPolicyInput, arg2 ...request.Option) (*iam.DetachGroupPolicyOutput, error) {
+func (m *MockIAMAPI) DetachGroupPolicyWithContext(arg0 aws.Context, arg1 *iam.DetachGroupPolicyInput, arg2 ...request.Option) (*iam.DetachGroupPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2373,7 +2373,7 @@ func (mr *MockIAMAPIMockRecorder) DetachRolePolicyRequest(arg0 any) *gomock.Call
 }
 
 // DetachRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) DetachRolePolicyWithContext(arg0 context.Context, arg1 *iam.DetachRolePolicyInput, arg2 ...request.Option) (*iam.DetachRolePolicyOutput, error) {
+func (m *MockIAMAPI) DetachRolePolicyWithContext(arg0 aws.Context, arg1 *iam.DetachRolePolicyInput, arg2 ...request.Option) (*iam.DetachRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2423,7 +2423,7 @@ func (mr *MockIAMAPIMockRecorder) DetachUserPolicyRequest(arg0 any) *gomock.Call
 }
 
 // DetachUserPolicyWithContext mocks base method.
-func (m *MockIAMAPI) DetachUserPolicyWithContext(arg0 context.Context, arg1 *iam.DetachUserPolicyInput, arg2 ...request.Option) (*iam.DetachUserPolicyOutput, error) {
+func (m *MockIAMAPI) DetachUserPolicyWithContext(arg0 aws.Context, arg1 *iam.DetachUserPolicyInput, arg2 ...request.Option) (*iam.DetachUserPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2473,7 +2473,7 @@ func (mr *MockIAMAPIMockRecorder) EnableMFADeviceRequest(arg0 any) *gomock.Call 
 }
 
 // EnableMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) EnableMFADeviceWithContext(arg0 context.Context, arg1 *iam.EnableMFADeviceInput, arg2 ...request.Option) (*iam.EnableMFADeviceOutput, error) {
+func (m *MockIAMAPI) EnableMFADeviceWithContext(arg0 aws.Context, arg1 *iam.EnableMFADeviceInput, arg2 ...request.Option) (*iam.EnableMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2523,7 +2523,7 @@ func (mr *MockIAMAPIMockRecorder) GenerateCredentialReportRequest(arg0 any) *gom
 }
 
 // GenerateCredentialReportWithContext mocks base method.
-func (m *MockIAMAPI) GenerateCredentialReportWithContext(arg0 context.Context, arg1 *iam.GenerateCredentialReportInput, arg2 ...request.Option) (*iam.GenerateCredentialReportOutput, error) {
+func (m *MockIAMAPI) GenerateCredentialReportWithContext(arg0 aws.Context, arg1 *iam.GenerateCredentialReportInput, arg2 ...request.Option) (*iam.GenerateCredentialReportOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2573,7 +2573,7 @@ func (mr *MockIAMAPIMockRecorder) GenerateOrganizationsAccessReportRequest(arg0 
 }
 
 // GenerateOrganizationsAccessReportWithContext mocks base method.
-func (m *MockIAMAPI) GenerateOrganizationsAccessReportWithContext(arg0 context.Context, arg1 *iam.GenerateOrganizationsAccessReportInput, arg2 ...request.Option) (*iam.GenerateOrganizationsAccessReportOutput, error) {
+func (m *MockIAMAPI) GenerateOrganizationsAccessReportWithContext(arg0 aws.Context, arg1 *iam.GenerateOrganizationsAccessReportInput, arg2 ...request.Option) (*iam.GenerateOrganizationsAccessReportOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2623,7 +2623,7 @@ func (mr *MockIAMAPIMockRecorder) GenerateServiceLastAccessedDetailsRequest(arg0
 }
 
 // GenerateServiceLastAccessedDetailsWithContext mocks base method.
-func (m *MockIAMAPI) GenerateServiceLastAccessedDetailsWithContext(arg0 context.Context, arg1 *iam.GenerateServiceLastAccessedDetailsInput, arg2 ...request.Option) (*iam.GenerateServiceLastAccessedDetailsOutput, error) {
+func (m *MockIAMAPI) GenerateServiceLastAccessedDetailsWithContext(arg0 aws.Context, arg1 *iam.GenerateServiceLastAccessedDetailsInput, arg2 ...request.Option) (*iam.GenerateServiceLastAccessedDetailsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2673,7 +2673,7 @@ func (mr *MockIAMAPIMockRecorder) GetAccessKeyLastUsedRequest(arg0 any) *gomock.
 }
 
 // GetAccessKeyLastUsedWithContext mocks base method.
-func (m *MockIAMAPI) GetAccessKeyLastUsedWithContext(arg0 context.Context, arg1 *iam.GetAccessKeyLastUsedInput, arg2 ...request.Option) (*iam.GetAccessKeyLastUsedOutput, error) {
+func (m *MockIAMAPI) GetAccessKeyLastUsedWithContext(arg0 aws.Context, arg1 *iam.GetAccessKeyLastUsedInput, arg2 ...request.Option) (*iam.GetAccessKeyLastUsedOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2722,7 +2722,7 @@ func (mr *MockIAMAPIMockRecorder) GetAccountAuthorizationDetailsPages(arg0, arg1
 }
 
 // GetAccountAuthorizationDetailsPagesWithContext mocks base method.
-func (m *MockIAMAPI) GetAccountAuthorizationDetailsPagesWithContext(arg0 context.Context, arg1 *iam.GetAccountAuthorizationDetailsInput, arg2 func(*iam.GetAccountAuthorizationDetailsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) GetAccountAuthorizationDetailsPagesWithContext(arg0 aws.Context, arg1 *iam.GetAccountAuthorizationDetailsInput, arg2 func(*iam.GetAccountAuthorizationDetailsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -2756,7 +2756,7 @@ func (mr *MockIAMAPIMockRecorder) GetAccountAuthorizationDetailsRequest(arg0 any
 }
 
 // GetAccountAuthorizationDetailsWithContext mocks base method.
-func (m *MockIAMAPI) GetAccountAuthorizationDetailsWithContext(arg0 context.Context, arg1 *iam.GetAccountAuthorizationDetailsInput, arg2 ...request.Option) (*iam.GetAccountAuthorizationDetailsOutput, error) {
+func (m *MockIAMAPI) GetAccountAuthorizationDetailsWithContext(arg0 aws.Context, arg1 *iam.GetAccountAuthorizationDetailsInput, arg2 ...request.Option) (*iam.GetAccountAuthorizationDetailsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2806,7 +2806,7 @@ func (mr *MockIAMAPIMockRecorder) GetAccountPasswordPolicyRequest(arg0 any) *gom
 }
 
 // GetAccountPasswordPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetAccountPasswordPolicyWithContext(arg0 context.Context, arg1 *iam.GetAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.GetAccountPasswordPolicyOutput, error) {
+func (m *MockIAMAPI) GetAccountPasswordPolicyWithContext(arg0 aws.Context, arg1 *iam.GetAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.GetAccountPasswordPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2856,7 +2856,7 @@ func (mr *MockIAMAPIMockRecorder) GetAccountSummaryRequest(arg0 any) *gomock.Cal
 }
 
 // GetAccountSummaryWithContext mocks base method.
-func (m *MockIAMAPI) GetAccountSummaryWithContext(arg0 context.Context, arg1 *iam.GetAccountSummaryInput, arg2 ...request.Option) (*iam.GetAccountSummaryOutput, error) {
+func (m *MockIAMAPI) GetAccountSummaryWithContext(arg0 aws.Context, arg1 *iam.GetAccountSummaryInput, arg2 ...request.Option) (*iam.GetAccountSummaryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2906,7 +2906,7 @@ func (mr *MockIAMAPIMockRecorder) GetContextKeysForCustomPolicyRequest(arg0 any)
 }
 
 // GetContextKeysForCustomPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetContextKeysForCustomPolicyWithContext(arg0 context.Context, arg1 *iam.GetContextKeysForCustomPolicyInput, arg2 ...request.Option) (*iam.GetContextKeysForPolicyResponse, error) {
+func (m *MockIAMAPI) GetContextKeysForCustomPolicyWithContext(arg0 aws.Context, arg1 *iam.GetContextKeysForCustomPolicyInput, arg2 ...request.Option) (*iam.GetContextKeysForPolicyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -2956,7 +2956,7 @@ func (mr *MockIAMAPIMockRecorder) GetContextKeysForPrincipalPolicyRequest(arg0 a
 }
 
 // GetContextKeysForPrincipalPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetContextKeysForPrincipalPolicyWithContext(arg0 context.Context, arg1 *iam.GetContextKeysForPrincipalPolicyInput, arg2 ...request.Option) (*iam.GetContextKeysForPolicyResponse, error) {
+func (m *MockIAMAPI) GetContextKeysForPrincipalPolicyWithContext(arg0 aws.Context, arg1 *iam.GetContextKeysForPrincipalPolicyInput, arg2 ...request.Option) (*iam.GetContextKeysForPolicyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3006,7 +3006,7 @@ func (mr *MockIAMAPIMockRecorder) GetCredentialReportRequest(arg0 any) *gomock.C
 }
 
 // GetCredentialReportWithContext mocks base method.
-func (m *MockIAMAPI) GetCredentialReportWithContext(arg0 context.Context, arg1 *iam.GetCredentialReportInput, arg2 ...request.Option) (*iam.GetCredentialReportOutput, error) {
+func (m *MockIAMAPI) GetCredentialReportWithContext(arg0 aws.Context, arg1 *iam.GetCredentialReportInput, arg2 ...request.Option) (*iam.GetCredentialReportOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3055,7 +3055,7 @@ func (mr *MockIAMAPIMockRecorder) GetGroupPages(arg0, arg1 any) *gomock.Call {
 }
 
 // GetGroupPagesWithContext mocks base method.
-func (m *MockIAMAPI) GetGroupPagesWithContext(arg0 context.Context, arg1 *iam.GetGroupInput, arg2 func(*iam.GetGroupOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) GetGroupPagesWithContext(arg0 aws.Context, arg1 *iam.GetGroupInput, arg2 func(*iam.GetGroupOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -3104,7 +3104,7 @@ func (mr *MockIAMAPIMockRecorder) GetGroupPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // GetGroupPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetGroupPolicyWithContext(arg0 context.Context, arg1 *iam.GetGroupPolicyInput, arg2 ...request.Option) (*iam.GetGroupPolicyOutput, error) {
+func (m *MockIAMAPI) GetGroupPolicyWithContext(arg0 aws.Context, arg1 *iam.GetGroupPolicyInput, arg2 ...request.Option) (*iam.GetGroupPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3139,7 +3139,7 @@ func (mr *MockIAMAPIMockRecorder) GetGroupRequest(arg0 any) *gomock.Call {
 }
 
 // GetGroupWithContext mocks base method.
-func (m *MockIAMAPI) GetGroupWithContext(arg0 context.Context, arg1 *iam.GetGroupInput, arg2 ...request.Option) (*iam.GetGroupOutput, error) {
+func (m *MockIAMAPI) GetGroupWithContext(arg0 aws.Context, arg1 *iam.GetGroupInput, arg2 ...request.Option) (*iam.GetGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3189,7 +3189,7 @@ func (mr *MockIAMAPIMockRecorder) GetInstanceProfileRequest(arg0 any) *gomock.Ca
 }
 
 // GetInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) GetInstanceProfileWithContext(arg0 context.Context, arg1 *iam.GetInstanceProfileInput, arg2 ...request.Option) (*iam.GetInstanceProfileOutput, error) {
+func (m *MockIAMAPI) GetInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.GetInstanceProfileInput, arg2 ...request.Option) (*iam.GetInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3239,7 +3239,7 @@ func (mr *MockIAMAPIMockRecorder) GetLoginProfileRequest(arg0 any) *gomock.Call 
 }
 
 // GetLoginProfileWithContext mocks base method.
-func (m *MockIAMAPI) GetLoginProfileWithContext(arg0 context.Context, arg1 *iam.GetLoginProfileInput, arg2 ...request.Option) (*iam.GetLoginProfileOutput, error) {
+func (m *MockIAMAPI) GetLoginProfileWithContext(arg0 aws.Context, arg1 *iam.GetLoginProfileInput, arg2 ...request.Option) (*iam.GetLoginProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3289,7 +3289,7 @@ func (mr *MockIAMAPIMockRecorder) GetMFADeviceRequest(arg0 any) *gomock.Call {
 }
 
 // GetMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) GetMFADeviceWithContext(arg0 context.Context, arg1 *iam.GetMFADeviceInput, arg2 ...request.Option) (*iam.GetMFADeviceOutput, error) {
+func (m *MockIAMAPI) GetMFADeviceWithContext(arg0 aws.Context, arg1 *iam.GetMFADeviceInput, arg2 ...request.Option) (*iam.GetMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3339,7 +3339,7 @@ func (mr *MockIAMAPIMockRecorder) GetOpenIDConnectProviderRequest(arg0 any) *gom
 }
 
 // GetOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) GetOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.GetOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.GetOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) GetOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.GetOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.GetOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3389,7 +3389,7 @@ func (mr *MockIAMAPIMockRecorder) GetOrganizationsAccessReportRequest(arg0 any) 
 }
 
 // GetOrganizationsAccessReportWithContext mocks base method.
-func (m *MockIAMAPI) GetOrganizationsAccessReportWithContext(arg0 context.Context, arg1 *iam.GetOrganizationsAccessReportInput, arg2 ...request.Option) (*iam.GetOrganizationsAccessReportOutput, error) {
+func (m *MockIAMAPI) GetOrganizationsAccessReportWithContext(arg0 aws.Context, arg1 *iam.GetOrganizationsAccessReportInput, arg2 ...request.Option) (*iam.GetOrganizationsAccessReportOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3469,7 +3469,7 @@ func (mr *MockIAMAPIMockRecorder) GetPolicyVersionRequest(arg0 any) *gomock.Call
 }
 
 // GetPolicyVersionWithContext mocks base method.
-func (m *MockIAMAPI) GetPolicyVersionWithContext(arg0 context.Context, arg1 *iam.GetPolicyVersionInput, arg2 ...request.Option) (*iam.GetPolicyVersionOutput, error) {
+func (m *MockIAMAPI) GetPolicyVersionWithContext(arg0 aws.Context, arg1 *iam.GetPolicyVersionInput, arg2 ...request.Option) (*iam.GetPolicyVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3489,7 +3489,7 @@ func (mr *MockIAMAPIMockRecorder) GetPolicyVersionWithContext(arg0, arg1 any, ar
 }
 
 // GetPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetPolicyWithContext(arg0 context.Context, arg1 *iam.GetPolicyInput, arg2 ...request.Option) (*iam.GetPolicyOutput, error) {
+func (m *MockIAMAPI) GetPolicyWithContext(arg0 aws.Context, arg1 *iam.GetPolicyInput, arg2 ...request.Option) (*iam.GetPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3554,7 +3554,7 @@ func (mr *MockIAMAPIMockRecorder) GetRolePolicyRequest(arg0 any) *gomock.Call {
 }
 
 // GetRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetRolePolicyWithContext(arg0 context.Context, arg1 *iam.GetRolePolicyInput, arg2 ...request.Option) (*iam.GetRolePolicyOutput, error) {
+func (m *MockIAMAPI) GetRolePolicyWithContext(arg0 aws.Context, arg1 *iam.GetRolePolicyInput, arg2 ...request.Option) (*iam.GetRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3589,7 +3589,7 @@ func (mr *MockIAMAPIMockRecorder) GetRoleRequest(arg0 any) *gomock.Call {
 }
 
 // GetRoleWithContext mocks base method.
-func (m *MockIAMAPI) GetRoleWithContext(arg0 context.Context, arg1 *iam.GetRoleInput, arg2 ...request.Option) (*iam.GetRoleOutput, error) {
+func (m *MockIAMAPI) GetRoleWithContext(arg0 aws.Context, arg1 *iam.GetRoleInput, arg2 ...request.Option) (*iam.GetRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3639,7 +3639,7 @@ func (mr *MockIAMAPIMockRecorder) GetSAMLProviderRequest(arg0 any) *gomock.Call 
 }
 
 // GetSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) GetSAMLProviderWithContext(arg0 context.Context, arg1 *iam.GetSAMLProviderInput, arg2 ...request.Option) (*iam.GetSAMLProviderOutput, error) {
+func (m *MockIAMAPI) GetSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.GetSAMLProviderInput, arg2 ...request.Option) (*iam.GetSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3689,7 +3689,7 @@ func (mr *MockIAMAPIMockRecorder) GetSSHPublicKeyRequest(arg0 any) *gomock.Call 
 }
 
 // GetSSHPublicKeyWithContext mocks base method.
-func (m *MockIAMAPI) GetSSHPublicKeyWithContext(arg0 context.Context, arg1 *iam.GetSSHPublicKeyInput, arg2 ...request.Option) (*iam.GetSSHPublicKeyOutput, error) {
+func (m *MockIAMAPI) GetSSHPublicKeyWithContext(arg0 aws.Context, arg1 *iam.GetSSHPublicKeyInput, arg2 ...request.Option) (*iam.GetSSHPublicKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3739,7 +3739,7 @@ func (mr *MockIAMAPIMockRecorder) GetServerCertificateRequest(arg0 any) *gomock.
 }
 
 // GetServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) GetServerCertificateWithContext(arg0 context.Context, arg1 *iam.GetServerCertificateInput, arg2 ...request.Option) (*iam.GetServerCertificateOutput, error) {
+func (m *MockIAMAPI) GetServerCertificateWithContext(arg0 aws.Context, arg1 *iam.GetServerCertificateInput, arg2 ...request.Option) (*iam.GetServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3789,7 +3789,7 @@ func (mr *MockIAMAPIMockRecorder) GetServiceLastAccessedDetailsRequest(arg0 any)
 }
 
 // GetServiceLastAccessedDetailsWithContext mocks base method.
-func (m *MockIAMAPI) GetServiceLastAccessedDetailsWithContext(arg0 context.Context, arg1 *iam.GetServiceLastAccessedDetailsInput, arg2 ...request.Option) (*iam.GetServiceLastAccessedDetailsOutput, error) {
+func (m *MockIAMAPI) GetServiceLastAccessedDetailsWithContext(arg0 aws.Context, arg1 *iam.GetServiceLastAccessedDetailsInput, arg2 ...request.Option) (*iam.GetServiceLastAccessedDetailsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3839,7 +3839,7 @@ func (mr *MockIAMAPIMockRecorder) GetServiceLastAccessedDetailsWithEntitiesReque
 }
 
 // GetServiceLastAccessedDetailsWithEntitiesWithContext mocks base method.
-func (m *MockIAMAPI) GetServiceLastAccessedDetailsWithEntitiesWithContext(arg0 context.Context, arg1 *iam.GetServiceLastAccessedDetailsWithEntitiesInput, arg2 ...request.Option) (*iam.GetServiceLastAccessedDetailsWithEntitiesOutput, error) {
+func (m *MockIAMAPI) GetServiceLastAccessedDetailsWithEntitiesWithContext(arg0 aws.Context, arg1 *iam.GetServiceLastAccessedDetailsWithEntitiesInput, arg2 ...request.Option) (*iam.GetServiceLastAccessedDetailsWithEntitiesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3889,7 +3889,7 @@ func (mr *MockIAMAPIMockRecorder) GetServiceLinkedRoleDeletionStatusRequest(arg0
 }
 
 // GetServiceLinkedRoleDeletionStatusWithContext mocks base method.
-func (m *MockIAMAPI) GetServiceLinkedRoleDeletionStatusWithContext(arg0 context.Context, arg1 *iam.GetServiceLinkedRoleDeletionStatusInput, arg2 ...request.Option) (*iam.GetServiceLinkedRoleDeletionStatusOutput, error) {
+func (m *MockIAMAPI) GetServiceLinkedRoleDeletionStatusWithContext(arg0 aws.Context, arg1 *iam.GetServiceLinkedRoleDeletionStatusInput, arg2 ...request.Option) (*iam.GetServiceLinkedRoleDeletionStatusOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3954,7 +3954,7 @@ func (mr *MockIAMAPIMockRecorder) GetUserPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // GetUserPolicyWithContext mocks base method.
-func (m *MockIAMAPI) GetUserPolicyWithContext(arg0 context.Context, arg1 *iam.GetUserPolicyInput, arg2 ...request.Option) (*iam.GetUserPolicyOutput, error) {
+func (m *MockIAMAPI) GetUserPolicyWithContext(arg0 aws.Context, arg1 *iam.GetUserPolicyInput, arg2 ...request.Option) (*iam.GetUserPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -3989,7 +3989,7 @@ func (mr *MockIAMAPIMockRecorder) GetUserRequest(arg0 any) *gomock.Call {
 }
 
 // GetUserWithContext mocks base method.
-func (m *MockIAMAPI) GetUserWithContext(arg0 context.Context, arg1 *iam.GetUserInput, arg2 ...request.Option) (*iam.GetUserOutput, error) {
+func (m *MockIAMAPI) GetUserWithContext(arg0 aws.Context, arg1 *iam.GetUserInput, arg2 ...request.Option) (*iam.GetUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4038,7 +4038,7 @@ func (mr *MockIAMAPIMockRecorder) ListAccessKeysPages(arg0, arg1 any) *gomock.Ca
 }
 
 // ListAccessKeysPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListAccessKeysPagesWithContext(arg0 context.Context, arg1 *iam.ListAccessKeysInput, arg2 func(*iam.ListAccessKeysOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListAccessKeysPagesWithContext(arg0 aws.Context, arg1 *iam.ListAccessKeysInput, arg2 func(*iam.ListAccessKeysOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4072,7 +4072,7 @@ func (mr *MockIAMAPIMockRecorder) ListAccessKeysRequest(arg0 any) *gomock.Call {
 }
 
 // ListAccessKeysWithContext mocks base method.
-func (m *MockIAMAPI) ListAccessKeysWithContext(arg0 context.Context, arg1 *iam.ListAccessKeysInput, arg2 ...request.Option) (*iam.ListAccessKeysOutput, error) {
+func (m *MockIAMAPI) ListAccessKeysWithContext(arg0 aws.Context, arg1 *iam.ListAccessKeysInput, arg2 ...request.Option) (*iam.ListAccessKeysOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4121,7 +4121,7 @@ func (mr *MockIAMAPIMockRecorder) ListAccountAliasesPages(arg0, arg1 any) *gomoc
 }
 
 // ListAccountAliasesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListAccountAliasesPagesWithContext(arg0 context.Context, arg1 *iam.ListAccountAliasesInput, arg2 func(*iam.ListAccountAliasesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListAccountAliasesPagesWithContext(arg0 aws.Context, arg1 *iam.ListAccountAliasesInput, arg2 func(*iam.ListAccountAliasesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4155,7 +4155,7 @@ func (mr *MockIAMAPIMockRecorder) ListAccountAliasesRequest(arg0 any) *gomock.Ca
 }
 
 // ListAccountAliasesWithContext mocks base method.
-func (m *MockIAMAPI) ListAccountAliasesWithContext(arg0 context.Context, arg1 *iam.ListAccountAliasesInput, arg2 ...request.Option) (*iam.ListAccountAliasesOutput, error) {
+func (m *MockIAMAPI) ListAccountAliasesWithContext(arg0 aws.Context, arg1 *iam.ListAccountAliasesInput, arg2 ...request.Option) (*iam.ListAccountAliasesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4204,7 +4204,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedGroupPoliciesPages(arg0, arg1 any)
 }
 
 // ListAttachedGroupPoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedGroupPoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListAttachedGroupPoliciesInput, arg2 func(*iam.ListAttachedGroupPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListAttachedGroupPoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedGroupPoliciesInput, arg2 func(*iam.ListAttachedGroupPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4238,7 +4238,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedGroupPoliciesRequest(arg0 any) *go
 }
 
 // ListAttachedGroupPoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedGroupPoliciesWithContext(arg0 context.Context, arg1 *iam.ListAttachedGroupPoliciesInput, arg2 ...request.Option) (*iam.ListAttachedGroupPoliciesOutput, error) {
+func (m *MockIAMAPI) ListAttachedGroupPoliciesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedGroupPoliciesInput, arg2 ...request.Option) (*iam.ListAttachedGroupPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4287,7 +4287,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedRolePoliciesPages(arg0, arg1 any) 
 }
 
 // ListAttachedRolePoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedRolePoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListAttachedRolePoliciesInput, arg2 func(*iam.ListAttachedRolePoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListAttachedRolePoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedRolePoliciesInput, arg2 func(*iam.ListAttachedRolePoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4321,7 +4321,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedRolePoliciesRequest(arg0 any) *gom
 }
 
 // ListAttachedRolePoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedRolePoliciesWithContext(arg0 context.Context, arg1 *iam.ListAttachedRolePoliciesInput, arg2 ...request.Option) (*iam.ListAttachedRolePoliciesOutput, error) {
+func (m *MockIAMAPI) ListAttachedRolePoliciesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedRolePoliciesInput, arg2 ...request.Option) (*iam.ListAttachedRolePoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4370,7 +4370,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedUserPoliciesPages(arg0, arg1 any) 
 }
 
 // ListAttachedUserPoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedUserPoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListAttachedUserPoliciesInput, arg2 func(*iam.ListAttachedUserPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListAttachedUserPoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedUserPoliciesInput, arg2 func(*iam.ListAttachedUserPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4404,7 +4404,7 @@ func (mr *MockIAMAPIMockRecorder) ListAttachedUserPoliciesRequest(arg0 any) *gom
 }
 
 // ListAttachedUserPoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListAttachedUserPoliciesWithContext(arg0 context.Context, arg1 *iam.ListAttachedUserPoliciesInput, arg2 ...request.Option) (*iam.ListAttachedUserPoliciesOutput, error) {
+func (m *MockIAMAPI) ListAttachedUserPoliciesWithContext(arg0 aws.Context, arg1 *iam.ListAttachedUserPoliciesInput, arg2 ...request.Option) (*iam.ListAttachedUserPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4453,7 +4453,7 @@ func (mr *MockIAMAPIMockRecorder) ListEntitiesForPolicyPages(arg0, arg1 any) *go
 }
 
 // ListEntitiesForPolicyPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListEntitiesForPolicyPagesWithContext(arg0 context.Context, arg1 *iam.ListEntitiesForPolicyInput, arg2 func(*iam.ListEntitiesForPolicyOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListEntitiesForPolicyPagesWithContext(arg0 aws.Context, arg1 *iam.ListEntitiesForPolicyInput, arg2 func(*iam.ListEntitiesForPolicyOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4487,7 +4487,7 @@ func (mr *MockIAMAPIMockRecorder) ListEntitiesForPolicyRequest(arg0 any) *gomock
 }
 
 // ListEntitiesForPolicyWithContext mocks base method.
-func (m *MockIAMAPI) ListEntitiesForPolicyWithContext(arg0 context.Context, arg1 *iam.ListEntitiesForPolicyInput, arg2 ...request.Option) (*iam.ListEntitiesForPolicyOutput, error) {
+func (m *MockIAMAPI) ListEntitiesForPolicyWithContext(arg0 aws.Context, arg1 *iam.ListEntitiesForPolicyInput, arg2 ...request.Option) (*iam.ListEntitiesForPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4536,7 +4536,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupPoliciesPages(arg0, arg1 any) *gomock
 }
 
 // ListGroupPoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupPoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListGroupPoliciesInput, arg2 func(*iam.ListGroupPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListGroupPoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListGroupPoliciesInput, arg2 func(*iam.ListGroupPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4570,7 +4570,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupPoliciesRequest(arg0 any) *gomock.Cal
 }
 
 // ListGroupPoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupPoliciesWithContext(arg0 context.Context, arg1 *iam.ListGroupPoliciesInput, arg2 ...request.Option) (*iam.ListGroupPoliciesOutput, error) {
+func (m *MockIAMAPI) ListGroupPoliciesWithContext(arg0 aws.Context, arg1 *iam.ListGroupPoliciesInput, arg2 ...request.Option) (*iam.ListGroupPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4634,7 +4634,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupsForUserPages(arg0, arg1 any) *gomock
 }
 
 // ListGroupsForUserPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupsForUserPagesWithContext(arg0 context.Context, arg1 *iam.ListGroupsForUserInput, arg2 func(*iam.ListGroupsForUserOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListGroupsForUserPagesWithContext(arg0 aws.Context, arg1 *iam.ListGroupsForUserInput, arg2 func(*iam.ListGroupsForUserOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4668,7 +4668,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupsForUserRequest(arg0 any) *gomock.Cal
 }
 
 // ListGroupsForUserWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupsForUserWithContext(arg0 context.Context, arg1 *iam.ListGroupsForUserInput, arg2 ...request.Option) (*iam.ListGroupsForUserOutput, error) {
+func (m *MockIAMAPI) ListGroupsForUserWithContext(arg0 aws.Context, arg1 *iam.ListGroupsForUserInput, arg2 ...request.Option) (*iam.ListGroupsForUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4702,7 +4702,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupsPages(arg0, arg1 any) *gomock.Call {
 }
 
 // ListGroupsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupsPagesWithContext(arg0 context.Context, arg1 *iam.ListGroupsInput, arg2 func(*iam.ListGroupsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListGroupsPagesWithContext(arg0 aws.Context, arg1 *iam.ListGroupsInput, arg2 func(*iam.ListGroupsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4736,7 +4736,7 @@ func (mr *MockIAMAPIMockRecorder) ListGroupsRequest(arg0 any) *gomock.Call {
 }
 
 // ListGroupsWithContext mocks base method.
-func (m *MockIAMAPI) ListGroupsWithContext(arg0 context.Context, arg1 *iam.ListGroupsInput, arg2 ...request.Option) (*iam.ListGroupsOutput, error) {
+func (m *MockIAMAPI) ListGroupsWithContext(arg0 aws.Context, arg1 *iam.ListGroupsInput, arg2 ...request.Option) (*iam.ListGroupsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4785,7 +4785,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfileTagsPages(arg0, arg1 any) *
 }
 
 // ListInstanceProfileTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfileTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfileTagsInput, arg2 func(*iam.ListInstanceProfileTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListInstanceProfileTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfileTagsInput, arg2 func(*iam.ListInstanceProfileTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4819,7 +4819,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfileTagsRequest(arg0 any) *gomo
 }
 
 // ListInstanceProfileTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfileTagsWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfileTagsInput, arg2 ...request.Option) (*iam.ListInstanceProfileTagsOutput, error) {
+func (m *MockIAMAPI) ListInstanceProfileTagsWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfileTagsInput, arg2 ...request.Option) (*iam.ListInstanceProfileTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4883,7 +4883,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfilesForRolePages(arg0, arg1 an
 }
 
 // ListInstanceProfilesForRolePagesWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfilesForRolePagesWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfilesForRoleInput, arg2 func(*iam.ListInstanceProfilesForRoleOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListInstanceProfilesForRolePagesWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfilesForRoleInput, arg2 func(*iam.ListInstanceProfilesForRoleOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4917,7 +4917,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfilesForRoleRequest(arg0 any) *
 }
 
 // ListInstanceProfilesForRoleWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfilesForRoleWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfilesForRoleInput, arg2 ...request.Option) (*iam.ListInstanceProfilesForRoleOutput, error) {
+func (m *MockIAMAPI) ListInstanceProfilesForRoleWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfilesForRoleInput, arg2 ...request.Option) (*iam.ListInstanceProfilesForRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -4951,7 +4951,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfilesPages(arg0, arg1 any) *gom
 }
 
 // ListInstanceProfilesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfilesPagesWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfilesInput, arg2 func(*iam.ListInstanceProfilesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListInstanceProfilesPagesWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfilesInput, arg2 func(*iam.ListInstanceProfilesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -4985,7 +4985,7 @@ func (mr *MockIAMAPIMockRecorder) ListInstanceProfilesRequest(arg0 any) *gomock.
 }
 
 // ListInstanceProfilesWithContext mocks base method.
-func (m *MockIAMAPI) ListInstanceProfilesWithContext(arg0 context.Context, arg1 *iam.ListInstanceProfilesInput, arg2 ...request.Option) (*iam.ListInstanceProfilesOutput, error) {
+func (m *MockIAMAPI) ListInstanceProfilesWithContext(arg0 aws.Context, arg1 *iam.ListInstanceProfilesInput, arg2 ...request.Option) (*iam.ListInstanceProfilesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5034,7 +5034,7 @@ func (mr *MockIAMAPIMockRecorder) ListMFADeviceTagsPages(arg0, arg1 any) *gomock
 }
 
 // ListMFADeviceTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListMFADeviceTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListMFADeviceTagsInput, arg2 func(*iam.ListMFADeviceTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListMFADeviceTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListMFADeviceTagsInput, arg2 func(*iam.ListMFADeviceTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5068,7 +5068,7 @@ func (mr *MockIAMAPIMockRecorder) ListMFADeviceTagsRequest(arg0 any) *gomock.Cal
 }
 
 // ListMFADeviceTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListMFADeviceTagsWithContext(arg0 context.Context, arg1 *iam.ListMFADeviceTagsInput, arg2 ...request.Option) (*iam.ListMFADeviceTagsOutput, error) {
+func (m *MockIAMAPI) ListMFADeviceTagsWithContext(arg0 aws.Context, arg1 *iam.ListMFADeviceTagsInput, arg2 ...request.Option) (*iam.ListMFADeviceTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5117,7 +5117,7 @@ func (mr *MockIAMAPIMockRecorder) ListMFADevicesPages(arg0, arg1 any) *gomock.Ca
 }
 
 // ListMFADevicesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListMFADevicesPagesWithContext(arg0 context.Context, arg1 *iam.ListMFADevicesInput, arg2 func(*iam.ListMFADevicesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListMFADevicesPagesWithContext(arg0 aws.Context, arg1 *iam.ListMFADevicesInput, arg2 func(*iam.ListMFADevicesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5151,7 +5151,7 @@ func (mr *MockIAMAPIMockRecorder) ListMFADevicesRequest(arg0 any) *gomock.Call {
 }
 
 // ListMFADevicesWithContext mocks base method.
-func (m *MockIAMAPI) ListMFADevicesWithContext(arg0 context.Context, arg1 *iam.ListMFADevicesInput, arg2 ...request.Option) (*iam.ListMFADevicesOutput, error) {
+func (m *MockIAMAPI) ListMFADevicesWithContext(arg0 aws.Context, arg1 *iam.ListMFADevicesInput, arg2 ...request.Option) (*iam.ListMFADevicesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5200,7 +5200,7 @@ func (mr *MockIAMAPIMockRecorder) ListOpenIDConnectProviderTagsPages(arg0, arg1 
 }
 
 // ListOpenIDConnectProviderTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListOpenIDConnectProviderTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListOpenIDConnectProviderTagsInput, arg2 func(*iam.ListOpenIDConnectProviderTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListOpenIDConnectProviderTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListOpenIDConnectProviderTagsInput, arg2 func(*iam.ListOpenIDConnectProviderTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5234,7 +5234,7 @@ func (mr *MockIAMAPIMockRecorder) ListOpenIDConnectProviderTagsRequest(arg0 any)
 }
 
 // ListOpenIDConnectProviderTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListOpenIDConnectProviderTagsWithContext(arg0 context.Context, arg1 *iam.ListOpenIDConnectProviderTagsInput, arg2 ...request.Option) (*iam.ListOpenIDConnectProviderTagsOutput, error) {
+func (m *MockIAMAPI) ListOpenIDConnectProviderTagsWithContext(arg0 aws.Context, arg1 *iam.ListOpenIDConnectProviderTagsInput, arg2 ...request.Option) (*iam.ListOpenIDConnectProviderTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5284,7 +5284,7 @@ func (mr *MockIAMAPIMockRecorder) ListOpenIDConnectProvidersRequest(arg0 any) *g
 }
 
 // ListOpenIDConnectProvidersWithContext mocks base method.
-func (m *MockIAMAPI) ListOpenIDConnectProvidersWithContext(arg0 context.Context, arg1 *iam.ListOpenIDConnectProvidersInput, arg2 ...request.Option) (*iam.ListOpenIDConnectProvidersOutput, error) {
+func (m *MockIAMAPI) ListOpenIDConnectProvidersWithContext(arg0 aws.Context, arg1 *iam.ListOpenIDConnectProvidersInput, arg2 ...request.Option) (*iam.ListOpenIDConnectProvidersOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5349,7 +5349,7 @@ func (mr *MockIAMAPIMockRecorder) ListPoliciesGrantingServiceAccessRequest(arg0 
 }
 
 // ListPoliciesGrantingServiceAccessWithContext mocks base method.
-func (m *MockIAMAPI) ListPoliciesGrantingServiceAccessWithContext(arg0 context.Context, arg1 *iam.ListPoliciesGrantingServiceAccessInput, arg2 ...request.Option) (*iam.ListPoliciesGrantingServiceAccessOutput, error) {
+func (m *MockIAMAPI) ListPoliciesGrantingServiceAccessWithContext(arg0 aws.Context, arg1 *iam.ListPoliciesGrantingServiceAccessInput, arg2 ...request.Option) (*iam.ListPoliciesGrantingServiceAccessOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5383,7 +5383,7 @@ func (mr *MockIAMAPIMockRecorder) ListPoliciesPages(arg0, arg1 any) *gomock.Call
 }
 
 // ListPoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListPoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListPoliciesInput, arg2 func(*iam.ListPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListPoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListPoliciesInput, arg2 func(*iam.ListPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5417,7 +5417,7 @@ func (mr *MockIAMAPIMockRecorder) ListPoliciesRequest(arg0 any) *gomock.Call {
 }
 
 // ListPoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListPoliciesWithContext(arg0 context.Context, arg1 *iam.ListPoliciesInput, arg2 ...request.Option) (*iam.ListPoliciesOutput, error) {
+func (m *MockIAMAPI) ListPoliciesWithContext(arg0 aws.Context, arg1 *iam.ListPoliciesInput, arg2 ...request.Option) (*iam.ListPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5466,7 +5466,7 @@ func (mr *MockIAMAPIMockRecorder) ListPolicyTagsPages(arg0, arg1 any) *gomock.Ca
 }
 
 // ListPolicyTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListPolicyTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListPolicyTagsInput, arg2 func(*iam.ListPolicyTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListPolicyTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListPolicyTagsInput, arg2 func(*iam.ListPolicyTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5500,7 +5500,7 @@ func (mr *MockIAMAPIMockRecorder) ListPolicyTagsRequest(arg0 any) *gomock.Call {
 }
 
 // ListPolicyTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListPolicyTagsWithContext(arg0 context.Context, arg1 *iam.ListPolicyTagsInput, arg2 ...request.Option) (*iam.ListPolicyTagsOutput, error) {
+func (m *MockIAMAPI) ListPolicyTagsWithContext(arg0 aws.Context, arg1 *iam.ListPolicyTagsInput, arg2 ...request.Option) (*iam.ListPolicyTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5549,7 +5549,7 @@ func (mr *MockIAMAPIMockRecorder) ListPolicyVersionsPages(arg0, arg1 any) *gomoc
 }
 
 // ListPolicyVersionsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListPolicyVersionsPagesWithContext(arg0 context.Context, arg1 *iam.ListPolicyVersionsInput, arg2 func(*iam.ListPolicyVersionsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListPolicyVersionsPagesWithContext(arg0 aws.Context, arg1 *iam.ListPolicyVersionsInput, arg2 func(*iam.ListPolicyVersionsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5583,7 +5583,7 @@ func (mr *MockIAMAPIMockRecorder) ListPolicyVersionsRequest(arg0 any) *gomock.Ca
 }
 
 // ListPolicyVersionsWithContext mocks base method.
-func (m *MockIAMAPI) ListPolicyVersionsWithContext(arg0 context.Context, arg1 *iam.ListPolicyVersionsInput, arg2 ...request.Option) (*iam.ListPolicyVersionsOutput, error) {
+func (m *MockIAMAPI) ListPolicyVersionsWithContext(arg0 aws.Context, arg1 *iam.ListPolicyVersionsInput, arg2 ...request.Option) (*iam.ListPolicyVersionsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5632,7 +5632,7 @@ func (mr *MockIAMAPIMockRecorder) ListRolePoliciesPages(arg0, arg1 any) *gomock.
 }
 
 // ListRolePoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListRolePoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListRolePoliciesInput, arg2 func(*iam.ListRolePoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListRolePoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListRolePoliciesInput, arg2 func(*iam.ListRolePoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5666,7 +5666,7 @@ func (mr *MockIAMAPIMockRecorder) ListRolePoliciesRequest(arg0 any) *gomock.Call
 }
 
 // ListRolePoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListRolePoliciesWithContext(arg0 context.Context, arg1 *iam.ListRolePoliciesInput, arg2 ...request.Option) (*iam.ListRolePoliciesOutput, error) {
+func (m *MockIAMAPI) ListRolePoliciesWithContext(arg0 aws.Context, arg1 *iam.ListRolePoliciesInput, arg2 ...request.Option) (*iam.ListRolePoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5715,7 +5715,7 @@ func (mr *MockIAMAPIMockRecorder) ListRoleTagsPages(arg0, arg1 any) *gomock.Call
 }
 
 // ListRoleTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListRoleTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListRoleTagsInput, arg2 func(*iam.ListRoleTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListRoleTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListRoleTagsInput, arg2 func(*iam.ListRoleTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5749,7 +5749,7 @@ func (mr *MockIAMAPIMockRecorder) ListRoleTagsRequest(arg0 any) *gomock.Call {
 }
 
 // ListRoleTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListRoleTagsWithContext(arg0 context.Context, arg1 *iam.ListRoleTagsInput, arg2 ...request.Option) (*iam.ListRoleTagsOutput, error) {
+func (m *MockIAMAPI) ListRoleTagsWithContext(arg0 aws.Context, arg1 *iam.ListRoleTagsInput, arg2 ...request.Option) (*iam.ListRoleTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5798,7 +5798,7 @@ func (mr *MockIAMAPIMockRecorder) ListRolesPages(arg0, arg1 any) *gomock.Call {
 }
 
 // ListRolesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListRolesPagesWithContext(arg0 context.Context, arg1 *iam.ListRolesInput, arg2 func(*iam.ListRolesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListRolesPagesWithContext(arg0 aws.Context, arg1 *iam.ListRolesInput, arg2 func(*iam.ListRolesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5832,7 +5832,7 @@ func (mr *MockIAMAPIMockRecorder) ListRolesRequest(arg0 any) *gomock.Call {
 }
 
 // ListRolesWithContext mocks base method.
-func (m *MockIAMAPI) ListRolesWithContext(arg0 context.Context, arg1 *iam.ListRolesInput, arg2 ...request.Option) (*iam.ListRolesOutput, error) {
+func (m *MockIAMAPI) ListRolesWithContext(arg0 aws.Context, arg1 *iam.ListRolesInput, arg2 ...request.Option) (*iam.ListRolesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5881,7 +5881,7 @@ func (mr *MockIAMAPIMockRecorder) ListSAMLProviderTagsPages(arg0, arg1 any) *gom
 }
 
 // ListSAMLProviderTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListSAMLProviderTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListSAMLProviderTagsInput, arg2 func(*iam.ListSAMLProviderTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListSAMLProviderTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListSAMLProviderTagsInput, arg2 func(*iam.ListSAMLProviderTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -5915,7 +5915,7 @@ func (mr *MockIAMAPIMockRecorder) ListSAMLProviderTagsRequest(arg0 any) *gomock.
 }
 
 // ListSAMLProviderTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListSAMLProviderTagsWithContext(arg0 context.Context, arg1 *iam.ListSAMLProviderTagsInput, arg2 ...request.Option) (*iam.ListSAMLProviderTagsOutput, error) {
+func (m *MockIAMAPI) ListSAMLProviderTagsWithContext(arg0 aws.Context, arg1 *iam.ListSAMLProviderTagsInput, arg2 ...request.Option) (*iam.ListSAMLProviderTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -5965,7 +5965,7 @@ func (mr *MockIAMAPIMockRecorder) ListSAMLProvidersRequest(arg0 any) *gomock.Cal
 }
 
 // ListSAMLProvidersWithContext mocks base method.
-func (m *MockIAMAPI) ListSAMLProvidersWithContext(arg0 context.Context, arg1 *iam.ListSAMLProvidersInput, arg2 ...request.Option) (*iam.ListSAMLProvidersOutput, error) {
+func (m *MockIAMAPI) ListSAMLProvidersWithContext(arg0 aws.Context, arg1 *iam.ListSAMLProvidersInput, arg2 ...request.Option) (*iam.ListSAMLProvidersOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6014,7 +6014,7 @@ func (mr *MockIAMAPIMockRecorder) ListSSHPublicKeysPages(arg0, arg1 any) *gomock
 }
 
 // ListSSHPublicKeysPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListSSHPublicKeysPagesWithContext(arg0 context.Context, arg1 *iam.ListSSHPublicKeysInput, arg2 func(*iam.ListSSHPublicKeysOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListSSHPublicKeysPagesWithContext(arg0 aws.Context, arg1 *iam.ListSSHPublicKeysInput, arg2 func(*iam.ListSSHPublicKeysOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6048,7 +6048,7 @@ func (mr *MockIAMAPIMockRecorder) ListSSHPublicKeysRequest(arg0 any) *gomock.Cal
 }
 
 // ListSSHPublicKeysWithContext mocks base method.
-func (m *MockIAMAPI) ListSSHPublicKeysWithContext(arg0 context.Context, arg1 *iam.ListSSHPublicKeysInput, arg2 ...request.Option) (*iam.ListSSHPublicKeysOutput, error) {
+func (m *MockIAMAPI) ListSSHPublicKeysWithContext(arg0 aws.Context, arg1 *iam.ListSSHPublicKeysInput, arg2 ...request.Option) (*iam.ListSSHPublicKeysOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6097,7 +6097,7 @@ func (mr *MockIAMAPIMockRecorder) ListServerCertificateTagsPages(arg0, arg1 any)
 }
 
 // ListServerCertificateTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListServerCertificateTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListServerCertificateTagsInput, arg2 func(*iam.ListServerCertificateTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListServerCertificateTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListServerCertificateTagsInput, arg2 func(*iam.ListServerCertificateTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6131,7 +6131,7 @@ func (mr *MockIAMAPIMockRecorder) ListServerCertificateTagsRequest(arg0 any) *go
 }
 
 // ListServerCertificateTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListServerCertificateTagsWithContext(arg0 context.Context, arg1 *iam.ListServerCertificateTagsInput, arg2 ...request.Option) (*iam.ListServerCertificateTagsOutput, error) {
+func (m *MockIAMAPI) ListServerCertificateTagsWithContext(arg0 aws.Context, arg1 *iam.ListServerCertificateTagsInput, arg2 ...request.Option) (*iam.ListServerCertificateTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6180,7 +6180,7 @@ func (mr *MockIAMAPIMockRecorder) ListServerCertificatesPages(arg0, arg1 any) *g
 }
 
 // ListServerCertificatesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListServerCertificatesPagesWithContext(arg0 context.Context, arg1 *iam.ListServerCertificatesInput, arg2 func(*iam.ListServerCertificatesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListServerCertificatesPagesWithContext(arg0 aws.Context, arg1 *iam.ListServerCertificatesInput, arg2 func(*iam.ListServerCertificatesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6214,7 +6214,7 @@ func (mr *MockIAMAPIMockRecorder) ListServerCertificatesRequest(arg0 any) *gomoc
 }
 
 // ListServerCertificatesWithContext mocks base method.
-func (m *MockIAMAPI) ListServerCertificatesWithContext(arg0 context.Context, arg1 *iam.ListServerCertificatesInput, arg2 ...request.Option) (*iam.ListServerCertificatesOutput, error) {
+func (m *MockIAMAPI) ListServerCertificatesWithContext(arg0 aws.Context, arg1 *iam.ListServerCertificatesInput, arg2 ...request.Option) (*iam.ListServerCertificatesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6264,7 +6264,7 @@ func (mr *MockIAMAPIMockRecorder) ListServiceSpecificCredentialsRequest(arg0 any
 }
 
 // ListServiceSpecificCredentialsWithContext mocks base method.
-func (m *MockIAMAPI) ListServiceSpecificCredentialsWithContext(arg0 context.Context, arg1 *iam.ListServiceSpecificCredentialsInput, arg2 ...request.Option) (*iam.ListServiceSpecificCredentialsOutput, error) {
+func (m *MockIAMAPI) ListServiceSpecificCredentialsWithContext(arg0 aws.Context, arg1 *iam.ListServiceSpecificCredentialsInput, arg2 ...request.Option) (*iam.ListServiceSpecificCredentialsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6313,7 +6313,7 @@ func (mr *MockIAMAPIMockRecorder) ListSigningCertificatesPages(arg0, arg1 any) *
 }
 
 // ListSigningCertificatesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListSigningCertificatesPagesWithContext(arg0 context.Context, arg1 *iam.ListSigningCertificatesInput, arg2 func(*iam.ListSigningCertificatesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListSigningCertificatesPagesWithContext(arg0 aws.Context, arg1 *iam.ListSigningCertificatesInput, arg2 func(*iam.ListSigningCertificatesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6347,7 +6347,7 @@ func (mr *MockIAMAPIMockRecorder) ListSigningCertificatesRequest(arg0 any) *gomo
 }
 
 // ListSigningCertificatesWithContext mocks base method.
-func (m *MockIAMAPI) ListSigningCertificatesWithContext(arg0 context.Context, arg1 *iam.ListSigningCertificatesInput, arg2 ...request.Option) (*iam.ListSigningCertificatesOutput, error) {
+func (m *MockIAMAPI) ListSigningCertificatesWithContext(arg0 aws.Context, arg1 *iam.ListSigningCertificatesInput, arg2 ...request.Option) (*iam.ListSigningCertificatesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6396,7 +6396,7 @@ func (mr *MockIAMAPIMockRecorder) ListUserPoliciesPages(arg0, arg1 any) *gomock.
 }
 
 // ListUserPoliciesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListUserPoliciesPagesWithContext(arg0 context.Context, arg1 *iam.ListUserPoliciesInput, arg2 func(*iam.ListUserPoliciesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListUserPoliciesPagesWithContext(arg0 aws.Context, arg1 *iam.ListUserPoliciesInput, arg2 func(*iam.ListUserPoliciesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6430,7 +6430,7 @@ func (mr *MockIAMAPIMockRecorder) ListUserPoliciesRequest(arg0 any) *gomock.Call
 }
 
 // ListUserPoliciesWithContext mocks base method.
-func (m *MockIAMAPI) ListUserPoliciesWithContext(arg0 context.Context, arg1 *iam.ListUserPoliciesInput, arg2 ...request.Option) (*iam.ListUserPoliciesOutput, error) {
+func (m *MockIAMAPI) ListUserPoliciesWithContext(arg0 aws.Context, arg1 *iam.ListUserPoliciesInput, arg2 ...request.Option) (*iam.ListUserPoliciesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6479,7 +6479,7 @@ func (mr *MockIAMAPIMockRecorder) ListUserTagsPages(arg0, arg1 any) *gomock.Call
 }
 
 // ListUserTagsPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListUserTagsPagesWithContext(arg0 context.Context, arg1 *iam.ListUserTagsInput, arg2 func(*iam.ListUserTagsOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListUserTagsPagesWithContext(arg0 aws.Context, arg1 *iam.ListUserTagsInput, arg2 func(*iam.ListUserTagsOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6513,7 +6513,7 @@ func (mr *MockIAMAPIMockRecorder) ListUserTagsRequest(arg0 any) *gomock.Call {
 }
 
 // ListUserTagsWithContext mocks base method.
-func (m *MockIAMAPI) ListUserTagsWithContext(arg0 context.Context, arg1 *iam.ListUserTagsInput, arg2 ...request.Option) (*iam.ListUserTagsOutput, error) {
+func (m *MockIAMAPI) ListUserTagsWithContext(arg0 aws.Context, arg1 *iam.ListUserTagsInput, arg2 ...request.Option) (*iam.ListUserTagsOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6562,7 +6562,7 @@ func (mr *MockIAMAPIMockRecorder) ListUsersPages(arg0, arg1 any) *gomock.Call {
 }
 
 // ListUsersPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListUsersPagesWithContext(arg0 context.Context, arg1 *iam.ListUsersInput, arg2 func(*iam.ListUsersOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListUsersPagesWithContext(arg0 aws.Context, arg1 *iam.ListUsersInput, arg2 func(*iam.ListUsersOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6596,7 +6596,7 @@ func (mr *MockIAMAPIMockRecorder) ListUsersRequest(arg0 any) *gomock.Call {
 }
 
 // ListUsersWithContext mocks base method.
-func (m *MockIAMAPI) ListUsersWithContext(arg0 context.Context, arg1 *iam.ListUsersInput, arg2 ...request.Option) (*iam.ListUsersOutput, error) {
+func (m *MockIAMAPI) ListUsersWithContext(arg0 aws.Context, arg1 *iam.ListUsersInput, arg2 ...request.Option) (*iam.ListUsersOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6645,7 +6645,7 @@ func (mr *MockIAMAPIMockRecorder) ListVirtualMFADevicesPages(arg0, arg1 any) *go
 }
 
 // ListVirtualMFADevicesPagesWithContext mocks base method.
-func (m *MockIAMAPI) ListVirtualMFADevicesPagesWithContext(arg0 context.Context, arg1 *iam.ListVirtualMFADevicesInput, arg2 func(*iam.ListVirtualMFADevicesOutput, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) ListVirtualMFADevicesPagesWithContext(arg0 aws.Context, arg1 *iam.ListVirtualMFADevicesInput, arg2 func(*iam.ListVirtualMFADevicesOutput, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -6679,7 +6679,7 @@ func (mr *MockIAMAPIMockRecorder) ListVirtualMFADevicesRequest(arg0 any) *gomock
 }
 
 // ListVirtualMFADevicesWithContext mocks base method.
-func (m *MockIAMAPI) ListVirtualMFADevicesWithContext(arg0 context.Context, arg1 *iam.ListVirtualMFADevicesInput, arg2 ...request.Option) (*iam.ListVirtualMFADevicesOutput, error) {
+func (m *MockIAMAPI) ListVirtualMFADevicesWithContext(arg0 aws.Context, arg1 *iam.ListVirtualMFADevicesInput, arg2 ...request.Option) (*iam.ListVirtualMFADevicesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6729,7 +6729,7 @@ func (mr *MockIAMAPIMockRecorder) PutGroupPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // PutGroupPolicyWithContext mocks base method.
-func (m *MockIAMAPI) PutGroupPolicyWithContext(arg0 context.Context, arg1 *iam.PutGroupPolicyInput, arg2 ...request.Option) (*iam.PutGroupPolicyOutput, error) {
+func (m *MockIAMAPI) PutGroupPolicyWithContext(arg0 aws.Context, arg1 *iam.PutGroupPolicyInput, arg2 ...request.Option) (*iam.PutGroupPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6779,7 +6779,7 @@ func (mr *MockIAMAPIMockRecorder) PutRolePermissionsBoundaryRequest(arg0 any) *g
 }
 
 // PutRolePermissionsBoundaryWithContext mocks base method.
-func (m *MockIAMAPI) PutRolePermissionsBoundaryWithContext(arg0 context.Context, arg1 *iam.PutRolePermissionsBoundaryInput, arg2 ...request.Option) (*iam.PutRolePermissionsBoundaryOutput, error) {
+func (m *MockIAMAPI) PutRolePermissionsBoundaryWithContext(arg0 aws.Context, arg1 *iam.PutRolePermissionsBoundaryInput, arg2 ...request.Option) (*iam.PutRolePermissionsBoundaryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6829,7 +6829,7 @@ func (mr *MockIAMAPIMockRecorder) PutRolePolicyRequest(arg0 any) *gomock.Call {
 }
 
 // PutRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) PutRolePolicyWithContext(arg0 context.Context, arg1 *iam.PutRolePolicyInput, arg2 ...request.Option) (*iam.PutRolePolicyOutput, error) {
+func (m *MockIAMAPI) PutRolePolicyWithContext(arg0 aws.Context, arg1 *iam.PutRolePolicyInput, arg2 ...request.Option) (*iam.PutRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6879,7 +6879,7 @@ func (mr *MockIAMAPIMockRecorder) PutUserPermissionsBoundaryRequest(arg0 any) *g
 }
 
 // PutUserPermissionsBoundaryWithContext mocks base method.
-func (m *MockIAMAPI) PutUserPermissionsBoundaryWithContext(arg0 context.Context, arg1 *iam.PutUserPermissionsBoundaryInput, arg2 ...request.Option) (*iam.PutUserPermissionsBoundaryOutput, error) {
+func (m *MockIAMAPI) PutUserPermissionsBoundaryWithContext(arg0 aws.Context, arg1 *iam.PutUserPermissionsBoundaryInput, arg2 ...request.Option) (*iam.PutUserPermissionsBoundaryOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6929,7 +6929,7 @@ func (mr *MockIAMAPIMockRecorder) PutUserPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // PutUserPolicyWithContext mocks base method.
-func (m *MockIAMAPI) PutUserPolicyWithContext(arg0 context.Context, arg1 *iam.PutUserPolicyInput, arg2 ...request.Option) (*iam.PutUserPolicyOutput, error) {
+func (m *MockIAMAPI) PutUserPolicyWithContext(arg0 aws.Context, arg1 *iam.PutUserPolicyInput, arg2 ...request.Option) (*iam.PutUserPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -6979,7 +6979,7 @@ func (mr *MockIAMAPIMockRecorder) RemoveClientIDFromOpenIDConnectProviderRequest
 }
 
 // RemoveClientIDFromOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) RemoveClientIDFromOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.RemoveClientIDFromOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.RemoveClientIDFromOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) RemoveClientIDFromOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.RemoveClientIDFromOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.RemoveClientIDFromOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7029,7 +7029,7 @@ func (mr *MockIAMAPIMockRecorder) RemoveRoleFromInstanceProfileRequest(arg0 any)
 }
 
 // RemoveRoleFromInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) RemoveRoleFromInstanceProfileWithContext(arg0 context.Context, arg1 *iam.RemoveRoleFromInstanceProfileInput, arg2 ...request.Option) (*iam.RemoveRoleFromInstanceProfileOutput, error) {
+func (m *MockIAMAPI) RemoveRoleFromInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.RemoveRoleFromInstanceProfileInput, arg2 ...request.Option) (*iam.RemoveRoleFromInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7079,7 +7079,7 @@ func (mr *MockIAMAPIMockRecorder) RemoveUserFromGroupRequest(arg0 any) *gomock.C
 }
 
 // RemoveUserFromGroupWithContext mocks base method.
-func (m *MockIAMAPI) RemoveUserFromGroupWithContext(arg0 context.Context, arg1 *iam.RemoveUserFromGroupInput, arg2 ...request.Option) (*iam.RemoveUserFromGroupOutput, error) {
+func (m *MockIAMAPI) RemoveUserFromGroupWithContext(arg0 aws.Context, arg1 *iam.RemoveUserFromGroupInput, arg2 ...request.Option) (*iam.RemoveUserFromGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7129,7 +7129,7 @@ func (mr *MockIAMAPIMockRecorder) ResetServiceSpecificCredentialRequest(arg0 any
 }
 
 // ResetServiceSpecificCredentialWithContext mocks base method.
-func (m *MockIAMAPI) ResetServiceSpecificCredentialWithContext(arg0 context.Context, arg1 *iam.ResetServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.ResetServiceSpecificCredentialOutput, error) {
+func (m *MockIAMAPI) ResetServiceSpecificCredentialWithContext(arg0 aws.Context, arg1 *iam.ResetServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.ResetServiceSpecificCredentialOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7179,7 +7179,7 @@ func (mr *MockIAMAPIMockRecorder) ResyncMFADeviceRequest(arg0 any) *gomock.Call 
 }
 
 // ResyncMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) ResyncMFADeviceWithContext(arg0 context.Context, arg1 *iam.ResyncMFADeviceInput, arg2 ...request.Option) (*iam.ResyncMFADeviceOutput, error) {
+func (m *MockIAMAPI) ResyncMFADeviceWithContext(arg0 aws.Context, arg1 *iam.ResyncMFADeviceInput, arg2 ...request.Option) (*iam.ResyncMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7229,7 +7229,7 @@ func (mr *MockIAMAPIMockRecorder) SetDefaultPolicyVersionRequest(arg0 any) *gomo
 }
 
 // SetDefaultPolicyVersionWithContext mocks base method.
-func (m *MockIAMAPI) SetDefaultPolicyVersionWithContext(arg0 context.Context, arg1 *iam.SetDefaultPolicyVersionInput, arg2 ...request.Option) (*iam.SetDefaultPolicyVersionOutput, error) {
+func (m *MockIAMAPI) SetDefaultPolicyVersionWithContext(arg0 aws.Context, arg1 *iam.SetDefaultPolicyVersionInput, arg2 ...request.Option) (*iam.SetDefaultPolicyVersionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7279,7 +7279,7 @@ func (mr *MockIAMAPIMockRecorder) SetSecurityTokenServicePreferencesRequest(arg0
 }
 
 // SetSecurityTokenServicePreferencesWithContext mocks base method.
-func (m *MockIAMAPI) SetSecurityTokenServicePreferencesWithContext(arg0 context.Context, arg1 *iam.SetSecurityTokenServicePreferencesInput, arg2 ...request.Option) (*iam.SetSecurityTokenServicePreferencesOutput, error) {
+func (m *MockIAMAPI) SetSecurityTokenServicePreferencesWithContext(arg0 aws.Context, arg1 *iam.SetSecurityTokenServicePreferencesInput, arg2 ...request.Option) (*iam.SetSecurityTokenServicePreferencesOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7328,7 +7328,7 @@ func (mr *MockIAMAPIMockRecorder) SimulateCustomPolicyPages(arg0, arg1 any) *gom
 }
 
 // SimulateCustomPolicyPagesWithContext mocks base method.
-func (m *MockIAMAPI) SimulateCustomPolicyPagesWithContext(arg0 context.Context, arg1 *iam.SimulateCustomPolicyInput, arg2 func(*iam.SimulatePolicyResponse, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) SimulateCustomPolicyPagesWithContext(arg0 aws.Context, arg1 *iam.SimulateCustomPolicyInput, arg2 func(*iam.SimulatePolicyResponse, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -7362,7 +7362,7 @@ func (mr *MockIAMAPIMockRecorder) SimulateCustomPolicyRequest(arg0 any) *gomock.
 }
 
 // SimulateCustomPolicyWithContext mocks base method.
-func (m *MockIAMAPI) SimulateCustomPolicyWithContext(arg0 context.Context, arg1 *iam.SimulateCustomPolicyInput, arg2 ...request.Option) (*iam.SimulatePolicyResponse, error) {
+func (m *MockIAMAPI) SimulateCustomPolicyWithContext(arg0 aws.Context, arg1 *iam.SimulateCustomPolicyInput, arg2 ...request.Option) (*iam.SimulatePolicyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7411,7 +7411,7 @@ func (mr *MockIAMAPIMockRecorder) SimulatePrincipalPolicyPages(arg0, arg1 any) *
 }
 
 // SimulatePrincipalPolicyPagesWithContext mocks base method.
-func (m *MockIAMAPI) SimulatePrincipalPolicyPagesWithContext(arg0 context.Context, arg1 *iam.SimulatePrincipalPolicyInput, arg2 func(*iam.SimulatePolicyResponse, bool) bool, arg3 ...request.Option) error {
+func (m *MockIAMAPI) SimulatePrincipalPolicyPagesWithContext(arg0 aws.Context, arg1 *iam.SimulatePrincipalPolicyInput, arg2 func(*iam.SimulatePolicyResponse, bool) bool, arg3 ...request.Option) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1, arg2}
 	for _, a := range arg3 {
@@ -7445,7 +7445,7 @@ func (mr *MockIAMAPIMockRecorder) SimulatePrincipalPolicyRequest(arg0 any) *gomo
 }
 
 // SimulatePrincipalPolicyWithContext mocks base method.
-func (m *MockIAMAPI) SimulatePrincipalPolicyWithContext(arg0 context.Context, arg1 *iam.SimulatePrincipalPolicyInput, arg2 ...request.Option) (*iam.SimulatePolicyResponse, error) {
+func (m *MockIAMAPI) SimulatePrincipalPolicyWithContext(arg0 aws.Context, arg1 *iam.SimulatePrincipalPolicyInput, arg2 ...request.Option) (*iam.SimulatePolicyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7495,7 +7495,7 @@ func (mr *MockIAMAPIMockRecorder) TagInstanceProfileRequest(arg0 any) *gomock.Ca
 }
 
 // TagInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) TagInstanceProfileWithContext(arg0 context.Context, arg1 *iam.TagInstanceProfileInput, arg2 ...request.Option) (*iam.TagInstanceProfileOutput, error) {
+func (m *MockIAMAPI) TagInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.TagInstanceProfileInput, arg2 ...request.Option) (*iam.TagInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7545,7 +7545,7 @@ func (mr *MockIAMAPIMockRecorder) TagMFADeviceRequest(arg0 any) *gomock.Call {
 }
 
 // TagMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) TagMFADeviceWithContext(arg0 context.Context, arg1 *iam.TagMFADeviceInput, arg2 ...request.Option) (*iam.TagMFADeviceOutput, error) {
+func (m *MockIAMAPI) TagMFADeviceWithContext(arg0 aws.Context, arg1 *iam.TagMFADeviceInput, arg2 ...request.Option) (*iam.TagMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7595,7 +7595,7 @@ func (mr *MockIAMAPIMockRecorder) TagOpenIDConnectProviderRequest(arg0 any) *gom
 }
 
 // TagOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) TagOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.TagOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.TagOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) TagOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.TagOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.TagOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7645,7 +7645,7 @@ func (mr *MockIAMAPIMockRecorder) TagPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // TagPolicyWithContext mocks base method.
-func (m *MockIAMAPI) TagPolicyWithContext(arg0 context.Context, arg1 *iam.TagPolicyInput, arg2 ...request.Option) (*iam.TagPolicyOutput, error) {
+func (m *MockIAMAPI) TagPolicyWithContext(arg0 aws.Context, arg1 *iam.TagPolicyInput, arg2 ...request.Option) (*iam.TagPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7695,7 +7695,7 @@ func (mr *MockIAMAPIMockRecorder) TagRoleRequest(arg0 any) *gomock.Call {
 }
 
 // TagRoleWithContext mocks base method.
-func (m *MockIAMAPI) TagRoleWithContext(arg0 context.Context, arg1 *iam.TagRoleInput, arg2 ...request.Option) (*iam.TagRoleOutput, error) {
+func (m *MockIAMAPI) TagRoleWithContext(arg0 aws.Context, arg1 *iam.TagRoleInput, arg2 ...request.Option) (*iam.TagRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7745,7 +7745,7 @@ func (mr *MockIAMAPIMockRecorder) TagSAMLProviderRequest(arg0 any) *gomock.Call 
 }
 
 // TagSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) TagSAMLProviderWithContext(arg0 context.Context, arg1 *iam.TagSAMLProviderInput, arg2 ...request.Option) (*iam.TagSAMLProviderOutput, error) {
+func (m *MockIAMAPI) TagSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.TagSAMLProviderInput, arg2 ...request.Option) (*iam.TagSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7795,7 +7795,7 @@ func (mr *MockIAMAPIMockRecorder) TagServerCertificateRequest(arg0 any) *gomock.
 }
 
 // TagServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) TagServerCertificateWithContext(arg0 context.Context, arg1 *iam.TagServerCertificateInput, arg2 ...request.Option) (*iam.TagServerCertificateOutput, error) {
+func (m *MockIAMAPI) TagServerCertificateWithContext(arg0 aws.Context, arg1 *iam.TagServerCertificateInput, arg2 ...request.Option) (*iam.TagServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7845,7 +7845,7 @@ func (mr *MockIAMAPIMockRecorder) TagUserRequest(arg0 any) *gomock.Call {
 }
 
 // TagUserWithContext mocks base method.
-func (m *MockIAMAPI) TagUserWithContext(arg0 context.Context, arg1 *iam.TagUserInput, arg2 ...request.Option) (*iam.TagUserOutput, error) {
+func (m *MockIAMAPI) TagUserWithContext(arg0 aws.Context, arg1 *iam.TagUserInput, arg2 ...request.Option) (*iam.TagUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7895,7 +7895,7 @@ func (mr *MockIAMAPIMockRecorder) UntagInstanceProfileRequest(arg0 any) *gomock.
 }
 
 // UntagInstanceProfileWithContext mocks base method.
-func (m *MockIAMAPI) UntagInstanceProfileWithContext(arg0 context.Context, arg1 *iam.UntagInstanceProfileInput, arg2 ...request.Option) (*iam.UntagInstanceProfileOutput, error) {
+func (m *MockIAMAPI) UntagInstanceProfileWithContext(arg0 aws.Context, arg1 *iam.UntagInstanceProfileInput, arg2 ...request.Option) (*iam.UntagInstanceProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7945,7 +7945,7 @@ func (mr *MockIAMAPIMockRecorder) UntagMFADeviceRequest(arg0 any) *gomock.Call {
 }
 
 // UntagMFADeviceWithContext mocks base method.
-func (m *MockIAMAPI) UntagMFADeviceWithContext(arg0 context.Context, arg1 *iam.UntagMFADeviceInput, arg2 ...request.Option) (*iam.UntagMFADeviceOutput, error) {
+func (m *MockIAMAPI) UntagMFADeviceWithContext(arg0 aws.Context, arg1 *iam.UntagMFADeviceInput, arg2 ...request.Option) (*iam.UntagMFADeviceOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -7995,7 +7995,7 @@ func (mr *MockIAMAPIMockRecorder) UntagOpenIDConnectProviderRequest(arg0 any) *g
 }
 
 // UntagOpenIDConnectProviderWithContext mocks base method.
-func (m *MockIAMAPI) UntagOpenIDConnectProviderWithContext(arg0 context.Context, arg1 *iam.UntagOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.UntagOpenIDConnectProviderOutput, error) {
+func (m *MockIAMAPI) UntagOpenIDConnectProviderWithContext(arg0 aws.Context, arg1 *iam.UntagOpenIDConnectProviderInput, arg2 ...request.Option) (*iam.UntagOpenIDConnectProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8045,7 +8045,7 @@ func (mr *MockIAMAPIMockRecorder) UntagPolicyRequest(arg0 any) *gomock.Call {
 }
 
 // UntagPolicyWithContext mocks base method.
-func (m *MockIAMAPI) UntagPolicyWithContext(arg0 context.Context, arg1 *iam.UntagPolicyInput, arg2 ...request.Option) (*iam.UntagPolicyOutput, error) {
+func (m *MockIAMAPI) UntagPolicyWithContext(arg0 aws.Context, arg1 *iam.UntagPolicyInput, arg2 ...request.Option) (*iam.UntagPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8095,7 +8095,7 @@ func (mr *MockIAMAPIMockRecorder) UntagRoleRequest(arg0 any) *gomock.Call {
 }
 
 // UntagRoleWithContext mocks base method.
-func (m *MockIAMAPI) UntagRoleWithContext(arg0 context.Context, arg1 *iam.UntagRoleInput, arg2 ...request.Option) (*iam.UntagRoleOutput, error) {
+func (m *MockIAMAPI) UntagRoleWithContext(arg0 aws.Context, arg1 *iam.UntagRoleInput, arg2 ...request.Option) (*iam.UntagRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8145,7 +8145,7 @@ func (mr *MockIAMAPIMockRecorder) UntagSAMLProviderRequest(arg0 any) *gomock.Cal
 }
 
 // UntagSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) UntagSAMLProviderWithContext(arg0 context.Context, arg1 *iam.UntagSAMLProviderInput, arg2 ...request.Option) (*iam.UntagSAMLProviderOutput, error) {
+func (m *MockIAMAPI) UntagSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.UntagSAMLProviderInput, arg2 ...request.Option) (*iam.UntagSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8195,7 +8195,7 @@ func (mr *MockIAMAPIMockRecorder) UntagServerCertificateRequest(arg0 any) *gomoc
 }
 
 // UntagServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) UntagServerCertificateWithContext(arg0 context.Context, arg1 *iam.UntagServerCertificateInput, arg2 ...request.Option) (*iam.UntagServerCertificateOutput, error) {
+func (m *MockIAMAPI) UntagServerCertificateWithContext(arg0 aws.Context, arg1 *iam.UntagServerCertificateInput, arg2 ...request.Option) (*iam.UntagServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8245,7 +8245,7 @@ func (mr *MockIAMAPIMockRecorder) UntagUserRequest(arg0 any) *gomock.Call {
 }
 
 // UntagUserWithContext mocks base method.
-func (m *MockIAMAPI) UntagUserWithContext(arg0 context.Context, arg1 *iam.UntagUserInput, arg2 ...request.Option) (*iam.UntagUserOutput, error) {
+func (m *MockIAMAPI) UntagUserWithContext(arg0 aws.Context, arg1 *iam.UntagUserInput, arg2 ...request.Option) (*iam.UntagUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8295,7 +8295,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateAccessKeyRequest(arg0 any) *gomock.Call 
 }
 
 // UpdateAccessKeyWithContext mocks base method.
-func (m *MockIAMAPI) UpdateAccessKeyWithContext(arg0 context.Context, arg1 *iam.UpdateAccessKeyInput, arg2 ...request.Option) (*iam.UpdateAccessKeyOutput, error) {
+func (m *MockIAMAPI) UpdateAccessKeyWithContext(arg0 aws.Context, arg1 *iam.UpdateAccessKeyInput, arg2 ...request.Option) (*iam.UpdateAccessKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8345,7 +8345,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateAccountPasswordPolicyRequest(arg0 any) *
 }
 
 // UpdateAccountPasswordPolicyWithContext mocks base method.
-func (m *MockIAMAPI) UpdateAccountPasswordPolicyWithContext(arg0 context.Context, arg1 *iam.UpdateAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.UpdateAccountPasswordPolicyOutput, error) {
+func (m *MockIAMAPI) UpdateAccountPasswordPolicyWithContext(arg0 aws.Context, arg1 *iam.UpdateAccountPasswordPolicyInput, arg2 ...request.Option) (*iam.UpdateAccountPasswordPolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8395,7 +8395,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateAssumeRolePolicyRequest(arg0 any) *gomoc
 }
 
 // UpdateAssumeRolePolicyWithContext mocks base method.
-func (m *MockIAMAPI) UpdateAssumeRolePolicyWithContext(arg0 context.Context, arg1 *iam.UpdateAssumeRolePolicyInput, arg2 ...request.Option) (*iam.UpdateAssumeRolePolicyOutput, error) {
+func (m *MockIAMAPI) UpdateAssumeRolePolicyWithContext(arg0 aws.Context, arg1 *iam.UpdateAssumeRolePolicyInput, arg2 ...request.Option) (*iam.UpdateAssumeRolePolicyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8445,7 +8445,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateGroupRequest(arg0 any) *gomock.Call {
 }
 
 // UpdateGroupWithContext mocks base method.
-func (m *MockIAMAPI) UpdateGroupWithContext(arg0 context.Context, arg1 *iam.UpdateGroupInput, arg2 ...request.Option) (*iam.UpdateGroupOutput, error) {
+func (m *MockIAMAPI) UpdateGroupWithContext(arg0 aws.Context, arg1 *iam.UpdateGroupInput, arg2 ...request.Option) (*iam.UpdateGroupOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8495,7 +8495,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateLoginProfileRequest(arg0 any) *gomock.Ca
 }
 
 // UpdateLoginProfileWithContext mocks base method.
-func (m *MockIAMAPI) UpdateLoginProfileWithContext(arg0 context.Context, arg1 *iam.UpdateLoginProfileInput, arg2 ...request.Option) (*iam.UpdateLoginProfileOutput, error) {
+func (m *MockIAMAPI) UpdateLoginProfileWithContext(arg0 aws.Context, arg1 *iam.UpdateLoginProfileInput, arg2 ...request.Option) (*iam.UpdateLoginProfileOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8545,7 +8545,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateOpenIDConnectProviderThumbprintRequest(a
 }
 
 // UpdateOpenIDConnectProviderThumbprintWithContext mocks base method.
-func (m *MockIAMAPI) UpdateOpenIDConnectProviderThumbprintWithContext(arg0 context.Context, arg1 *iam.UpdateOpenIDConnectProviderThumbprintInput, arg2 ...request.Option) (*iam.UpdateOpenIDConnectProviderThumbprintOutput, error) {
+func (m *MockIAMAPI) UpdateOpenIDConnectProviderThumbprintWithContext(arg0 aws.Context, arg1 *iam.UpdateOpenIDConnectProviderThumbprintInput, arg2 ...request.Option) (*iam.UpdateOpenIDConnectProviderThumbprintOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8610,7 +8610,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateRoleDescriptionRequest(arg0 any) *gomock
 }
 
 // UpdateRoleDescriptionWithContext mocks base method.
-func (m *MockIAMAPI) UpdateRoleDescriptionWithContext(arg0 context.Context, arg1 *iam.UpdateRoleDescriptionInput, arg2 ...request.Option) (*iam.UpdateRoleDescriptionOutput, error) {
+func (m *MockIAMAPI) UpdateRoleDescriptionWithContext(arg0 aws.Context, arg1 *iam.UpdateRoleDescriptionInput, arg2 ...request.Option) (*iam.UpdateRoleDescriptionOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8645,7 +8645,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateRoleRequest(arg0 any) *gomock.Call {
 }
 
 // UpdateRoleWithContext mocks base method.
-func (m *MockIAMAPI) UpdateRoleWithContext(arg0 context.Context, arg1 *iam.UpdateRoleInput, arg2 ...request.Option) (*iam.UpdateRoleOutput, error) {
+func (m *MockIAMAPI) UpdateRoleWithContext(arg0 aws.Context, arg1 *iam.UpdateRoleInput, arg2 ...request.Option) (*iam.UpdateRoleOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8695,7 +8695,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateSAMLProviderRequest(arg0 any) *gomock.Ca
 }
 
 // UpdateSAMLProviderWithContext mocks base method.
-func (m *MockIAMAPI) UpdateSAMLProviderWithContext(arg0 context.Context, arg1 *iam.UpdateSAMLProviderInput, arg2 ...request.Option) (*iam.UpdateSAMLProviderOutput, error) {
+func (m *MockIAMAPI) UpdateSAMLProviderWithContext(arg0 aws.Context, arg1 *iam.UpdateSAMLProviderInput, arg2 ...request.Option) (*iam.UpdateSAMLProviderOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8745,7 +8745,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateSSHPublicKeyRequest(arg0 any) *gomock.Ca
 }
 
 // UpdateSSHPublicKeyWithContext mocks base method.
-func (m *MockIAMAPI) UpdateSSHPublicKeyWithContext(arg0 context.Context, arg1 *iam.UpdateSSHPublicKeyInput, arg2 ...request.Option) (*iam.UpdateSSHPublicKeyOutput, error) {
+func (m *MockIAMAPI) UpdateSSHPublicKeyWithContext(arg0 aws.Context, arg1 *iam.UpdateSSHPublicKeyInput, arg2 ...request.Option) (*iam.UpdateSSHPublicKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8795,7 +8795,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateServerCertificateRequest(arg0 any) *gomo
 }
 
 // UpdateServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) UpdateServerCertificateWithContext(arg0 context.Context, arg1 *iam.UpdateServerCertificateInput, arg2 ...request.Option) (*iam.UpdateServerCertificateOutput, error) {
+func (m *MockIAMAPI) UpdateServerCertificateWithContext(arg0 aws.Context, arg1 *iam.UpdateServerCertificateInput, arg2 ...request.Option) (*iam.UpdateServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8845,7 +8845,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateServiceSpecificCredentialRequest(arg0 an
 }
 
 // UpdateServiceSpecificCredentialWithContext mocks base method.
-func (m *MockIAMAPI) UpdateServiceSpecificCredentialWithContext(arg0 context.Context, arg1 *iam.UpdateServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.UpdateServiceSpecificCredentialOutput, error) {
+func (m *MockIAMAPI) UpdateServiceSpecificCredentialWithContext(arg0 aws.Context, arg1 *iam.UpdateServiceSpecificCredentialInput, arg2 ...request.Option) (*iam.UpdateServiceSpecificCredentialOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8895,7 +8895,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateSigningCertificateRequest(arg0 any) *gom
 }
 
 // UpdateSigningCertificateWithContext mocks base method.
-func (m *MockIAMAPI) UpdateSigningCertificateWithContext(arg0 context.Context, arg1 *iam.UpdateSigningCertificateInput, arg2 ...request.Option) (*iam.UpdateSigningCertificateOutput, error) {
+func (m *MockIAMAPI) UpdateSigningCertificateWithContext(arg0 aws.Context, arg1 *iam.UpdateSigningCertificateInput, arg2 ...request.Option) (*iam.UpdateSigningCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8945,7 +8945,7 @@ func (mr *MockIAMAPIMockRecorder) UpdateUserRequest(arg0 any) *gomock.Call {
 }
 
 // UpdateUserWithContext mocks base method.
-func (m *MockIAMAPI) UpdateUserWithContext(arg0 context.Context, arg1 *iam.UpdateUserInput, arg2 ...request.Option) (*iam.UpdateUserOutput, error) {
+func (m *MockIAMAPI) UpdateUserWithContext(arg0 aws.Context, arg1 *iam.UpdateUserInput, arg2 ...request.Option) (*iam.UpdateUserOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -8995,7 +8995,7 @@ func (mr *MockIAMAPIMockRecorder) UploadSSHPublicKeyRequest(arg0 any) *gomock.Ca
 }
 
 // UploadSSHPublicKeyWithContext mocks base method.
-func (m *MockIAMAPI) UploadSSHPublicKeyWithContext(arg0 context.Context, arg1 *iam.UploadSSHPublicKeyInput, arg2 ...request.Option) (*iam.UploadSSHPublicKeyOutput, error) {
+func (m *MockIAMAPI) UploadSSHPublicKeyWithContext(arg0 aws.Context, arg1 *iam.UploadSSHPublicKeyInput, arg2 ...request.Option) (*iam.UploadSSHPublicKeyOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9045,7 +9045,7 @@ func (mr *MockIAMAPIMockRecorder) UploadServerCertificateRequest(arg0 any) *gomo
 }
 
 // UploadServerCertificateWithContext mocks base method.
-func (m *MockIAMAPI) UploadServerCertificateWithContext(arg0 context.Context, arg1 *iam.UploadServerCertificateInput, arg2 ...request.Option) (*iam.UploadServerCertificateOutput, error) {
+func (m *MockIAMAPI) UploadServerCertificateWithContext(arg0 aws.Context, arg1 *iam.UploadServerCertificateInput, arg2 ...request.Option) (*iam.UploadServerCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9095,7 +9095,7 @@ func (mr *MockIAMAPIMockRecorder) UploadSigningCertificateRequest(arg0 any) *gom
 }
 
 // UploadSigningCertificateWithContext mocks base method.
-func (m *MockIAMAPI) UploadSigningCertificateWithContext(arg0 context.Context, arg1 *iam.UploadSigningCertificateInput, arg2 ...request.Option) (*iam.UploadSigningCertificateOutput, error) {
+func (m *MockIAMAPI) UploadSigningCertificateWithContext(arg0 aws.Context, arg1 *iam.UploadSigningCertificateInput, arg2 ...request.Option) (*iam.UploadSigningCertificateOutput, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9129,7 +9129,7 @@ func (mr *MockIAMAPIMockRecorder) WaitUntilInstanceProfileExists(arg0 any) *gomo
 }
 
 // WaitUntilInstanceProfileExistsWithContext mocks base method.
-func (m *MockIAMAPI) WaitUntilInstanceProfileExistsWithContext(arg0 context.Context, arg1 *iam.GetInstanceProfileInput, arg2 ...request.WaiterOption) error {
+func (m *MockIAMAPI) WaitUntilInstanceProfileExistsWithContext(arg0 aws.Context, arg1 *iam.GetInstanceProfileInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9162,7 +9162,7 @@ func (mr *MockIAMAPIMockRecorder) WaitUntilPolicyExists(arg0 any) *gomock.Call {
 }
 
 // WaitUntilPolicyExistsWithContext mocks base method.
-func (m *MockIAMAPI) WaitUntilPolicyExistsWithContext(arg0 context.Context, arg1 *iam.GetPolicyInput, arg2 ...request.WaiterOption) error {
+func (m *MockIAMAPI) WaitUntilPolicyExistsWithContext(arg0 aws.Context, arg1 *iam.GetPolicyInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9195,7 +9195,7 @@ func (mr *MockIAMAPIMockRecorder) WaitUntilRoleExists(arg0 any) *gomock.Call {
 }
 
 // WaitUntilRoleExistsWithContext mocks base method.
-func (m *MockIAMAPI) WaitUntilRoleExistsWithContext(arg0 context.Context, arg1 *iam.GetRoleInput, arg2 ...request.WaiterOption) error {
+func (m *MockIAMAPI) WaitUntilRoleExistsWithContext(arg0 aws.Context, arg1 *iam.GetRoleInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {
@@ -9228,7 +9228,7 @@ func (mr *MockIAMAPIMockRecorder) WaitUntilUserExists(arg0 any) *gomock.Call {
 }
 
 // WaitUntilUserExistsWithContext mocks base method.
-func (m *MockIAMAPI) WaitUntilUserExistsWithContext(arg0 context.Context, arg1 *iam.GetUserInput, arg2 ...request.WaiterOption) error {
+func (m *MockIAMAPI) WaitUntilUserExistsWithContext(arg0 aws.Context, arg1 *iam.GetUserInput, arg2 ...request.WaiterOption) error {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0, arg1}
 	for _, a := range arg2 {

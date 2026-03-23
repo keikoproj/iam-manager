@@ -36,13 +36,13 @@ import (
 
 	iammanagerv1alpha1 "github.com/keikoproj/iam-manager/api/v1alpha1"
 	"github.com/keikoproj/iam-manager/internal/config"
+	appconfig "github.com/keikoproj/iam-manager/internal/config"
 	"github.com/keikoproj/iam-manager/internal/controllers"
 	"github.com/keikoproj/iam-manager/internal/utils"
 	"github.com/keikoproj/iam-manager/pkg/awsapi"
 	"github.com/keikoproj/iam-manager/pkg/k8s"
 	"github.com/keikoproj/iam-manager/pkg/logging"
 	_ "go.uber.org/mock/mockgen/model"
-	appconfig "github.com/keikoproj/iam-manager/internal/config"
 )
 
 var (

@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	validationutils "k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -51,47 +50,49 @@ func NewWClient() {
 }
 
 func (r *Iamrole) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+	return ctrl.NewWebhookManagedBy(mgr, &Iamrole{}).
+		WithDefaulter(r).
+		WithValidator(r).
 		Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-iammanager-keikoproj-io-v1alpha1-iamrole,mutating=true,failurePolicy=fail,groups=iammanager.keikoproj.io,resources=iamroles,verbs=create;update,versions=v1alpha1,name=miamrole.kb.io,sideEffects=none,admissionReviewVersions=v1
 
 // Default implements webhook mutating admission so a webhook will be registered for the type
-func (r *Iamrole) Default() {
-	log := logging.Logger(context.Background(), "v1alpha1", "Default")
-	log.Info("setting default version", "name", r.Name)
+func (r *Iamrole) Default(ctx context.Context, obj *Iamrole) error {
+	log := logging.Logger(ctx, "v1alpha1", "Default")
+	log.Info("setting default version", "name", obj.Name)
 
 	//Set the default value for Version
-	if r.Spec.PolicyDocument.Version == "" {
-		r.Spec.PolicyDocument.Version = version
+	if obj.Spec.PolicyDocument.Version == "" {
+		obj.Spec.PolicyDocument.Version = version
 	}
+	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-iammanager-keikoproj-io-v1alpha1-iamrole,mutating=false,failurePolicy=fail,groups=iammanager.keikoproj.io,resources=iamroles,versions=v1alpha1,name=viamrole.kb.io,sideEffects=none,admissionReviewVersions=v1
 
 // ValidateCreate implements webhook validating admission so a webhook will be registered for the type
-func (r *Iamrole) ValidateCreate() (admission.Warnings, error) {
-	log := logging.Logger(context.Background(), "v1alpha1", "ValidateCreate")
-	log.Info("validating create request", "name", r.Name)
+func (r *Iamrole) ValidateCreate(ctx context.Context, obj *Iamrole) (admission.Warnings, error) {
+	log := logging.Logger(ctx, "v1alpha1", "ValidateCreate")
+	log.Info("validating create request", "name", obj.Name)
 
-	return []string{}, r.validateIAMPolicy(false)
+	return []string{}, obj.validateIAMPolicy(false)
 }
 
 // ValidateUpdate implements webhook validating admission so a webhook will be registered for the type
-func (r *Iamrole) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	log := logging.Logger(context.Background(), "v1alpha1", "ValidateCreate")
-	log.Info("validate update", "name", r.Name)
+func (r *Iamrole) ValidateUpdate(ctx context.Context, oldObj, newObj *Iamrole) (admission.Warnings, error) {
+	log := logging.Logger(ctx, "v1alpha1", "ValidateUpdate")
+	log.Info("validate update", "name", newObj.Name)
 
-	return []string{}, r.validateIAMPolicy(true)
+	return []string{}, newObj.validateIAMPolicy(true)
 }
 
 // ValidateDelete implements webhook validating admission so a webhook will be registered for the type
-func (r *Iamrole) ValidateDelete() (admission.Warnings, error) {
-	log := logging.Logger(context.Background(), "v1alpha1", "ValidateDelete")
-	log.Info("validate delete", "name", r.Name)
+func (r *Iamrole) ValidateDelete(ctx context.Context, obj *Iamrole) (admission.Warnings, error) {
+	log := logging.Logger(ctx, "v1alpha1", "ValidateDelete")
+	log.Info("validate delete", "name", obj.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return []string{}, nil

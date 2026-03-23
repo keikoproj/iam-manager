@@ -1,6 +1,6 @@
 module github.com/keikoproj/iam-manager
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8
@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.39.1
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
-	go.uber.org/mock v0.5.0
+	go.uber.org/mock v0.6.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	k8s.io/api v0.35.0
 	k8s.io/apimachinery v0.35.0

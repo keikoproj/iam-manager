@@ -17,10 +17,10 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6
         with:
-          go-version: 1.26
+          go-version: stable
           cache: true
           cache-dependency-path: go.sum
-          
+
       - name: Generate mocks
         run: |
           make mock
@@ -34,15 +34,6 @@ jobs:
         run: |
           make vet
 
-      # Run golangci-lint but allow it to fail - document issues for future PR
-      - name: Run golangci-lint (Non-blocking)
-        id: lint
-        continue-on-error: true
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: latest
-          args: --timeout=5m --issues-exit-code=0
-
   unit-test:
     name: unit-test
     runs-on: ubuntu-latest
@@ -54,7 +45,7 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v6
         with:
-          go-version: 1.26
+          go-version: stable
           cache: true
           cache-dependency-path: go.sum
 

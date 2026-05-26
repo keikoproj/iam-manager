@@ -212,3 +212,51 @@ func (s *PropertiesSuite) TestIsIRSARegionalEndpointDisabled(c *check.C) {
 	value := Props.IsIRSARegionalEndpointDisabled()
 	c.Assert(value, check.Equals, false)
 }
+
+// Both new flags must default to false when the configmap key is absent so
+// upgraded clusters keep their existing behavior until an operator opts in.
+func (s *PropertiesSuite) TestResyncOptimizationFlagsDefaultFalse(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId": "123456789012",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.IsResyncShortCircuitEnabled(), check.Equals, false)
+	c.Assert(Props.IsResyncPredicateEnabled(), check.Equals, false)
+}
+
+func (s *PropertiesSuite) TestResyncOptimizationFlagsEnabled(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                          "123456789012",
+			"controller.resync.shortcircuit.enabled": "true",
+			"controller.resync.predicate.enabled":    "true",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.IsResyncShortCircuitEnabled(), check.Equals, true)
+	c.Assert(Props.IsResyncPredicateEnabled(), check.Equals, true)
+}
+
+// Any value other than the literal "true" is treated as false. This matches
+// how isWebhookEnabled and isIRSAEnabled handle the same case and prevents
+// surprises from typos like "True" or "1".
+func (s *PropertiesSuite) TestResyncOptimizationFlagsNonTrueIsFalse(c *check.C) {
+	Props = nil
+	cm := &v1.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                          "123456789012",
+			"controller.resync.shortcircuit.enabled": "yes",
+			"controller.resync.predicate.enabled":    "1",
+		},
+	}
+	err := LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+	c.Assert(Props.IsResyncShortCircuitEnabled(), check.Equals, false)
+	c.Assert(Props.IsResyncPredicateEnabled(), check.Equals, false)
+}

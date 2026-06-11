@@ -215,11 +215,11 @@ func (r *Iamrole) validateNumberOfRoles(isItUpdate bool) *field.Error {
 
 	if isItUpdate {
 		if count > config.Props.MaxRolesAllowed() {
-			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
+			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 non-sandbox iamrole is allowed per namespace; use the iammanager.keikoproj.io/additional-role annotation for additional roles")
 		}
 	} else {
 		if count >= config.Props.MaxRolesAllowed() {
-			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
+			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 non-sandbox iamrole is allowed per namespace; use the iammanager.keikoproj.io/additional-role annotation for additional roles")
 		}
 	}
 	//While doing update it should be fine to have

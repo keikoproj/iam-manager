@@ -242,9 +242,16 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, ignoreNotFound(err)
 		}
 
-		log.Info("Total Number of roles", "count", len(iamRoles.Items), "allowed", config.Props.MaxRolesAllowed())
+		nonSandboxCount := 0
+		for _, role := range iamRoles.Items {
+			if _, isSandbox := role.Annotations[config.IamManagerRoleNameSuffixAnnotation]; !isSandbox {
+				nonSandboxCount++
+			}
+		}
 
-		if config.Props.MaxRolesAllowed() < len(iamRoles.Items) {
+		log.Info("Total Number of roles", "total", len(iamRoles.Items), "non_sandbox", nonSandboxCount, "allowed", config.Props.MaxRolesAllowed())
+
+		if config.Props.MaxRolesAllowed() < nonSandboxCount {
 			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
 			log.Error(errors.New(errMsg), errMsg)
 			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)

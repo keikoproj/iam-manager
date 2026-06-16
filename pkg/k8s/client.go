@@ -24,6 +24,12 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
+// iamManagerRoleNameSuffixAnnotation mirrors the constant in internal/config
+// (config imports this package, so we can't import config here without a
+// cycle). Iamrole CRs carrying this annotation are sandbox/additional roles
+// and are excluded from the per-namespace limit enforced by IamrolesCount.
+const iamManagerRoleNameSuffixAnnotation = "iammanager.keikoproj.io/additional-role"
+
 type Client struct {
 	cl  kubernetes.Interface
 	dCl dynamic.Interface
@@ -100,7 +106,10 @@ type Iface interface {
 	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
 }
 
-// IamrolesCount function lists the "Iamrole" for a provided namespace
+// IamrolesCount lists Iamroles in the namespace and returns the count of
+// roles that do NOT carry the IamManagerRoleNameSuffixAnnotation. Annotated
+// (sandbox) Iamroles are excluded from the count so the per-namespace limit
+// only applies to standard roles.
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 	log := logging.Logger(ctx, "k8s", "client", "IamrolesCount")
 	log.WithValues("namespace", ns)
@@ -116,8 +125,19 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 		log.Error(err, "unable to list iamroles resources")
 		return 0, err
 	}
-	log.Info("Total number of roles", "count", len(roleList.Items))
-	return len(roleList.Items), nil
+
+	count := 0
+	skipped := 0
+	for _, item := range roleList.Items {
+		annotations := item.GetAnnotations()
+		if _, ok := annotations[iamManagerRoleNameSuffixAnnotation]; ok {
+			skipped++
+			continue
+		}
+		count++
+	}
+	log.Info("Iamrole count for limit enforcement", "non_sandbox_count", count, "sandbox_excluded", skipped, "total", len(roleList.Items))
+	return count, nil
 }
 
 func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap {

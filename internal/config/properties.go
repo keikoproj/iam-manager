@@ -42,6 +42,8 @@ type Properties struct {
 	iamRolePattern                    string
 	isIRSARegionalEndpointDisabled    string
 	disallowSameAccountDynamoDBAccess string
+	resyncShortCircuitEnabled         string
+	resyncPredicateEnabled            string
 }
 
 func init() {
@@ -255,6 +257,19 @@ func LoadProperties(env string, cm ...*v1.ConfigMap) error {
 		Props.disallowSameAccountDynamoDBAccess = "false"
 	}
 
+	// Resync-optimization feature flags. Default false so existing behavior is preserved.
+	if cm[0].Data[propertyResyncShortCircuitEnabled] == "true" {
+		Props.resyncShortCircuitEnabled = "true"
+	} else {
+		Props.resyncShortCircuitEnabled = "false"
+	}
+
+	if cm[0].Data[propertyResyncPredicateEnabled] == "true" {
+		Props.resyncPredicateEnabled = "true"
+	} else {
+		Props.resyncPredicateEnabled = "false"
+	}
+
 	return nil
 }
 
@@ -352,6 +367,8 @@ func (p *Properties) LogStartupConfig(log logr.Logger) {
 		"restricted.s3.resources", p.RestrictedS3Resources(),
 		"managed.policies", p.ManagedPolicies(),
 		"iam.policy.dynamodb.same.account.disallow", p.DisallowSameAccountDynamoDBAccess(),
+		"controller.resync.shortcircuit.enabled", p.IsResyncShortCircuitEnabled(),
+		"controller.resync.predicate.enabled", p.IsResyncPredicateEnabled(),
 	)
 }
 
@@ -389,6 +406,22 @@ func (p *Properties) DisallowSameAccountDynamoDBAccess() bool {
 		resp = true
 	}
 	return resp
+}
+
+// IsResyncShortCircuitEnabled reports whether the Ready-path short-circuit
+// is enabled. When true, the reconcile loop skips the AWS GetRole /
+// GetRolePolicy verification if the CR's generation and the IRSA/tags
+// annotations have not changed since the last successful reconcile.
+func (p *Properties) IsResyncShortCircuitEnabled() bool {
+	return p.resyncShortCircuitEnabled == "true"
+}
+
+// IsResyncPredicateEnabled reports whether the resync-event predicate is
+// enabled. When true, the controller drops watch events whose
+// ResourceVersion did not change, i.e. periodic informer resyncs with no
+// underlying write.
+func (p *Properties) IsResyncPredicateEnabled() bool {
+	return p.resyncPredicateEnabled == "true"
 }
 
 func RunConfigMapInformer(ctx context.Context) {

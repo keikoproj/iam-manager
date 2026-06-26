@@ -26,7 +26,7 @@ import (
 
 // iamManagerRoleNameSuffixAnnotation mirrors the constant in internal/config
 // (config imports this package, so we can't import config here without a
-// cycle). Iamrole CRs carrying this annotation are sandbox/additional roles
+// cycle). Iamrole CRs carrying this annotation are additional roles
 // and are excluded from the per-namespace limit enforced by IamrolesCount.
 const iamManagerRoleNameSuffixAnnotation = "iammanager.keikoproj.io/additional-role"
 
@@ -108,7 +108,7 @@ type Iface interface {
 
 // IamrolesCount lists Iamroles in the namespace and returns the count of
 // roles that do NOT carry the IamManagerRoleNameSuffixAnnotation. Annotated
-// (sandbox) Iamroles are excluded from the count so the per-namespace limit
+// (additional) Iamroles are excluded from the count so the per-namespace limit
 // only applies to standard roles.
 func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 	log := logging.Logger(ctx, "k8s", "client", "IamrolesCount")
@@ -136,7 +136,7 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 		}
 		count++
 	}
-	log.Info("Iamrole count for limit enforcement", "non_sandbox_count", count, "sandbox_excluded", skipped, "total", len(roleList.Items))
+	log.Info("Iamrole count for limit enforcement", "non_additional_count", count, "additional_excluded", skipped, "total", len(roleList.Items))
 	return count, nil
 }
 

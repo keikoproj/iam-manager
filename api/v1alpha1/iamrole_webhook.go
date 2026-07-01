@@ -18,6 +18,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -115,6 +116,9 @@ func (r *Iamrole) validateIAMPolicy(isItUpdate bool) error {
 	if err := r.validateNumberOfRoles(isItUpdate); err != nil {
 		allErrs = append(allErrs, err)
 	}
+	if err := r.validateRoleNameSuffixAnnotation(); err != nil {
+		allErrs = append(allErrs, err)
+	}
 	if len(allErrs) == 0 {
 		return nil
 	}
@@ -205,24 +209,48 @@ func (r *Iamrole) validateCustomResourceName() *field.Error {
 	return nil
 }
 
+// validateRoleNameSuffixAnnotation validates the iammanager.keikoproj.io/additional-role
+// annotation when present. CRs without this annotation are unaffected.
+func (r *Iamrole) validateRoleNameSuffixAnnotation() *field.Error {
+	suffix, ok := r.Annotations[config.IamManagerRoleNameSuffixAnnotation]
+	if !ok {
+		return nil
+	}
+	annotationPath := field.NewPath("metadata").Child("annotations").Key(config.IamManagerRoleNameSuffixAnnotation)
+	if suffix == "" {
+		return field.Invalid(annotationPath, suffix, "iammanager.keikoproj.io/additional-role must not be empty")
+	}
+	if len(suffix) > 3 {
+		return field.Invalid(annotationPath, suffix, "iammanager.keikoproj.io/additional-role value must be 3 characters or fewer")
+	}
+	if matched, _ := regexp.MatchString(`^[\w+=,.@-]+$`, suffix); !matched {
+		return field.Invalid(annotationPath, suffix, `iammanager.keikoproj.io/additional-role value must match AWS IAM role name character set [\w+=,.@-]`)
+	}
+	return nil
+}
+
 //Lets do a cheesy way to talk to API server
 
 func (r *Iamrole) validateNumberOfRoles(isItUpdate bool) *field.Error {
-	count, err := wClient.IamrolesCount(context.Background(), r.ObjectMeta.Namespace)
+	nonAdditional, additional, err := wClient.IamrolesCount(context.Background(), r.ObjectMeta.Namespace)
 	if err != nil {
 		panic(err)
 	}
 
-	if isItUpdate {
-		if count > config.Props.MaxRolesAllowed() {
-			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
-		}
-	} else {
-		if count >= config.Props.MaxRolesAllowed() {
-			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
-		}
-	}
-	//While doing update it should be fine to have
+	_, isAdditional := r.Annotations[config.IamManagerRoleNameSuffixAnnotation]
 
+	// On create the incoming CR is not yet in the list, so reject when the
+	// existing count already meets the limit. On update the CR is already
+	// counted, so the same existing role is allowed to pass through.
+	if isAdditional {
+		if (!isItUpdate && additional >= 1) || (isItUpdate && additional > 1) {
+			return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 additional (sandbox) role is allowed per namespace")
+		}
+		return nil
+	}
+
+	if (!isItUpdate && nonAdditional >= config.Props.MaxRolesAllowed()) || (isItUpdate && nonAdditional > config.Props.MaxRolesAllowed()) {
+		return field.Invalid(field.NewPath("metadata").Child("namespace"), r.ObjectMeta.Namespace, "only 1 role is allowed per namespace")
+	}
 	return nil
 }

@@ -242,13 +242,39 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, ignoreNotFound(err)
 		}
 
-		log.Info("Total Number of roles", "count", len(iamRoles.Items), "allowed", config.Props.MaxRolesAllowed())
+		nonAdditionalRoles := 0
+		additionalRoles := 0
+		for _, role := range iamRoles.Items {
+			if _, isAdditional := role.Annotations[config.IamManagerRoleNameSuffixAnnotation]; isAdditional {
+				additionalRoles++
+			} else {
+				nonAdditionalRoles++
+			}
+		}
 
-		if config.Props.MaxRolesAllowed() < len(iamRoles.Items) {
-			errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
-			log.Error(errors.New(errMsg), errMsg)
-			r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
-			return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+		// Apply the limit that matches the CR currently being reconciled.
+		// The two limits are independent: over-quota on one side must not
+		// block a CR being reconciled on the other side.
+		_, isAdditional := iamRole.Annotations[config.IamManagerRoleNameSuffixAnnotation]
+
+		log.Info("Total Number of roles", "total", len(iamRoles.Items), "nonAdditionalRoles", nonAdditionalRoles, "additionalRoles", additionalRoles, "allowed", config.Props.MaxRolesAllowed(), "isAdditional", isAdditional)
+
+		if isAdditional {
+			// Cap additional (sandbox) roles at 1 per namespace. The CR being
+			// reconciled is already in the list, so > 1 means over-quota.
+			if additionalRoles > 1 {
+				errMsg := "maximum number of additional (sandbox) roles reached. Only 1 additional role is allowed per namespace"
+				log.Error(errors.New(errMsg), errMsg)
+				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
+				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+			}
+		} else {
+			if config.Props.MaxRolesAllowed() < nonAdditionalRoles {
+				errMsg := "maximum number of allowed roles reached. You must delete any existing role before proceeding further"
+				log.Error(errors.New(errMsg), errMsg)
+				r.Recorder.Event(iamRole, v1.EventTypeWarning, string(iammanagerv1alpha1.RolesMaxLimitReached), errMsg)
+				return r.UpdateStatus(ctx, iamRole, iammanagerv1alpha1.IamroleStatus{RoleName: roleName, ErrorDescription: errMsg, State: iammanagerv1alpha1.RolesMaxLimitReached, LastUpdatedTimestamp: metav1.Now()}, requeueTime)
+			}
 		}
 		fallthrough
 	default:

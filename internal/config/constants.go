@@ -83,6 +83,12 @@ const (
 	IamManagerTagsAnnotation = "iammanager.keikoproj.io/tags"
 
 	IRSARegionalEndpointAnnotation = "eks.amazonaws.com/sts-regional-endpoints"
+	// IamManagerRoleNameSuffixAnnotation appends a suffix to the templated
+	// AWS IAM role name produced by `iam.role.pattern`. Lets a single
+	// namespace host multiple Iamrole CRs that produce distinct AWS role
+	// names without changing the cluster-wide naming template. Opt-in
+	// per CR; CRs without this annotation are unaffected.
+	IamManagerRoleNameSuffixAnnotation = "iammanager.keikoproj.io/additional-role"
 )
 
 const (

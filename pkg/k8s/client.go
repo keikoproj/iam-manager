@@ -24,6 +24,12 @@ import (
 	"github.com/keikoproj/iam-manager/pkg/logging"
 )
 
+// iamManagerRoleNameSuffixAnnotation mirrors the constant in internal/config
+// (config imports this package, so we can't import config here without a
+// cycle). Iamrole CRs carrying this annotation are additional roles
+// and are counted separately by IamrolesCount.
+const iamManagerRoleNameSuffixAnnotation = "iammanager.keikoproj.io/additional-role"
+
 type Client struct {
 	cl  kubernetes.Interface
 	dCl dynamic.Interface
@@ -93,15 +99,17 @@ func NewK8sManagerClient(client client.Client) *Client {
 
 // Iface defines required functions to be implemented by receivers
 type Iface interface {
-	IamrolesCount(ctx context.Context, ns string)
+	IamrolesCount(ctx context.Context, ns string) (int, int, error)
 	GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap
 	SetUpEventHandler(ctx context.Context) record.EventRecorder
 	GetNamespace(ctx context.Context, ns string) *v1.Namespace
 	CreateOrUpdateServiceAccount(ctx context.Context, saName string, ns string) error
 }
 
-// IamrolesCount function lists the "Iamrole" for a provided namespace
-func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
+// IamrolesCount lists Iamroles in the namespace and returns the counts of
+// non-additional (standard) roles and additional roles separately,
+// so callers can enforce independent per-namespace limits on each.
+func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, int, error) {
 	log := logging.Logger(ctx, "k8s", "client", "IamrolesCount")
 	log.WithValues("namespace", ns)
 	log.V(1).Info("list api call")
@@ -114,10 +122,19 @@ func (c *Client) IamrolesCount(ctx context.Context, ns string) (int, error) {
 	roleList, err := c.dCl.Resource(iamCR).Namespace(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Error(err, "unable to list iamroles resources")
-		return 0, err
+		return 0, 0, err
 	}
-	log.Info("Total number of roles", "count", len(roleList.Items))
-	return len(roleList.Items), nil
+
+	nonAdditional, additional := 0, 0
+	for _, item := range roleList.Items {
+		if _, ok := item.GetAnnotations()[iamManagerRoleNameSuffixAnnotation]; ok {
+			additional++
+			continue
+		}
+		nonAdditional++
+	}
+	log.Info("Iamrole count for limit enforcement", "non_additional_count", nonAdditional, "additional_count", additional, "total", len(roleList.Items))
+	return nonAdditional, additional, nil
 }
 
 func (c *Client) GetConfigMap(ctx context.Context, ns string, name string) *v1.ConfigMap {

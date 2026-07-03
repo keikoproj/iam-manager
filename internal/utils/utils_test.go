@@ -42,6 +42,7 @@ func (s *UtilsTestSuite) TearDownTest(c *check.C) {
 	s.mockCtrl.Finish()
 }
 
+
 func (s *UtilsTestSuite) TestDefaultTrustPolicyNoGoTemplate(c *check.C) {
 	tD := `{"Version": "2012-10-17", "Statement": [{"Effect": "Allow","Principal": {"AWS": ["arn:aws:iam::123456789012:role/trust_role"]},"Action": "sts:AssumeRole"}]}`
 	expect := v1alpha1.AssumeRolePolicyDocument{
@@ -654,6 +655,31 @@ func (s *UtilsTestSuite) TestGenerateNameFunctionWithNamespace(c *check.C) {
 	roleName, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, nil)
 	c.Assert(roleName, check.Equals, "pfx+test-ns+foo")
 	c.Assert(err, check.IsNil)
+}
+
+func (s *UtilsTestSuite) TestGenerateNameFunctionWithAdditionalRoleAnnotation(c *check.C) {
+	cm := &v12.ConfigMap{
+		Data: map[string]string{
+			"aws.accountId":                  "123456789012", // Required mock for testing
+			"iam.role.derive.from.namespace": "false",
+			"iam.role.pattern":               "k8s-kubernetes-ikssandboxservice-usw2-{{ .ObjectMeta.Name }}",
+		},
+	}
+	config.Props = nil
+	err := config.LoadProperties("", cm)
+	c.Assert(err, check.IsNil)
+
+	resource := &v1alpha1.Iamrole{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "qal",
+			Annotations: map[string]string{
+				config.IamManagerRoleNameSuffixAnnotation: "sbx",
+			},
+		},
+	}
+	name, err := utils.GenerateRoleName(s.ctx, resource, *config.Props, nil)
+	c.Assert(err, check.IsNil)
+	c.Assert(name, check.Equals, "k8s-kubernetes-ikssandboxservice-usw2-qal-sbx")
 }
 
 func (s *UtilsTestSuite) TestGenerateNameFunctionWithPrivilegedNamespace(c *check.C) {

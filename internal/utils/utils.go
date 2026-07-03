@@ -186,7 +186,17 @@ func GenerateRoleName(ctx context.Context, iamRole *iammanagerv1alpha1.Iamrole, 
 		return "", err
 	}
 
-	return buf.String(), nil
+	result := buf.String()
+
+	// Honor optional iammanager.keikoproj.io/additional-role annotation on the CR. Lets a single
+	// namespace host multiple Iamrole CRs that produce distinct AWS role
+	// names without changing the cluster-wide iam.role.pattern template.
+	if flag, suffix := parseAnnotations(ctx, config.IamManagerRoleNameSuffixAnnotation, iamRole.Annotations); flag {
+		result = result + "-" + suffix
+		log.Info("appended role-name suffix from annotation", "suffix", suffix, "finalName", result)
+	}
+
+	return result, nil
 }
 
 // parseAnnotations parses annotations attached to iam role resource and returns the value if found

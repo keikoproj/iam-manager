@@ -69,6 +69,17 @@ const (
 
 	//propertyDisallowSameAccountDynamoDBAccess can be used to enable validation that prevents adding same-account DynamoDB access when it wasn't previously allowed
 	propertyDisallowSameAccountDynamoDBAccess = "iam.policy.dynamodb.same.account.disallow"
+
+	// Skip the AWS GetRole/GetRolePolicy verification on the Ready reconcile
+	// path when the CR inputs (generation + IRSA/tags annotations) match what
+	// was last reconciled. Speeds up cron-driven resync and any idle reconcile
+	// where nothing has changed. Opt-in.
+	propertyResyncShortCircuitEnabled = "controller.resync.shortcircuit.enabled"
+
+	// Drop watch events from periodic informer resync (ResourceVersion
+	// unchanged) before they enter the workqueue. Lossless because every real
+	// apiserver write bumps ResourceVersion. Opt-in.
+	propertyResyncPredicateEnabled = "controller.resync.predicate.enabled"
 )
 
 const (

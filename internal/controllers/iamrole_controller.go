@@ -171,6 +171,22 @@ func (r *IamroleReconciler) HandleReconcile(ctx context.Context, req ctrl.Reques
 	switch iamRole.Status.State {
 	case iammanagerv1alpha1.Ready:
 
+		// Speed up resync and idle reconciles. When the short-circuit flag is
+		// on and the CR's generation + the IRSA/tags annotations match what we
+		// last reconciled successfully, the desired state is already in AWS.
+		// Skip the IAM.GetRole / IAM.GetRolePolicy / per-SA reads — they
+		// account for ~90%+ of steady-state AWS calls.
+		//
+		// Safety: generation is apiserver-owned and bumps only on spec writes;
+		// the two annotations are the only metadata this loop reads. Drift
+		// caused outside the controller is intentionally not detected here —
+		// drift recovery remains the cron's job.
+		if shouldShortCircuitReady(iamRole, config.Props.IsResyncShortCircuitEnabled()) {
+			log.V(1).Info("Ready short-circuit: CR inputs match last reconcile, skipping AWS verification",
+				"generation", iamRole.Generation)
+			return successRequeueIt()
+		}
+
 		// This can be update request or a duplicate Requeue for the previous status change to Ready
 		// Check with state of the world to figure out if this event is because of status update
 		targetRole, err := r.IAMClient.GetRole(ctx, *input)
@@ -385,6 +401,20 @@ func (r *IamroleReconciler) ConstructCreateIAMRoleInput(ctx context.Context, iam
 	return input, nil, nil
 }
 
+// shouldShortCircuitReady reports whether the Ready-path reconcile can skip
+// AWS verification because the CR's inputs match the last successful
+// reconcile. The decision is intentionally pure: no I/O, no clock, no global
+// state beyond the explicit flag — so it's trivially testable. Returns false
+// when the flag is off so the caller falls through to the existing behavior.
+func shouldShortCircuitReady(iamRole *iammanagerv1alpha1.Iamrole, flagEnabled bool) bool {
+	if !flagEnabled {
+		return false
+	}
+	return iamRole.Status.ObservedGeneration == iamRole.Generation &&
+		iamRole.Status.ObservedIRSAAnnotation == iamRole.Annotations[config.IRSAAnnotation] &&
+		iamRole.Status.ObservedTagsAnnotation == iamRole.Annotations[config.IamManagerTagsAnnotation]
+}
+
 type StatusUpdatePredicate struct {
 	predicate.Funcs
 }
@@ -399,6 +429,16 @@ func (StatusUpdatePredicate) Update(e event.UpdateEvent) bool {
 	}
 	if e.ObjectNew == nil {
 		log.Error(nil, "Update event has no new runtime object for update", "event", e)
+		return false
+	}
+
+	// Drop periodic informer-resync events before they enter the workqueue.
+	// ResourceVersion is bumped by the apiserver on every real write, so RV
+	// equality is a lossless signal that nothing has actually changed — the
+	// event is a cache-driven replay. This speeds up idle reconciles by
+	// avoiding workqueue churn.
+	if config.Props.IsResyncPredicateEnabled() &&
+		e.ObjectOld.GetResourceVersion() == e.ObjectNew.GetResourceVersion() {
 		return false
 	}
 
@@ -441,6 +481,16 @@ func (r *IamroleReconciler) UpdateStatus(ctx context.Context, iamRole *iammanage
 
 	if iamRole.Status.LastUpdatedTimestamp.IsZero() {
 		status.LastUpdatedTimestamp = metav1.Now()
+	}
+
+	// On every successful Ready write, record the inputs that drove this
+	// reconcile so the next pass can short-circuit when they haven't changed.
+	// We do this in UpdateStatus rather than at each call site so the
+	// bookkeeping can't be forgotten.
+	if status.State == iammanagerv1alpha1.Ready {
+		status.ObservedGeneration = iamRole.Generation
+		status.ObservedIRSAAnnotation = iamRole.Annotations[config.IRSAAnnotation]
+		status.ObservedTagsAnnotation = iamRole.Annotations[config.IamManagerTagsAnnotation]
 	}
 
 	iamRole.Status = status

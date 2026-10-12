@@ -191,6 +191,26 @@ type IamroleStatus struct {
 	//LastUpdatedTimestamp represents the last time the iam role has been modified
 	// +optional
 	LastUpdatedTimestamp metav1.Time `json:"lastUpdatedTimestamp,omitempty"`
+
+	// ObservedGeneration is the metadata.generation of the CR that was last
+	// successfully reconciled to AWS. Combined with the observed annotation
+	// values below, lets the Ready-path short-circuit skip the AWS
+	// GetRole/GetRolePolicy verification when nothing the controller reads
+	// has changed.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// ObservedIRSAAnnotation is the value of the IRSA service-account
+	// annotation (iam.amazonaws.com/irsa-service-account) at the time of the
+	// last successful reconcile. Empty string means the annotation was absent.
+	// +optional
+	ObservedIRSAAnnotation string `json:"observedIRSAAnnotation,omitempty"`
+
+	// ObservedTagsAnnotation is the value of the custom-tags annotation
+	// (iammanager.keikoproj.io/tags) at the time of the last successful
+	// reconcile. Empty string means the annotation was absent.
+	// +optional
+	ObservedTagsAnnotation string `json:"observedTagsAnnotation,omitempty"`
 }
 
 type State string
